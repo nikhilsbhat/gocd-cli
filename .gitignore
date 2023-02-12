@@ -1,0 +1,7 @@
+.idea
+/vendor
+*.tar.gz
+/dist
+cover.out
+cover.html
+gocd-cli

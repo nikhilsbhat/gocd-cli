@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -42,7 +40,6 @@ func getEncryptCommand() *cobra.Command {
 				return &errors.AuthError{Message: "args cannot be more than one, only one encrypted/plain text must be passed"}
 			}
 
-			fmt.Printf("client: %v\n", client)
 			response, err := client.EncryptText(args[0])
 			if err != nil {
 				return err

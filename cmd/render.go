@@ -13,7 +13,7 @@ import (
 var cliWriter = bufio.NewWriter(os.Stdout)
 
 func render(value interface{}) error {
-	if cliCfg.json {
+	if cliCfg.JSON {
 		if err := toJSON(value); err != nil {
 			return err
 		}
@@ -21,7 +21,7 @@ func render(value interface{}) error {
 		return nil
 	}
 
-	if cliCfg.yaml {
+	if cliCfg.YAML {
 		if err := toYAML(value); err != nil {
 			return err
 		}

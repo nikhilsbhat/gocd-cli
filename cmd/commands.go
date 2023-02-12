@@ -10,18 +10,18 @@ type cliCommands struct {
 	commands []*cobra.Command
 }
 
+// Config holds the information of the cli config.
 type Config struct {
-	url      string
-	loglevel string
-	caPath   string
-	auth     gocd.Auth
-	json     bool
-	yaml     bool
+	URL        string    `yaml:"url,omitempty"`
+	LogLevel   string    `yaml:"log_level,omitempty"`
+	CaPath     string    `yaml:"ca_path,omitempty"`
+	Auth       gocd.Auth `yaml:"auth,omitempty"`
+	JSON       bool      `yaml:"json,omitempty"`
+	YAML       bool      `yaml:"yaml,omitempty"`
+	saveConfig bool
 }
 
 func setGoCDCliCommands() *cobra.Command {
-	SetLogger(cliCfg.loglevel)
-
 	return getGoCDCliCommands()
 }
 

@@ -46,8 +46,8 @@ func (c *cliCommands) prepareCommands() *cobra.Command {
 func getRootCommand() *cobra.Command {
 	rootCommand := &cobra.Command{
 		Use:     "gocd-cli",
-		Short:   "Command line interface for GoCD that helps in interacting with GoCD server",
-		Long:    `Lists all images that would be part of helm deployment.`,
+		Short:   "Command line interface for GoCD",
+		Long:    `Command line interface for GoCD that helps in interacting with GoCD CI/CD server`,
 		PreRunE: setGoCDClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmd.Usage(); err != nil {

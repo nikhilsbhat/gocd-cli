@@ -1,13 +1,14 @@
-// Package version powers the versioning of gocd-cli.
-package version
+package cmd
 
 import (
 	"bufio"
 	"encoding/json"
 	"log"
 	"os"
+	"reflect"
 	"strings"
 
+	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 )
 
@@ -58,12 +59,30 @@ func GetBuildInfo() BuildInfo {
 func AppVersion(cmd *cobra.Command, args []string) error {
 	buildInfo, err := json.Marshal(GetBuildInfo())
 	if err != nil {
-		log.Fatalf("fetching version of helm-images failed with: %v", err)
+		log.Fatalf("fetching version of GoCD cli failed with: %v\n", err)
 	}
 
 	writer := bufio.NewWriter(os.Stdout)
-	versionInfo := strings.Join([]string{"images version", string(buildInfo)}, ": ")
-	_, err = writer.Write([]byte(versionInfo))
+
+	var serverVersionInfo string
+	cliLogger.Debug("a call to GoCD server would be made to collect server version")
+	if serverVersion, _ := client.GetVersionInfo(); !reflect.DeepEqual(serverVersion, gocd.ServerVersion{}) {
+		cliLogger.Debug("got an update from GoCD server about server version")
+
+		serverVersionJSON, err := json.Marshal(serverVersion)
+		if err != nil {
+			cliLogger.Errorf("fetching version of GoCD server failed with %v\n", err)
+		}
+		serverVersionInfo = strings.Join([]string{"server version", string(serverVersionJSON), "\n"}, ": ")
+
+		_, err = writer.Write([]byte(serverVersionInfo))
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	cliVersionInfo := strings.Join([]string{"cli version", string(buildInfo), "\n"}, ": ")
+	_, err = writer.Write([]byte(cliVersionInfo))
 	if err != nil {
 		log.Fatalln(err)
 	}

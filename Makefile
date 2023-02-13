@@ -10,7 +10,7 @@ DATE?=$(shell date)
 PlATFORM?=$(shell go env GOOS)
 ARCHITECTURE?=$(shell go env GOARCH)
 GOVERSION?=$(shell go version | awk '{printf $$3}')
-BUILD_WITH_FLAGS="-s -w -X 'github.com/nikhilsbhat/gocd-cli/version.Version=${VERSION}' -X 'github.com/nikhilsbhat/gocd-cli/version.Env=${BUILD_ENVIRONMENT}' -X 'github.com/nikhilsbhat/gocd-cli/version.BuildDate=${DATE}' -X 'github.com/nikhilsbhat/gocd-cli/version.Revision=${REVISION}' -X 'github.com/nikhilsbhat/gocd-cli/version.Platform=${PlATFORM}/${ARCHITECTURE}' -X 'github.com/nikhilsbhat/gocd-cli/version.GoVersion=${GOVERSION}'"
+BUILD_WITH_FLAGS="-s -w -X 'github.com/nikhilsbhat/gocd-cli/cmd.Version=${VERSION}' -X 'github.com/nikhilsbhat/gocd-cli/cmd.Env=${BUILD_ENVIRONMENT}' -X 'github.com/nikhilsbhat/gocd-cli/cmd.BuildDate=${DATE}' -X 'github.com/nikhilsbhat/gocd-cli/cmd.Revision=${REVISION}' -X 'github.com/nikhilsbhat/gocd-cli/cmd.Platform=${PlATFORM}/${ARCHITECTURE}' -X 'github.com/nikhilsbhat/gocd-cli/cmd.GoVersion=${GOVERSION}'"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))

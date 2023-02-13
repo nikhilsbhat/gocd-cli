@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/nikhilsbhat/gocd-cli/version"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 )
@@ -64,12 +63,16 @@ func getRootCommand() *cobra.Command {
 }
 
 func getVersionCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:   "version [flags]",
-		Short: "Command to fetch the version of gocd-cli installed",
-		Long:  `This will help user to find what version of gocd-cli he/she installed in her machine.`,
-		RunE:  version.AppVersion,
+	versionCommand := &cobra.Command{
+		Use:     "version [flags]",
+		Short:   "Command to fetch the version of gocd-cli installed",
+		Long:    `This will help user to find what version of gocd-cli he/she installed in her machine.`,
+		PreRunE: setGoCDClient,
+		RunE:    AppVersion,
 	}
+	versionCommand.SetUsageTemplate(getUsageTemplate())
+
+	return versionCommand
 }
 
 func getUsageTemplate() string {

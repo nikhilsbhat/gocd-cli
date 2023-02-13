@@ -12,11 +12,11 @@ type cliCommands struct {
 // Config holds the information of the cli config.
 type Config struct {
 	URL        string    `yaml:"url,omitempty"`
-	LogLevel   string    `yaml:"log_level,omitempty"`
 	CaPath     string    `yaml:"ca_path,omitempty"`
 	Auth       gocd.Auth `yaml:"auth,omitempty"`
 	JSON       bool      `yaml:"json,omitempty"`
 	YAML       bool      `yaml:"yaml,omitempty"`
+	LogLevel   string
 	saveConfig bool
 }
 
@@ -29,6 +29,7 @@ func getGoCDCliCommands() *cobra.Command {
 	command := new(cliCommands)
 	command.commands = append(command.commands, getEncryptionCommand())
 	command.commands = append(command.commands, getVersionCommand())
+	command.commands = append(command.commands, getConfigRepoCommand())
 
 	return command.prepareCommands()
 }

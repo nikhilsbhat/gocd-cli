@@ -16,7 +16,9 @@ type Config struct {
 	Auth       gocd.Auth `yaml:"auth,omitempty"`
 	JSON       bool      `yaml:"json,omitempty"`
 	YAML       bool      `yaml:"yaml,omitempty"`
+	NoColor    bool
 	LogLevel   string
+	FromFile   string
 	saveConfig bool
 }
 

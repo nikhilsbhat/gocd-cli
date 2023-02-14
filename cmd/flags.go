@@ -23,16 +23,15 @@ func registerGlobalFlags(cmd *cobra.Command) {
 		"enable this to render output in JSON format")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "to-yaml", "", false,
 		"enable this to render output in YAML format")
+	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "no-color", "", false,
+		"enable this to render output in YAML format")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.saveConfig, "save-config", "", false,
 		"enable this to locally save auth configs used to connect GoCD server (path: $HOME/.gocd/auth_config.yaml)")
+	cmd.PersistentFlags().StringVarP(&cliCfg.FromFile, "from-file", "", "",
+		"file containing configurations of objects that needs to be created in GoCD, config-repo/pipeline-group/environment and etc.")
 }
 
 func registerEncryptionFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&cipherKey, "cipher-key", "", "",
 		"cipher key value used for decryption, the key should same which is used by GoCD server for encryption")
-}
-
-func registerConfigRepoFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVarP(&cipherKey, "from-file", "", "",
-		"file containing config repo object that needs to be created")
 }

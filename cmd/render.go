@@ -62,12 +62,12 @@ func toYAML(value interface{}) error {
 
 func toJSON(value interface{}) error {
 	cliLogger.Debug("rendering output in json format since --json is enabled")
-	valueJSON, err := json.MarshalIndent(value, " ", " ")
+	valueJSON, err := json.MarshalIndent(value, "", "     ")
 	if err != nil {
 		return err
 	}
 
-	jsonString := strings.Join([]string{string(valueJSON)}, "\n")
+	jsonString := strings.Join([]string{string(valueJSON), "\n"}, "")
 
 	_, err = cliWriter.Write([]byte(jsonString))
 	if err != nil {

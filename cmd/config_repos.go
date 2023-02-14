@@ -1,8 +1,13 @@
 package cmd
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
+	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
 func getConfigRepoCommand() *cobra.Command {
@@ -19,44 +24,168 @@ GET/CREATE/UPDATE/DELETE and trigger update on the same`,
 			return nil
 		},
 	}
-	registerConfigRepoFlags(configRepoCommand)
+
 	configRepoCommand.SetUsageTemplate(getUsageTemplate())
 
 	configRepoCommand.AddCommand(getConfigRepoTriggerUpdateCommand())
 	configRepoCommand.AddCommand(getConfigRepoStatusCommand())
-	// configRepoCommand.AddCommand(getGetConfigRepoCommand())
-	// configRepoCommand.AddCommand(getCreateConfigRepoCommand())
-	// configRepoCommand.AddCommand(getUpdateConfigRepoCommand())
-	// configRepoCommand.AddCommand(getDeleteConfigRepoCommand())
+	configRepoCommand.AddCommand(getGetConfigRepoCommand())
+	configRepoCommand.AddCommand(getCreateConfigRepoCommand())
+	configRepoCommand.AddCommand(getUpdateConfigRepoCommand())
+	configRepoCommand.AddCommand(getDeleteConfigRepoCommand())
 
 	return configRepoCommand
 }
 
 func getGetConfigRepoCommand() *cobra.Command {
-	return &cobra.Command{}
-}
-
-func getUpdateConfigRepoCommand() *cobra.Command {
-	return &cobra.Command{}
-}
-
-func getDeleteConfigRepoCommand() *cobra.Command {
-	return &cobra.Command{}
-}
-
-func getCreateConfigRepoCommand() *cobra.Command {
-	return &cobra.Command{}
-}
-
-func getConfigRepoStatusCommand() *cobra.Command {
-	configTriggerStatusCommand := &cobra.Command{
-		Use:     "status",
-		Short:   "Command to get the status of config repository update operation.",
+	configGetCommand := &cobra.Command{
+		Use:     "get",
+		Short:   "Command to GET the config information with a specified ID.",
 		Args:    cobra.MinimumNArgs(1),
 		PreRunE: setGoCDClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 1 {
-				return &errors.AuthError{Message: "args cannot be more than one. At once, status of only one configrepo update operation can be fetched"}
+				return &errors.ConfigRepoError{Message: "information of only one config-repo can be fetched"}
+			}
+
+			response, err := client.GetConfigRepo(args[0])
+			if err != nil {
+				return err
+			}
+
+			if err = render(response); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+
+	configGetCommand.SetUsageTemplate(getUsageTemplate())
+
+	return configGetCommand
+}
+
+func getCreateConfigRepoCommand() *cobra.Command {
+	configCreateStatusCommand := &cobra.Command{
+		Use:     "create",
+		Short:   "Command to CREATE the config-repo with specified configuration",
+		PreRunE: setGoCDClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var configRepo gocd.ConfigRepo
+			object, err := readObject(cmd)
+			if err != nil {
+				return err
+			}
+
+			switch objType := object.CheckFileType(); objType {
+			case fileTypeYAML:
+				if err = yaml.Unmarshal([]byte(object), &configRepo); err != nil {
+					return err
+				}
+			case fileTypeJSON:
+				if err = json.Unmarshal([]byte(object), &configRepo); err != nil {
+					return err
+				}
+			default:
+				return &errors.UnknownObjectTypeError{Name: objType}
+			}
+
+			if err = client.CreateConfigRepo(configRepo); err != nil {
+				return err
+			}
+
+			if err = render(fmt.Sprintf("config repo %s created successfully", configRepo.ID)); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+
+	configCreateStatusCommand.SetUsageTemplate(getUsageTemplate())
+
+	return configCreateStatusCommand
+}
+
+func getUpdateConfigRepoCommand() *cobra.Command {
+	configCreateStatusCommand := &cobra.Command{
+		Use:     "update",
+		Short:   "Command to UPDATE the config-repo",
+		PreRunE: setGoCDClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var configRepo gocd.ConfigRepo
+			object, err := readObject(cmd)
+			if err != nil {
+				return err
+			}
+
+			switch objType := object.CheckFileType(); objType {
+			case fileTypeYAML:
+				if err = yaml.Unmarshal([]byte(object), &configRepo); err != nil {
+					return err
+				}
+			case fileTypeJSON:
+				if err = json.Unmarshal([]byte(object), &configRepo); err != nil {
+					return err
+				}
+			default:
+				return &errors.UnknownObjectTypeError{Name: objType}
+			}
+
+			response, err := client.UpdateConfigRepo(configRepo)
+			if err != nil {
+				return err
+			}
+
+			if err = render(response); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+
+	configCreateStatusCommand.SetUsageTemplate(getUsageTemplate())
+
+	return configCreateStatusCommand
+}
+
+func getDeleteConfigRepoCommand() *cobra.Command {
+	configUpdateStatusCommand := &cobra.Command{
+		Use:     "delete",
+		Short:   "Command to DELETE the specified config-repo",
+		Args:    cobra.MinimumNArgs(1),
+		PreRunE: setGoCDClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 1 {
+				return &errors.ConfigRepoError{Message: "information of only one config-repo can be fetched"}
+			}
+
+			if err := client.DeleteConfigRepo(args[0]); err != nil {
+				return err
+			}
+
+			if err := render(fmt.Sprintf("config repo deleted: %s", args[0])); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+
+	return configUpdateStatusCommand
+}
+
+func getConfigRepoStatusCommand() *cobra.Command {
+	configStatusCommand := &cobra.Command{
+		Use:     "status",
+		Short:   "Command to GET the status of config-repo update operation.",
+		Args:    cobra.MinimumNArgs(1),
+		PreRunE: setGoCDClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 1 {
+				return &errors.ConfigRepoError{Message: "status of only one config-repo update operation can be fetched"}
 			}
 
 			response, err := client.ConfigRepoStatus(args[0])
@@ -72,20 +201,20 @@ func getConfigRepoStatusCommand() *cobra.Command {
 		},
 	}
 
-	configTriggerStatusCommand.SetUsageTemplate(getUsageTemplate())
+	configStatusCommand.SetUsageTemplate(getUsageTemplate())
 
-	return configTriggerStatusCommand
+	return configStatusCommand
 }
 
 func getConfigRepoTriggerUpdateCommand() *cobra.Command {
 	configTriggerUpdateCommand := &cobra.Command{
 		Use:     "trigger-update",
-		Short:   "Command to trigger the update for config repository to get latest revisions.",
+		Short:   "Command to TRIGGER the update for config-repo to get latest revisions.",
 		Args:    cobra.MinimumNArgs(1),
 		PreRunE: setGoCDClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 1 {
-				return &errors.AuthError{Message: "args cannot be more than one. At once, updates for only one configrepo can be triggered"}
+				return &errors.ConfigRepoError{Message: "updates for only one config-repo can be triggered"}
 			}
 
 			response, err := client.ConfigRepoTriggerUpdate(args[0])

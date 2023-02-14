@@ -37,7 +37,7 @@ func getEncryptCommand() *cobra.Command {
 		PreRunE: setGoCDClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 1 {
-				return &errors.AuthError{Message: "args cannot be more than one, only one encrypted/plain text must be passed"}
+				return &errors.MoreArgError{Message: "encrypted/plain"}
 			}
 
 			response, err := client.EncryptText(args[0])
@@ -66,7 +66,7 @@ func getDecryptCommand() *cobra.Command {
 		PreRunE: setGoCDClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 1 {
-				return &errors.AuthError{Message: "args cannot be more than one, only one encrypted/plain text must be passed"}
+				return &errors.MoreArgError{Message: "encrypted/plain"}
 			}
 
 			response, err := client.DecryptText(args[0], cipherKey)

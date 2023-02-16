@@ -34,7 +34,7 @@ func getEncryptCommand() *cobra.Command {
 		Use:     "encrypt",
 		Short:   "Command to encrypt plain text value [https://api.gocd.org/current/#encryption]",
 		Args:    cobra.MinimumNArgs(1),
-		PreRunE: setGoCDClient,
+		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 1 {
 				return &errors.MoreArgError{Message: "encrypted/plain"}
@@ -45,7 +45,7 @@ func getEncryptCommand() *cobra.Command {
 				return err
 			}
 
-			if err = render(response); err != nil {
+			if err = cliRenderer.Render(response); err != nil {
 				return err
 			}
 
@@ -63,7 +63,7 @@ func getDecryptCommand() *cobra.Command {
 		Use:     "decrypt",
 		Short:   "Command to decrypt encrypted value [https://github.com/nikhilsbhat/gocd-sdk-go/blob/master/encryption.go#L49]",
 		Args:    cobra.MinimumNArgs(1),
-		PreRunE: setGoCDClient,
+		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 1 {
 				return &errors.MoreArgError{Message: "encrypted/plain"}
@@ -74,7 +74,7 @@ func getDecryptCommand() *cobra.Command {
 				return err
 			}
 
-			if err = render(response); err != nil {
+			if err = cliRenderer.Render(response); err != nil {
 				return err
 			}
 

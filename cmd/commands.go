@@ -14,11 +14,11 @@ type Config struct {
 	URL        string    `yaml:"url,omitempty"`
 	CaPath     string    `yaml:"ca_path,omitempty"`
 	Auth       gocd.Auth `yaml:"auth,omitempty"`
-	JSON       bool      `yaml:"json,omitempty"`
-	YAML       bool      `yaml:"yaml,omitempty"`
-	NoColor    bool
-	LogLevel   string
-	FromFile   string
+	JSON       bool      `yaml:"-"`
+	YAML       bool      `yaml:"-"`
+	NoColor    bool      `yaml:"-"`
+	LogLevel   string    `yaml:"-"`
+	FromFile   string    `yaml:"-"`
 	saveConfig bool
 }
 
@@ -51,7 +51,7 @@ func getRootCommand() *cobra.Command {
 		Use:     "gocd-cli",
 		Short:   "Command line interface for GoCD",
 		Long:    `Command line interface for GoCD that helps in interacting with GoCD CI/CD server`,
-		PreRunE: setGoCDClient,
+		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmd.Usage(); err != nil {
 				return err
@@ -70,7 +70,7 @@ func getVersionCommand() *cobra.Command {
 		Use:     "version [flags]",
 		Short:   "Command to fetch the version of gocd-cli installed",
 		Long:    `This will help user to find what version of gocd-cli he/she installed in her machine.`,
-		PreRunE: setGoCDClient,
+		PreRunE: setCLIClient,
 		RunE:    AppVersion,
 	}
 	versionCommand.SetUsageTemplate(getUsageTemplate())

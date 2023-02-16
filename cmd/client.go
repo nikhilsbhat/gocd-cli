@@ -5,14 +5,18 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/nikhilsbhat/gocd-cli/pkg/utils"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
 
-var client gocd.GoCd
+var (
+	client      gocd.GoCd
+	cliRenderer utils.Renderer
+)
 
-func setGoCDClient(cmd *cobra.Command, args []string) error {
+func setCLIClient(cmd *cobra.Command, args []string) error {
 	var caContent []byte
 
 	SetLogger(cliCfg.LogLevel)
@@ -62,6 +66,7 @@ func setGoCDClient(cmd *cobra.Command, args []string) error {
 	)
 
 	client = goCDClient
+	cliRenderer = utils.GetRenderer(nil, cliLogger, cliCfg.YAML, cliCfg.JSON)
 
 	return nil
 }

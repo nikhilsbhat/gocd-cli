@@ -20,11 +20,11 @@ func registerGlobalFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&cliCfg.LogLevel, "log-level", "l", "info",
 		"log level for gocd cli, log levels supported by [https://github.com/sirupsen/logrus] will work")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.JSON, "to-json", "", false,
-		"enable this to render output in JSON format")
+		"enable this to Render output in JSON format")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "to-yaml", "", false,
-		"enable this to render output in YAML format")
+		"enable this to Render output in YAML format")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "no-color", "", false,
-		"enable this to render output in YAML format")
+		"enable this to Render output in YAML format")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.saveConfig, "save-config", "", false,
 		"enable this to locally save auth configs used to connect GoCD server (path: $HOME/.gocd/auth_config.yaml)")
 	cmd.PersistentFlags().StringVarP(&cliCfg.FromFile, "from-file", "", "",

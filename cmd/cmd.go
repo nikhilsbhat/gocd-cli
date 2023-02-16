@@ -9,7 +9,8 @@ import (
 
 var cmd *cobra.Command
 
-func init() { //nolint:gochecknoinits
+//nolint:gochecknoinits
+func init() {
 	cmd = setGoCDCliCommands()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }

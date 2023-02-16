@@ -27,6 +27,8 @@ func registerGlobalFlags(cmd *cobra.Command) {
 		"enable this to Render output in YAML format")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.saveConfig, "save-config", "", false,
 		"enable this to locally save auth configs used to connect GoCD server (path: $HOME/.gocd/auth_config.yaml)")
+	cmd.PersistentFlags().BoolVarP(&cliCfg.skipCacheConfig, "skip-cache-config", "", false,
+		"if enabled locally save auth configs would not be used to authenticate GoCD server (path: $HOME/.gocd/auth_config.yaml)")
 	cmd.PersistentFlags().StringVarP(&cliCfg.FromFile, "from-file", "", "",
 		"file containing configurations of objects that needs to be created in GoCD, config-repo/pipeline-group/environment and etc.")
 }

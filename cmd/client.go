@@ -26,7 +26,7 @@ func setCLIClient(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if localConfig {
+	if localConfig && !cliCfg.skipCacheConfig {
 		cliLogger.Debugf("found authorisation configuration in cache, loading config from %s", localConfigPath)
 		yamlConfig, err := os.ReadFile(localConfigPath)
 		if err != nil {

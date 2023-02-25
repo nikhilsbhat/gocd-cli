@@ -21,9 +21,9 @@ func registerGlobalFlags(cmd *cobra.Command) {
 		"path to file containing CA cert used to authenticate GoCD server, if you have one")
 	cmd.PersistentFlags().StringVarP(&cliCfg.LogLevel, "log-level", "l", "info",
 		"log level for gocd cli, log levels supported by [https://github.com/sirupsen/logrus] will work")
-	cmd.PersistentFlags().BoolVarP(&cliCfg.JSON, "to-json", "", false,
+	cmd.PersistentFlags().BoolVarP(&cliCfg.JSON, "json", "", false,
 		"enable this to Render output in JSON format")
-	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "to-yaml", "", false,
+	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "yaml", "", false,
 		"enable this to Render output in YAML format")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "no-color", "", false,
 		"enable this to Render output in YAML format")
@@ -33,6 +33,8 @@ func registerGlobalFlags(cmd *cobra.Command) {
 		"if enabled locally save auth configs would not be used to authenticate GoCD server (path: $HOME/.gocd/auth_config.yaml)")
 	cmd.PersistentFlags().StringVarP(&cliCfg.FromFile, "from-file", "f", "",
 		"file containing configurations of objects that needs to be created in GoCD, config-repo/pipeline-group/environment and etc.")
+	cmd.PersistentFlags().StringVarP(&cliCfg.ToFile, "to-file", "", "",
+		"file to which the output needs to be written to (this works only if --yaml or --json is enabled)")
 }
 
 func registerEncryptionFlags(cmd *cobra.Command) {

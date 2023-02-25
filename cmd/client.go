@@ -66,7 +66,18 @@ func setCLIClient(cmd *cobra.Command, args []string) error {
 	)
 
 	client = goCDClient
-	cliRenderer = utils.GetRenderer(nil, cliLogger, cliCfg.YAML, cliCfg.JSON)
+
+	writer := os.Stdout
+	if len(cliCfg.ToFile) != 0 {
+		cliLogger.Debugf("--to-file is opted, output would be saved under a file '%s'", cliCfg.ToFile)
+		filePTR, err := os.Create(cliCfg.ToFile)
+		if err != nil {
+			return err
+		}
+		writer = filePTR
+	}
+
+	cliRenderer = utils.GetRenderer(writer, cliLogger, cliCfg.YAML, cliCfg.JSON)
 
 	return nil
 }

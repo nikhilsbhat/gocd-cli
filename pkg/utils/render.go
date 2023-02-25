@@ -101,10 +101,12 @@ func GetRenderer(writer io.Writer, log *logrus.Logger, yaml, json bool) Renderer
 		YAML:   yaml,
 		JSON:   json,
 	}
-	if writer != nil {
+
+	if writer == nil {
+		renderer.writer = bufio.NewWriter(os.Stdout)
+	} else {
 		renderer.writer = bufio.NewWriter(writer)
 	}
-	renderer.writer = bufio.NewWriter(os.Stdout)
 
 	return renderer
 }

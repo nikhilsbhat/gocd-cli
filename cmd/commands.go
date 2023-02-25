@@ -19,6 +19,7 @@ type Config struct {
 	NoColor         bool      `yaml:"-"`
 	LogLevel        string    `yaml:"-"`
 	FromFile        string    `yaml:"-"`
+	ToFile          string    `yaml:"-"`
 	saveConfig      bool
 	skipCacheConfig bool
 }

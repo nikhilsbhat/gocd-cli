@@ -3,6 +3,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/nikhilsbhat/gocd-cli)](https://goreportcard.com/report/github.com/nikhilsbhat/gocd-cli)
 [![shields](https://img.shields.io/badge/license-MIT-blue)](https://github.com/nikhilsbhat/gocd-cli/blob/master/LICENSE)
 [![shields](https://godoc.org/github.com/nikhilsbhat/gocd-cli?status.svg)](https://godoc.org/github.com/nikhilsbhat/gocd-cli)
+[![shields](https://img.shields.io/github/v/tag/nikhilsbhat/gocd-cli.svg)](https://github.com/nikhilsbhat/gocd-cli/tags)
+[![shields](https://img.shields.io/github/downloads/nikhilsbhat/gocd-cli/total.svg)](https://github.com/nikhilsbhat/gocd-cli/releases)
 
 command-line interface for `GoCD` that helps in interacting with [GoCD](https://www.gocd.org/) server.
 

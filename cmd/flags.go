@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 )
 
@@ -29,11 +31,23 @@ func registerGlobalFlags(cmd *cobra.Command) {
 		"enable this to locally save auth configs used to connect GoCD server (path: $HOME/.gocd/auth_config.yaml)")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.skipCacheConfig, "skip-cache-config", "", false,
 		"if enabled locally save auth configs would not be used to authenticate GoCD server (path: $HOME/.gocd/auth_config.yaml)")
-	cmd.PersistentFlags().StringVarP(&cliCfg.FromFile, "from-file", "", "",
+	cmd.PersistentFlags().StringVarP(&cliCfg.FromFile, "from-file", "f", "",
 		"file containing configurations of objects that needs to be created in GoCD, config-repo/pipeline-group/environment and etc.")
 }
 
 func registerEncryptionFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&cipherKey, "cipher-key", "", "",
 		"cipher key value used for decryption, the key should same which is used by GoCD server for encryption")
+}
+
+const (
+	defaultRetryCount = 30
+	defaultDelay      = 5 * time.Second
+)
+
+func registerBackupFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().IntVarP(&backupRetry, "retry", "", defaultRetryCount,
+		"number of times to retry to get backup stats when backup status is not ready")
+	cmd.PersistentFlags().DurationVarP(&delay, "delay", "", defaultDelay,
+		"time delay between each retries that would be made to get backup stats")
 }

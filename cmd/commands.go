@@ -33,6 +33,7 @@ func getGoCDCliCommands() *cobra.Command {
 	command.commands = append(command.commands, getEncryptionCommand())
 	command.commands = append(command.commands, getVersionCommand())
 	command.commands = append(command.commands, getConfigRepoCommand())
+	command.commands = append(command.commands, getBackupCommand())
 
 	return command.prepareCommands()
 }

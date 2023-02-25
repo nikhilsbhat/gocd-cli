@@ -71,6 +71,7 @@ func getCreateConfigRepoCommand() *cobra.Command {
 	configCreateStatusCommand := &cobra.Command{
 		Use:     "create",
 		Short:   "Command to CREATE the config-repo with specified configuration",
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var configRepo gocd.ConfigRepo

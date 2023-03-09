@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Object implements method that check for file content type.

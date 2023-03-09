@@ -9,7 +9,7 @@ import (
 	"github.com/nikhilsbhat/gocd-cli/pkg/utils"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 var (

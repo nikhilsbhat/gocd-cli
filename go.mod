@@ -4,11 +4,11 @@ go 1.19
 
 require (
 	github.com/ghodss/yaml v1.0.0
-	github.com/nikhilsbhat/gocd-sdk-go v0.1.1-0.20230309041138-a419ad58c924
+	github.com/nikhilsbhat/gocd-sdk-go v0.1.1-0.20230309115000-143d0ad092a7
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.0
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -21,5 +21,5 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

@@ -8,7 +8,7 @@ import (
 	"github.com/nikhilsbhat/gocd-cli/pkg/utils"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type configRepoPreflight struct {
@@ -39,6 +39,7 @@ GET/CREATE/UPDATE/DELETE and trigger update on the same`,
 
 	configRepoCommand.AddCommand(getConfigRepoTriggerUpdateCommand())
 	configRepoCommand.AddCommand(getConfigRepoStatusCommand())
+	configRepoCommand.AddCommand(getGetConfigReposCommand())
 	configRepoCommand.AddCommand(getGetConfigRepoCommand())
 	configRepoCommand.AddCommand(getCreateConfigRepoCommand())
 	configRepoCommand.AddCommand(getUpdateConfigRepoCommand())
@@ -48,10 +49,31 @@ GET/CREATE/UPDATE/DELETE and trigger update on the same`,
 	return configRepoCommand
 }
 
+func getGetConfigReposCommand() *cobra.Command {
+	configGetCommand := &cobra.Command{
+		Use:     "get-all",
+		Short:   "Command to GET all config-repo information present in GoCD [https://api.gocd.org/current/#get-all-config-repos]",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			response, err := client.GetConfigRepos()
+			if err != nil {
+				return err
+			}
+
+			return cliRenderer.Render(response)
+		},
+	}
+
+	configGetCommand.SetUsageTemplate(getUsageTemplate())
+
+	return configGetCommand
+}
+
 func getGetConfigRepoCommand() *cobra.Command {
 	configGetCommand := &cobra.Command{
 		Use:     "get",
-		Short:   "Command to GET the config information with a specified ID.",
+		Short:   "Command to GET the config-repo information with a specified ID present in GoCD [https://api.gocd.org/current/#get-a-config-repo]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -76,7 +98,7 @@ func getGetConfigRepoCommand() *cobra.Command {
 func getCreateConfigRepoCommand() *cobra.Command {
 	configCreateStatusCommand := &cobra.Command{
 		Use:     "create",
-		Short:   "Command to CREATE the config-repo with specified configuration",
+		Short:   "Command to CREATE the config-repo with specified configuration [https://api.gocd.org/current/#create-a-config-repo]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -119,7 +141,8 @@ func getCreateConfigRepoCommand() *cobra.Command {
 func getUpdateConfigRepoCommand() *cobra.Command {
 	configCreateStatusCommand := &cobra.Command{
 		Use:     "update",
-		Short:   "Command to UPDATE the config-repo",
+		Short:   "Command to UPDATE the config-repo present in GoCD [https://api.gocd.org/current/#update-config-repo]",
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var configRepo gocd.ConfigRepo
@@ -162,7 +185,7 @@ func getUpdateConfigRepoCommand() *cobra.Command {
 func getDeleteConfigRepoCommand() *cobra.Command {
 	configUpdateStatusCommand := &cobra.Command{
 		Use:     "delete",
-		Short:   "Command to DELETE the specified config-repo",
+		Short:   "Command to DELETE the specified config-repo [https://api.gocd.org/current/#delete-a-config-repo]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -184,7 +207,7 @@ func getDeleteConfigRepoCommand() *cobra.Command {
 func getConfigRepoStatusCommand() *cobra.Command {
 	configStatusCommand := &cobra.Command{
 		Use:     "status",
-		Short:   "Command to GET the status of config-repo update operation.",
+		Short:   "Command to GET the status of config-repo update operation [https://api.gocd.org/current/#status-of-config-repository-update]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -209,7 +232,7 @@ func getConfigRepoStatusCommand() *cobra.Command {
 func getConfigRepoTriggerUpdateCommand() *cobra.Command {
 	configTriggerUpdateCommand := &cobra.Command{
 		Use:     "trigger-update",
-		Short:   "Command to TRIGGER the update for config-repo to get latest revisions.",
+		Short:   "Command to TRIGGER the update for config-repo to get latest revisions [https://api.gocd.org/current/#trigger-update-of-config-repository]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -234,7 +257,7 @@ func getConfigRepoTriggerUpdateCommand() *cobra.Command {
 func getConfigRepoPreflightCheckCommand() *cobra.Command {
 	configTriggerUpdateCommand := &cobra.Command{
 		Use:     "preflight-check",
-		Short:   "Command to PREFLIGHT check the config repo configurations.",
+		Short:   "Command to PREFLIGHT check the config repo configurations [https://api.gocd.org/current/#preflight-check-of-config-repo-configurations]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {

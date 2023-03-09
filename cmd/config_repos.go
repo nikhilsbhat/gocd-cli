@@ -11,6 +11,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type configRepoPreflight struct {
+	pluginID         string
+	pipelineFiles    []string
+	pipelineDir      string
+	pipelineExtRegex string
+}
+
+var configRepoPreflightObj configRepoPreflight
+
 func getConfigRepoCommand() *cobra.Command {
 	configRepoCommand := &cobra.Command{
 		Use:   "configrepo",
@@ -34,6 +43,7 @@ GET/CREATE/UPDATE/DELETE and trigger update on the same`,
 	configRepoCommand.AddCommand(getCreateConfigRepoCommand())
 	configRepoCommand.AddCommand(getUpdateConfigRepoCommand())
 	configRepoCommand.AddCommand(getDeleteConfigRepoCommand())
+	configRepoCommand.AddCommand(getConfigRepoPreflightCheckCommand())
 
 	return configRepoCommand
 }
@@ -42,13 +52,9 @@ func getGetConfigRepoCommand() *cobra.Command {
 	configGetCommand := &cobra.Command{
 		Use:     "get",
 		Short:   "Command to GET the config information with a specified ID.",
-		Args:    cobra.MinimumNArgs(1),
+		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) > 1 {
-				return &errors.ConfigRepoError{Message: "information of only one config-repo can be fetched"}
-			}
-
 			response, err := client.GetConfigRepo(args[0])
 			if err != nil {
 				return err
@@ -157,13 +163,9 @@ func getDeleteConfigRepoCommand() *cobra.Command {
 	configUpdateStatusCommand := &cobra.Command{
 		Use:     "delete",
 		Short:   "Command to DELETE the specified config-repo",
-		Args:    cobra.MinimumNArgs(1),
+		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) > 1 {
-				return &errors.ConfigRepoError{Message: "information of only one config-repo can be fetched"}
-			}
-
 			if err := client.DeleteConfigRepo(args[0]); err != nil {
 				return err
 			}
@@ -183,13 +185,9 @@ func getConfigRepoStatusCommand() *cobra.Command {
 	configStatusCommand := &cobra.Command{
 		Use:     "status",
 		Short:   "Command to GET the status of config-repo update operation.",
-		Args:    cobra.MinimumNArgs(1),
+		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) > 1 {
-				return &errors.ConfigRepoError{Message: "status of only one config-repo update operation can be fetched"}
-			}
-
 			response, err := client.ConfigRepoStatus(args[0])
 			if err != nil {
 				return err
@@ -212,13 +210,9 @@ func getConfigRepoTriggerUpdateCommand() *cobra.Command {
 	configTriggerUpdateCommand := &cobra.Command{
 		Use:     "trigger-update",
 		Short:   "Command to TRIGGER the update for config-repo to get latest revisions.",
-		Args:    cobra.MinimumNArgs(1),
+		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) > 1 {
-				return &errors.ConfigRepoError{Message: "updates for only one config-repo can be triggered"}
-			}
-
 			response, err := client.ConfigRepoTriggerUpdate(args[0])
 			if err != nil {
 				return err
@@ -233,6 +227,60 @@ func getConfigRepoTriggerUpdateCommand() *cobra.Command {
 	}
 
 	configTriggerUpdateCommand.SetUsageTemplate(getUsageTemplate())
+
+	return configTriggerUpdateCommand
+}
+
+func getConfigRepoPreflightCheckCommand() *cobra.Command {
+	configTriggerUpdateCommand := &cobra.Command{
+		Use:     "preflight-check",
+		Short:   "Command to PREFLIGHT check the config repo configurations.",
+		Args:    cobra.RangeArgs(1, 1),
+		PreRunE: setCLIClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var pipelineFiles []gocd.PipelineFiles
+			var pathAndPattern []string
+
+			if len(configRepoPreflightObj.pipelineFiles) != 0 {
+				for _, pipelinefile := range configRepoPreflightObj.pipelineFiles {
+					file, err := client.GetPipelineFiles(pipelinefile)
+					if err != nil {
+						return err
+					}
+					pipelineFiles = append(pipelineFiles, file...)
+				}
+			} else {
+				if len(configRepoPreflightObj.pipelineExtRegex) == 0 {
+					return &errors.ConfigRepoError{Message: "pipeline file regex not passed, make sure to set --regex if --pipeline-dir is set"}
+				}
+
+				pathAndPattern[0] = configRepoPreflightObj.pipelineDir
+				pathAndPattern = append(pathAndPattern, configRepoPreflightObj.pipelineExtRegex)
+				file, err := client.GetPipelineFiles(pathAndPattern[0], pathAndPattern[1])
+				if err != nil {
+					return err
+				}
+
+				pipelineFiles = append(pipelineFiles, file...)
+			}
+
+			pipelineMap := client.SetPipelineFiles(pipelineFiles)
+
+			response, err := client.ConfigRepoPreflightCheck(pipelineMap, configRepoPreflightObj.pluginID, args[0])
+			if err != nil {
+				return err
+			}
+
+			if err = cliRenderer.Render(response); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+
+	configTriggerUpdateCommand.SetUsageTemplate(getUsageTemplate())
+	registerConfigRepoPreflightFlags(configTriggerUpdateCommand)
 
 	return configTriggerUpdateCommand
 }

@@ -31,7 +31,7 @@ func registerGlobalFlags(cmd *cobra.Command) {
 		"enable this to locally save auth configs used to connect GoCD server (path: $HOME/.gocd/auth_config.yaml)")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.skipCacheConfig, "skip-cache-config", "", false,
 		"if enabled locally save auth configs would not be used to authenticate GoCD server (path: $HOME/.gocd/auth_config.yaml)")
-	cmd.PersistentFlags().StringVarP(&cliCfg.FromFile, "from-file", "f", "",
+	cmd.PersistentFlags().StringVarP(&cliCfg.FromFile, "from-file", "", "",
 		"file containing configurations of objects that needs to be created in GoCD, config-repo/pipeline-group/environment and etc.")
 	cmd.PersistentFlags().StringVarP(&cliCfg.ToFile, "to-file", "", "",
 		"file to which the output needs to be written to (this works only if --yaml or --json is enabled)")
@@ -40,6 +40,18 @@ func registerGlobalFlags(cmd *cobra.Command) {
 func registerEncryptionFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&cipherKey, "cipher-key", "", "",
 		"cipher key value used for decryption, the key should same which is used by GoCD server for encryption")
+}
+
+func registerConfigRepoPreflightFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringVarP(&configRepoPreflightObj.pluginID, "plugin-id", "i", "",
+		"GoCD's config-repo plugin ID against which the pipelines has to be validated")
+	cmd.PersistentFlags().StringSliceVarP(&configRepoPreflightObj.pipelineFiles, "pipeline-file", "f", nil,
+		"GoCD pipeline files that should be considered for config-repo preflight checks")
+	cmd.PersistentFlags().StringVarP(&configRepoPreflightObj.pipelineDir, "pipeline-dir", "", "",
+		"path to directory that potentially contains the pipeline configuration file")
+	cmd.PersistentFlags().StringVarP(&configRepoPreflightObj.pipelineExtRegex, "regex", "", "*.gocd.yaml",
+		"regex to be used while identifying the pipeline files under the directory which was passed in pipeline-dir, "+
+			"should be co-used with --pipeline-dir")
 }
 
 const (

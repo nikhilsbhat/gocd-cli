@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/utils"
@@ -44,6 +45,7 @@ GET/CREATE/UPDATE/DELETE and trigger update on the same`,
 	configRepoCommand.AddCommand(getCreateConfigRepoCommand())
 	configRepoCommand.AddCommand(getUpdateConfigRepoCommand())
 	configRepoCommand.AddCommand(getDeleteConfigRepoCommand())
+	configRepoCommand.AddCommand(listConfigReposCommand())
 	configRepoCommand.AddCommand(getConfigRepoPreflightCheckCommand())
 
 	for _, command := range configRepoCommand.Commands() {
@@ -206,6 +208,31 @@ func getDeleteConfigRepoCommand() *cobra.Command {
 	}
 
 	return configUpdateStatusCommand
+}
+
+func listConfigReposCommand() *cobra.Command {
+	listConfigReposCmd := &cobra.Command{
+		Use:     "list",
+		Short:   "Command to LIST all configuration repository present in GoCD [https://api.gocd.org/current/#get-all-config-repos]",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			response, err := client.GetConfigRepos()
+			if err != nil {
+				return err
+			}
+
+			var configRepos []string
+
+			for _, configRepo := range response {
+				configRepos = append(configRepos, configRepo.ID)
+			}
+
+			return cliRenderer.Render(strings.Join(configRepos, "\n"))
+		},
+	}
+
+	return listConfigReposCmd
 }
 
 func getConfigRepoStatusCommand() *cobra.Command {

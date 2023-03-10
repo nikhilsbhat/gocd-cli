@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/utils"
@@ -16,7 +17,7 @@ func registerEnvironmentsCommand() *cobra.Command {
 		Use:   "environment",
 		Short: "Command to operate on environments present in GoCD [https://api.gocd.org/current/#environment-config]",
 		Long: `Command leverages GoCD environments apis' [https://api.gocd.org/current/#environment-config] to 
-GET/CREATE/UPDATE/PATCH/DELETE GoCD environments`,
+GET/CREATE/UPDATE/PATCH/DELETE and list GoCD environments`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmd.Usage(); err != nil {
 				return err
@@ -34,6 +35,7 @@ GET/CREATE/UPDATE/PATCH/DELETE GoCD environments`,
 	environmentCommand.AddCommand(updateEnvironmentCommand())
 	environmentCommand.AddCommand(patchEnvironmentCommand())
 	environmentCommand.AddCommand(deleteEnvironmentCommand())
+	environmentCommand.AddCommand(listEnvironmentsCommand())
 
 	for _, command := range environmentCommand.Commands() {
 		command.SilenceUsage = true
@@ -219,4 +221,29 @@ func deleteEnvironmentCommand() *cobra.Command {
 	}
 
 	return deleteEnvironmentCmd
+}
+
+func listEnvironmentsCommand() *cobra.Command {
+	listEnvironmentsCmd := &cobra.Command{
+		Use:     "list",
+		Short:   "Command to LIST all the environments present in GoCD [https://api.gocd.org/current/#get-all-environments]",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			response, err := client.GetEnvironments()
+			if err != nil {
+				return err
+			}
+
+			var environments []string
+
+			for _, environment := range response {
+				environments = append(environments, environment.Name)
+			}
+
+			return cliRenderer.Render(strings.Join(environments, "\n"))
+		},
+	}
+
+	return listEnvironmentsCmd
 }

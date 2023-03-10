@@ -40,6 +40,7 @@ func getGoCDCliCommands() *cobra.Command {
 	command.commands = append(command.commands, registerPluginsCommand())
 	command.commands = append(command.commands, registerClusterProfilesCommand())
 	command.commands = append(command.commands, registerAgentProfilesCommand())
+	command.commands = append(command.commands, registerAgentCommand())
 
 	return command.prepareCommands()
 }

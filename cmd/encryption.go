@@ -7,7 +7,7 @@ import (
 
 var cipherKey string
 
-func getEncryptionCommand() *cobra.Command {
+func registerEncryptionCommand() *cobra.Command {
 	encryptionCommand := &cobra.Command{
 		Use:   "encryption",
 		Short: "Command to encrypt/decrypt plain text value [https://api.gocd.org/current/#encryption]",
@@ -25,6 +25,10 @@ AES decryption while decrypting encrypted value [https://github.com/nikhilsbhat/
 	encryptionCommand.SetUsageTemplate(getUsageTemplate())
 	encryptionCommand.AddCommand(getEncryptCommand())
 	encryptionCommand.AddCommand(getDecryptCommand())
+
+	for _, command := range encryptionCommand.Commands() {
+		command.SilenceUsage = true
+	}
 
 	return encryptionCommand
 }

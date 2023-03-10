@@ -4,6 +4,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func registerAgent() *cobra.Command {
+func registerAgentCommand() *cobra.Command {
 	return &cobra.Command{}
 }

@@ -31,13 +31,15 @@ func setGoCDCliCommands() *cobra.Command {
 // Add an entry in below function to register new command.
 func getGoCDCliCommands() *cobra.Command {
 	command := new(cliCommands)
-	command.commands = append(command.commands, getEncryptionCommand())
-	command.commands = append(command.commands, getVersionCommand())
-	command.commands = append(command.commands, getConfigRepoCommand())
-	command.commands = append(command.commands, getBackupCommand())
-	command.commands = append(command.commands, getUsersCommand())
-	command.commands = append(command.commands, getEnvironmentsCommand())
-	command.commands = append(command.commands, getPluginsCommand())
+	command.commands = append(command.commands, registerEncryptionCommand())
+	command.commands = append(command.commands, registerVersionCommand())
+	command.commands = append(command.commands, registerConfigRepoCommand())
+	command.commands = append(command.commands, registerBackupCommand())
+	command.commands = append(command.commands, registerUsersCommand())
+	command.commands = append(command.commands, registerEnvironmentsCommand())
+	command.commands = append(command.commands, registerPluginsCommand())
+	command.commands = append(command.commands, registerClusterProfilesCommand())
+	command.commands = append(command.commands, registerAgentProfilesCommand())
 
 	return command.prepareCommands()
 }
@@ -47,6 +49,7 @@ func (c *cliCommands) prepareCommands() *cobra.Command {
 	for _, cmnd := range c.commands {
 		rootCmd.AddCommand(cmnd)
 	}
+	rootCmd.SilenceErrors = true
 	registerGlobalFlags(rootCmd)
 
 	return rootCmd
@@ -71,7 +74,7 @@ func getRootCommand() *cobra.Command {
 	return rootCommand
 }
 
-func getVersionCommand() *cobra.Command {
+func registerVersionCommand() *cobra.Command {
 	versionCommand := &cobra.Command{
 		Use:     "version [flags]",
 		Short:   "Command to fetch the version of gocd-cli installed",

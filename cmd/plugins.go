@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func getPluginsCommand() *cobra.Command {
+func registerPluginsCommand() *cobra.Command {
 	pluginCommand := &cobra.Command{
 		Use:   "plugin",
 		Short: "Command to operate on plugins present in GoCD",
@@ -35,6 +35,10 @@ GET/CREATE/UPDATE plugins settings or information`,
 	pluginCommand.AddCommand(getPluginsInfoCommand())
 	pluginCommand.AddCommand(getPluginInfoCommand())
 	pluginCommand.AddCommand(listPluginsCommand())
+
+	for _, command := range pluginCommand.Commands() {
+		command.SilenceUsage = true
+	}
 
 	return pluginCommand
 }

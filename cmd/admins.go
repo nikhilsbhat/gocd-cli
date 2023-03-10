@@ -4,6 +4,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func registerAdmins() *cobra.Command {
+func registerAdminsCommand() *cobra.Command {
 	return &cobra.Command{}
 }

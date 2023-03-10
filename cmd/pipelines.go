@@ -4,6 +4,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func registerPipelines() *cobra.Command {
+func registerPipelinesCommand() *cobra.Command {
 	return &cobra.Command{}
 }

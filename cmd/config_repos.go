@@ -20,7 +20,7 @@ type configRepoPreflight struct {
 
 var configRepoPreflightObj configRepoPreflight
 
-func getConfigRepoCommand() *cobra.Command {
+func registerConfigRepoCommand() *cobra.Command {
 	configRepoCommand := &cobra.Command{
 		Use:   "configrepo",
 		Short: "Command to operate on configrepo present in GoCD [https://api.gocd.org/current/#config-repo]",
@@ -39,17 +39,21 @@ GET/CREATE/UPDATE/DELETE and trigger update on the same`,
 
 	configRepoCommand.AddCommand(getConfigRepoTriggerUpdateCommand())
 	configRepoCommand.AddCommand(getConfigRepoStatusCommand())
-	configRepoCommand.AddCommand(getGetConfigReposCommand())
-	configRepoCommand.AddCommand(getGetConfigRepoCommand())
+	configRepoCommand.AddCommand(getConfigReposCommand())
+	configRepoCommand.AddCommand(getConfigRepoCommand())
 	configRepoCommand.AddCommand(getCreateConfigRepoCommand())
 	configRepoCommand.AddCommand(getUpdateConfigRepoCommand())
 	configRepoCommand.AddCommand(getDeleteConfigRepoCommand())
 	configRepoCommand.AddCommand(getConfigRepoPreflightCheckCommand())
 
+	for _, command := range configRepoCommand.Commands() {
+		command.SilenceUsage = true
+	}
+
 	return configRepoCommand
 }
 
-func getGetConfigReposCommand() *cobra.Command {
+func getConfigReposCommand() *cobra.Command {
 	configGetCommand := &cobra.Command{
 		Use:     "get-all",
 		Short:   "Command to GET all config-repo information present in GoCD [https://api.gocd.org/current/#get-all-config-repos]",
@@ -70,7 +74,7 @@ func getGetConfigReposCommand() *cobra.Command {
 	return configGetCommand
 }
 
-func getGetConfigRepoCommand() *cobra.Command {
+func getConfigRepoCommand() *cobra.Command {
 	configGetCommand := &cobra.Command{
 		Use:     "get",
 		Short:   "Command to GET the config-repo information with a specified ID present in GoCD [https://api.gocd.org/current/#get-a-config-repo]",

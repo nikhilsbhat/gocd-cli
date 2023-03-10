@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func getUsersCommand() *cobra.Command {
+func registerUsersCommand() *cobra.Command {
 	usersCommand := &cobra.Command{
 		Use:   "user",
 		Short: "Command to operate on users in GoCD [https://api.gocd.org/current/#users]",
@@ -36,6 +36,10 @@ GET/CREATE/UPDATE/DELETE/BULK-DELETE/BULK-UPDATE the users in GoCD server.`,
 	usersCommand.AddCommand(userUpdateCommand())
 	usersCommand.AddCommand(userDeleteCommand())
 	usersCommand.AddCommand(bulkDeleteUsersCommand())
+
+	for _, command := range usersCommand.Commands() {
+		command.SilenceUsage = true
+	}
 
 	return usersCommand
 }

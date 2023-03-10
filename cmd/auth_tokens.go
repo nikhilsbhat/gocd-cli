@@ -4,6 +4,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func registerAuthTokens() *cobra.Command {
+func registerAuthTokensCommand() *cobra.Command {
 	return &cobra.Command{}
 }

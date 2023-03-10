@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func getEnvironmentsCommand() *cobra.Command {
+func registerEnvironmentsCommand() *cobra.Command {
 	environmentCommand := &cobra.Command{
 		Use:   "environment",
 		Short: "Command to operate on environments present in GoCD [https://api.gocd.org/current/#environment-config]",
@@ -28,17 +28,21 @@ GET/CREATE/UPDATE/PATCH/DELETE GoCD environments`,
 
 	environmentCommand.SetUsageTemplate(getUsageTemplate())
 
-	environmentCommand.AddCommand(getGetEnvironmentsCommand())
-	environmentCommand.AddCommand(getGetEnvironmentCommand())
+	environmentCommand.AddCommand(getEnvironmentsCommand())
+	environmentCommand.AddCommand(getEnvironmentCommand())
 	environmentCommand.AddCommand(createEnvironmentCommand())
 	environmentCommand.AddCommand(updateEnvironmentCommand())
 	environmentCommand.AddCommand(patchEnvironmentCommand())
 	environmentCommand.AddCommand(deleteEnvironmentCommand())
 
+	for _, command := range environmentCommand.Commands() {
+		command.SilenceUsage = true
+	}
+
 	return environmentCommand
 }
 
-func getGetEnvironmentsCommand() *cobra.Command {
+func getEnvironmentsCommand() *cobra.Command {
 	getEnvironmentsCmd := &cobra.Command{
 		Use:     "get-all",
 		Short:   "Command to GET all the environments present in GoCD [https://api.gocd.org/current/#get-all-environments]",
@@ -57,7 +61,7 @@ func getGetEnvironmentsCommand() *cobra.Command {
 	return getEnvironmentsCmd
 }
 
-func getGetEnvironmentCommand() *cobra.Command {
+func getEnvironmentCommand() *cobra.Command {
 	getEnvironmentCmd := &cobra.Command{
 		Use:     "get",
 		Short:   "Command to GET a specific environments present in GoCD [https://api.gocd.org/current/#get-environment-config]",
@@ -106,11 +110,7 @@ func createEnvironmentCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(fmt.Sprintf("environment %s created successfully", envs.Name)); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(fmt.Sprintf("environment %s created successfully", envs.Name))
 		},
 	}
 
@@ -154,11 +154,7 @@ func updateEnvironmentCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(env); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(env)
 		},
 	}
 
@@ -200,11 +196,7 @@ func patchEnvironmentCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(env); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(env)
 		},
 	}
 
@@ -222,11 +214,7 @@ func deleteEnvironmentCommand() *cobra.Command {
 				return err
 			}
 
-			if err := cliRenderer.Render(fmt.Sprintf("environment deleted: %s", args[0])); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(fmt.Sprintf("environment deleted: %s", args[0]))
 		},
 	}
 

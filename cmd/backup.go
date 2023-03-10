@@ -17,7 +17,7 @@ var (
 	delay       time.Duration
 )
 
-func getBackupCommand() *cobra.Command {
+func registerBackupCommand() *cobra.Command {
 	configRepoCommand := &cobra.Command{
 		Use:   "backup",
 		Short: "Command to operate on backup in GoCD [https://api.gocd.org/current/#backups]",
@@ -41,6 +41,10 @@ GET/CREATE/UPDATE/DELETE/SCHEDULE the backup in GoCD server.`,
 	configRepoCommand.AddCommand(deleteBackupConfig())
 	configRepoCommand.AddCommand(getBackupStats())
 	configRepoCommand.AddCommand(scheduleBackup())
+
+	for _, command := range configRepoCommand.Commands() {
+		command.SilenceUsage = true
+	}
 
 	return configRepoCommand
 }

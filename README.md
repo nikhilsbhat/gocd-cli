@@ -1,7 +1,7 @@
 # GoCD commandline interface
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nikhilsbhat/gocd-cli)](https://goreportcard.com/report/github.com/nikhilsbhat/gocd-cli)
-[![shields](https://img.shields.io/badge/license-MIT-blue)](https://github.com/nikhilsbhat/gocd-cli/blob/master/LICENSE)
+[![shields](https://img.shields.io/badge/license-MIT-blue)](https://github.com/nikhilsbhat/gocd-cli/blob/main/LICENSE)
 [![shields](https://godoc.org/github.com/nikhilsbhat/gocd-cli?status.svg)](https://godoc.org/github.com/nikhilsbhat/gocd-cli)
 [![shields](https://img.shields.io/github/v/tag/nikhilsbhat/gocd-cli.svg)](https://github.com/nikhilsbhat/gocd-cli/tags)
 [![shields](https://img.shields.io/github/downloads/nikhilsbhat/gocd-cli/total.svg)](https://github.com/nikhilsbhat/gocd-cli/releases)
@@ -22,6 +22,9 @@ This cli uses GoCD golang [sdk](https://github.com/nikhilsbhat/gocd-sdk-go). If 
 * [Go](https://golang.org/dl/) 1.17 or above . Installing go can be found [here](https://golang.org/doc/install).
 * Basic understanding of CI/CD server [GoCD](https://www.gocd.org/) and GoCD golang [sdk](https://github.com/nikhilsbhat/gocd-sdk-go).
 
+## Documentation
+
+Updated documentation on all available commands and flags can be found [here](https://github.com/nikhilsbhat/gocd-cli/blob/main/docs/gocd-cli.md).
 
 ## Installation
 

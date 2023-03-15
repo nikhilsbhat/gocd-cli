@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
-	"github.com/nikhilsbhat/gocd-cli/pkg/utils"
+	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -67,6 +67,16 @@ func getConfigReposCommand() *cobra.Command {
 				return err
 			}
 
+			if len(queries) != 0 {
+				objectString, err := render.Marshal(response)
+				if err != nil {
+					return err
+				}
+				queriedResponse := objectString.GetQuery(queries)
+
+				return cliRenderer.Render(queriedResponse)
+			}
+
 			return cliRenderer.Render(response)
 		},
 	}
@@ -88,11 +98,19 @@ func getConfigRepoCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(response); err != nil {
-				return err
+			if len(queries) != 0 {
+				objectString, err := render.Marshal(response)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf("since --query is passed, applying query '%v' to the output", queries)
+				queriedResponse := objectString.GetQuery(queries)
+
+				return cliRenderer.Render(queriedResponse)
 			}
 
-			return nil
+			return cliRenderer.Render(response)
 		},
 	}
 
@@ -115,11 +133,11 @@ func getCreateConfigRepoCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case utils.FileTypeYAML:
+			case render.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &configRepo); err != nil {
 					return err
 				}
-			case utils.FileTypeJSON:
+			case render.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &configRepo); err != nil {
 					return err
 				}
@@ -158,11 +176,11 @@ func getUpdateConfigRepoCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case utils.FileTypeYAML:
+			case render.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &configRepo); err != nil {
 					return err
 				}
-			case utils.FileTypeJSON:
+			case render.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &configRepo); err != nil {
 					return err
 				}
@@ -175,11 +193,7 @@ func getUpdateConfigRepoCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(response); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(response)
 		},
 	}
 

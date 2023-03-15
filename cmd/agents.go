@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
-	"github.com/nikhilsbhat/gocd-cli/pkg/utils"
+	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -55,6 +55,18 @@ func getAgentsCommand() *cobra.Command {
 				return err
 			}
 
+			if len(queries) != 0 {
+				objectString, err := render.Marshal(response)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf("since --query is passed, applying query '%v' to the output", queries)
+				queriedResponse := objectString.GetQuery(queries)
+
+				return cliRenderer.Render(queriedResponse)
+			}
+
 			return cliRenderer.Render(response)
 		},
 	}
@@ -72,6 +84,18 @@ func getAgentCommand() *cobra.Command {
 			response, err := client.GetAgent(args[0])
 			if err != nil {
 				return err
+			}
+
+			if len(queries) != 0 {
+				objectString, err := render.Marshal(response)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf("since --query is passed, applying query '%v' to the output", queries)
+				queriedResponse := objectString.GetQuery(queries)
+
+				return cliRenderer.Render(queriedResponse)
 			}
 
 			return cliRenderer.Render(response)
@@ -95,11 +119,11 @@ func updateAgentCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case utils.FileTypeYAML:
+			case render.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &agent); err != nil {
 					return err
 				}
-			case utils.FileTypeJSON:
+			case render.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &agent); err != nil {
 					return err
 				}

@@ -1,9 +1,9 @@
-package utils_test
+package render_test
 
 import (
 	"testing"
 
-	"github.com/nikhilsbhat/gocd-cli/pkg/utils"
+	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -22,21 +22,21 @@ func init() {
 
 func TestObject_CheckFileType(t *testing.T) {
 	t.Run("should validate content as json", func(t *testing.T) {
-		obj := utils.Object(`{"name": "testing"}`)
+		obj := render.Object(`{"name": "testing"}`)
 
 		actual := obj.CheckFileType(log)
 		assert.Equal(t, "json", actual)
 	})
 
 	t.Run("should validate content as unknown since malformed json passed", func(t *testing.T) {
-		obj := utils.Object(`{"name": "testing"`)
+		obj := render.Object(`{"name": "testing"`)
 
 		actual := obj.CheckFileType(log)
 		assert.Equal(t, "unknown", actual)
 	})
 
 	t.Run("should validate content as yaml", func(t *testing.T) {
-		obj := utils.Object(`---
+		obj := render.Object(`---
 name: "testing"`)
 
 		actual := obj.CheckFileType(log)
@@ -44,7 +44,7 @@ name: "testing"`)
 	})
 
 	t.Run("should validate content as unknown since malformed yaml passed", func(t *testing.T) {
-		obj := utils.Object(`---
+		obj := render.Object(`---
 name: "testing`)
 
 		actual := obj.CheckFileType(log)

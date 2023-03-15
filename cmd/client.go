@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nikhilsbhat/gocd-cli/pkg/utils"
+	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -13,7 +13,7 @@ import (
 
 var (
 	client      gocd.GoCd
-	cliRenderer utils.Renderer
+	cliRenderer render.Renderer
 )
 
 func setCLIClient(cmd *cobra.Command, args []string) error {
@@ -77,7 +77,7 @@ func setCLIClient(cmd *cobra.Command, args []string) error {
 		writer = filePTR
 	}
 
-	cliRenderer = utils.GetRenderer(writer, cliLogger, cliCfg.YAML, cliCfg.JSON)
+	cliRenderer = render.GetRenderer(writer, cliLogger, cliCfg.YAML, cliCfg.JSON)
 
 	return nil
 }

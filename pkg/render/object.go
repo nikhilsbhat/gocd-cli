@@ -1,4 +1,4 @@
-package utils
+package render
 
 import (
 	"encoding/json"
@@ -48,4 +48,17 @@ func (obj Object) CheckFileType(log *logrus.Logger) string {
 	log.Debug("input file type identified as UNKNOWN")
 
 	return FileTypeUnknown
+}
+
+func Marshal(data interface{}) (Object, error) {
+	out, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+
+	return Object(out), nil
+}
+
+func (obj Object) String() string {
+	return string(obj)
 }

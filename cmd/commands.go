@@ -24,7 +24,7 @@ type Config struct {
 	skipCacheConfig bool
 }
 
-func setGoCDCliCommands() *cobra.Command {
+func SetGoCDCliCommands() *cobra.Command {
 	return getGoCDCliCommands()
 }
 
@@ -41,6 +41,7 @@ func getGoCDCliCommands() *cobra.Command {
 	command.commands = append(command.commands, registerClusterProfilesCommand())
 	command.commands = append(command.commands, registerAgentProfilesCommand())
 	command.commands = append(command.commands, registerAgentCommand())
+	command.commands = append(command.commands, registerServerCommand())
 
 	return command.prepareCommands()
 }
@@ -50,11 +51,6 @@ func (c *cliCommands) prepareCommands() *cobra.Command {
 	for _, cmnd := range c.commands {
 		rootCmd.AddCommand(cmnd)
 	}
-
-	//err := doc.GenMarkdownTree(rootCmd, "docs")
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
 
 	rootCmd.SilenceErrors = true
 	registerGlobalFlags(rootCmd)

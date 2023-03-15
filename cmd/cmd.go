@@ -11,7 +11,7 @@ var cmd *cobra.Command
 
 //nolint:gochecknoinits
 func init() {
-	cmd = setGoCDCliCommands()
+	cmd = SetGoCDCliCommands()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
 

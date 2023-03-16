@@ -1,6 +1,9 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/nikhilsbhat/gocd-cli/pkg/render"
+	"github.com/spf13/cobra"
+)
 
 func registerServerCommand() *cobra.Command {
 	serverCommand := &cobra.Command{
@@ -59,6 +62,19 @@ func getHealthMessagesCommand() *cobra.Command {
 			response, err := client.GetServerHealthMessages()
 			if err != nil {
 				return err
+			}
+
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(response, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
 			}
 
 			return cliRenderer.Render(response)

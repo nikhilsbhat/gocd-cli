@@ -55,16 +55,17 @@ func getClusterProfilesCommand() *cobra.Command {
 				return err
 			}
 
-			if len(queries) != 0 {
-				objectString, err := render.Marshal(response)
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf("since --query is passed, applying query '%v' to the output", queries)
-				queriedResponse := objectString.GetQuery(queries)
+				cliLogger.Debugf(baseQuery.Print())
 
-				return cliRenderer.Render(queriedResponse)
+				return cliRenderer.Render(baseQuery.RunQuery())
 			}
 
 			return cliRenderer.Render(response.ClusterProfilesConfig)
@@ -86,16 +87,17 @@ func getClusterProfileCommand() *cobra.Command {
 				return err
 			}
 
-			if len(queries) != 0 {
-				objectString, err := render.Marshal(response)
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf("since --query is passed, applying query '%v' to the output", queries)
-				queriedResponse := objectString.GetQuery(queries)
+				cliLogger.Debugf(baseQuery.Print())
 
-				return cliRenderer.Render(queriedResponse)
+				return cliRenderer.Render(baseQuery.RunQuery())
 			}
 
 			return cliRenderer.Render(response)

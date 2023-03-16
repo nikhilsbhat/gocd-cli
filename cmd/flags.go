@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	cliCfg  Config
-	queries []string
+	cliCfg    Config
+	jsonQuery string
 )
 
 func registerGlobalFlags(cmd *cobra.Command) {
@@ -38,8 +38,11 @@ func registerGlobalFlags(cmd *cobra.Command) {
 		"file containing configurations of objects that needs to be created in GoCD, config-repo/pipeline-group/environment and etc.")
 	cmd.PersistentFlags().StringVarP(&cliCfg.ToFile, "to-file", "", "",
 		"file to which the output needs to be written to (this works only if --yaml or --json is enabled)")
-	cmd.PersistentFlags().StringSliceVarP(&queries, "query", "q", nil,
-		`query to filter the results, ex: '.material.attributes.url'. this uses library gojsonq beneath
+	//	cmd.PersistentFlags().StringSliceVarP(&queries, "query", "q", nil,
+	//		`query to filter the results, ex: '.material.attributes.url'. this uses library gojsonq beneath
+	// more queries can be found here https://github.com/thedevsaddam/gojsonq/wiki/Queries`)
+	cmd.PersistentFlags().StringVarP(&jsonQuery, "query", "q", "",
+		`query to filter the results, ex: '.material.attributes.type | id eq git'. this uses library gojsonq beneath
 more queries can be found here https://github.com/thedevsaddam/gojsonq/wiki/Queries`)
 }
 

@@ -55,6 +55,19 @@ func getPluginSettingsCommand() *cobra.Command {
 				return err
 			}
 
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(response, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
+			}
+
 			return cliRenderer.Render(response)
 		},
 	}
@@ -164,6 +177,19 @@ func getPluginsInfoCommand() *cobra.Command {
 				return err
 			}
 
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(response, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
+			}
+
 			return cliRenderer.Render(response)
 		},
 	}
@@ -183,6 +209,19 @@ func getPluginInfoCommand() *cobra.Command {
 			response, err := client.GetPluginInfo(args[0])
 			if err != nil {
 				return err
+			}
+
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(response, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
 			}
 
 			return cliRenderer.Render(response)

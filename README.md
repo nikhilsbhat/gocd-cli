@@ -24,7 +24,7 @@ This cli uses GoCD golang [sdk](https://github.com/nikhilsbhat/gocd-sdk-go). If 
 
 ## Documentation
 
-Updated documentation on all available commands and flags can be found [here](https://github.com/nikhilsbhat/gocd-cli/blob/main/docs/gocd-cli.md).
+Updated documentation on all available commands and flags can be found [here](https://github.com/nikhilsbhat/gocd-cli/blob/main/docs/doc/gocd-cli.md).
 
 ## Installation
 

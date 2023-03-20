@@ -8,6 +8,12 @@ import (
 	"github.com/thedevsaddam/gojsonq/v2"
 )
 
+const (
+	defaultLengthGetOrPluck = 1
+	defaultLengthSort       = 2
+	defaultLengthWhere      = 3
+)
+
 // Query holds information of queries to be executed.
 type Query struct {
 	object    string
@@ -35,29 +41,27 @@ func SetQuery(data interface{}, query string) (*Query, error) {
 }
 
 // ConstructQuery process the query in string to a format that is understood by gojsonq.
-//
-//nolint:gomnd
 func (q *Query) ConstructQuery(query string) {
 	queryLHS := strings.Split(query, "|")
 	queryLHSObject := strings.TrimRightFunc(queryLHS[0], unicode.IsSpace)
 
 	switch len(queryLHS) {
-	case 1:
+	case defaultLengthGetOrPluck:
 		q.object = queryLHSObject
 		q.queryType = "get"
-	case 2:
+	case defaultLengthSort:
 		q.object = queryLHSObject
 		queryRHS := strings.TrimLeftFunc(queryLHS[1], unicode.IsSpace)
 		queryRHSObject := strings.Split(queryRHS, " ")
 		switch len(queryRHSObject) {
-		case 1:
+		case defaultLengthGetOrPluck:
 			q.key = queryRHSObject[0]
 			q.queryType = "pluck"
-		case 2:
+		case defaultLengthSort:
 			q.key = queryRHSObject[0]
 			q.value = queryRHSObject[1]
 			q.queryType = "sort"
-		case 3:
+		case defaultLengthWhere:
 			q.key = queryRHSObject[0]
 			q.operator = Operator(queryRHSObject[1])
 			q.value = queryRHSObject[2]

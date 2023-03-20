@@ -228,13 +228,13 @@ func listPipelineGroupsCommand() *cobra.Command {
 				return err
 			}
 
-			var environments []string
+			var pipelineGroups []string
 
 			for _, environment := range response {
-				environments = append(environments, environment.Name)
+				pipelineGroups = append(pipelineGroups, environment.Name)
 			}
 
-			return cliRenderer.Render(strings.Join(environments, "\n"))
+			return cliRenderer.Render(strings.Join(pipelineGroups, "\n"))
 		},
 	}
 

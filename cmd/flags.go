@@ -64,8 +64,9 @@ func registerConfigRepoPreflightFlags(cmd *cobra.Command) {
 }
 
 const (
-	defaultRetryCount = 30
-	defaultDelay      = 5 * time.Second
+	defaultRetryCount    = 30
+	defaultDelay         = 5 * time.Second
+	defaultInstanceCount = 0
 )
 
 func registerBackupFlags(cmd *cobra.Command) {
@@ -73,4 +74,17 @@ func registerBackupFlags(cmd *cobra.Command) {
 		"number of times to retry to get backup stats when backup status is not ready")
 	cmd.PersistentFlags().DurationVarP(&delay, "delay", "", defaultDelay,
 		"time delay between each retries that would be made to get backup stats")
+}
+
+func registerPipelineFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().IntVarP(&goCDPipelineInstance, "instance", "i", defaultInstanceCount,
+		"instance number of a pipeline")
+	cmd.PersistentFlags().StringVarP(&goCDPipelineName, "name", "n", "",
+		"name of the pipeline present in GoCD")
+	cmd.PersistentFlags().StringVarP(&goCDPipelineMessage, "message", "m", "",
+		"message to be passed while pausing/unpausing or commenting on pipeline present in GoCD")
+	cmd.PersistentFlags().BoolVarP(&goCDPipelinePause, "pause", "", false,
+		"enable to pause a pipeline")
+	cmd.PersistentFlags().BoolVarP(&goCDPipelineUnPause, "un-pause", "", false,
+		"disable to pause a pipeline")
 }

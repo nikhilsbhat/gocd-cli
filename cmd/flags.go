@@ -88,3 +88,10 @@ func registerPipelineFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVarP(&goCDPipelineUnPause, "un-pause", "", false,
 		"disable to pause a pipeline")
 }
+
+func registerMaintenanceFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVarP(&goCDEnableMaintenance, "enable", "", false,
+		"set this to enable maintenance mode in GoCD")
+	cmd.PersistentFlags().BoolVarP(&goCDDisableMaintenance, "disable", "", false,
+		"set this to disable maintenance mode in GoCD")
+}

@@ -162,8 +162,8 @@ func getPipelineInstanceCommand() *cobra.Command {
 func pauseUnpausePipelineCommand() *cobra.Command {
 	pauseUnpausePipelineCmd := &cobra.Command{
 		Use: "action",
-		Short: "Command to PAUSE/UNPAUSE a specific pipeline present in GoCD " +
-			"[https://api.gocd.org/current/#pause-a-pipeline,https://api.gocd.org/current/#unpause-a-pipeline]",
+		Short: `Command to PAUSE/UNPAUSE a specific pipeline present in GoCD,
+              [https://api.gocd.org/current/#pause-a-pipeline,https://api.gocd.org/current/#unpause-a-pipeline]`,
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline action sample-pipeline --pause/--un-pause`,

@@ -46,7 +46,8 @@ gocd-cli pipeline [flags]
 ### SEE ALSO
 
 * [gocd-cli](gocd-cli.md)	 - Command line interface for GoCD
-* [gocd-cli pipeline action](gocd-cli_pipeline_action.md)	 - Command to PAUSE/UNPAUSE a specific pipeline present in GoCD [https://api.gocd.org/current/#pause-a-pipeline,https://api.gocd.org/current/#unpause-a-pipeline]
+* [gocd-cli pipeline action](gocd-cli_pipeline_action.md)	 - Command to PAUSE/UNPAUSE a specific pipeline present in GoCD,
+              [https://api.gocd.org/current/#pause-a-pipeline,https://api.gocd.org/current/#unpause-a-pipeline]
 * [gocd-cli pipeline comment](gocd-cli_pipeline_comment.md)	 - Command to COMMENT on a specific pipeline instance present in GoCD [https://api.gocd.org/current/#comment-on-pipeline-instance]
 * [gocd-cli pipeline get-all](gocd-cli_pipeline_get-all.md)	 - Command to GET all pipelines present in GoCD [https://api.gocd.org/current/#get-feed-of-all-stages-in-a-pipeline]
 * [gocd-cli pipeline instance](gocd-cli_pipeline_instance.md)	 - Command to GET instance of a specific pipeline present in GoCD [https://api.gocd.org/current/#get-pipeline-instance]

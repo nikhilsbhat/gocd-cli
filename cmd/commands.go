@@ -45,6 +45,7 @@ func getGoCDCliCommands() *cobra.Command {
 	command.commands = append(command.commands, registerPipelineGroupsCommand())
 	command.commands = append(command.commands, registerPipelinesCommand())
 	command.commands = append(command.commands, registerMaintenanceCommand())
+	command.commands = append(command.commands, registerJobsCommand())
 
 	return command.prepareCommands()
 }

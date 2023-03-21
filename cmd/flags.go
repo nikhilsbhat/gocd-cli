@@ -81,12 +81,18 @@ func registerPipelineFlags(cmd *cobra.Command) {
 		"instance number of a pipeline")
 	cmd.PersistentFlags().StringVarP(&goCDPipelineName, "name", "n", "",
 		"name of the pipeline present in GoCD")
+	cmd.PersistentFlags().StringVarP(&goCDPipelineETAG, "etag", "", "",
+		"etag used to identify the pipeline config. If you don't have one get it by using pipeline get command")
 	cmd.PersistentFlags().StringVarP(&goCDPipelineMessage, "message", "m", "",
 		"message to be passed while pausing/unpausing or commenting on pipeline present in GoCD")
 	cmd.PersistentFlags().BoolVarP(&goCDPipelinePause, "pause", "", false,
 		"enable to pause a pipeline")
 	cmd.PersistentFlags().BoolVarP(&goCDPipelineUnPause, "un-pause", "", false,
 		"disable to pause a pipeline")
+	cmd.PersistentFlags().BoolVarP(&goCDPausePipelineAtStart, "pause-at-start", "", false,
+		"enabling this will create the pipeline in the paused state")
+	cmd.PersistentFlags().StringVarP(&goCDPipelineTemplateName, "template-name", "", "",
+		"name of the template to which the pipeline has to be extracted")
 }
 
 func registerMaintenanceFlags(cmd *cobra.Command) {

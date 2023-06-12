@@ -167,7 +167,7 @@ func createPipelineCommand() *cobra.Command {
 				pipelineConfig.PauseReason = goCDPipelineMessage
 			}
 
-			if err = client.CreatePipeline(pipelineConfig); err != nil {
+			if _, err = client.CreatePipeline(pipelineConfig); err != nil {
 				return err
 			}
 

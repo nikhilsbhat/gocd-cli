@@ -11,7 +11,13 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - '-s -w -X github.com/nikhilsbhat/gocd-cli/cmd.Version={{.Version}} -X github.com/nikhilsbhat/gocd-cli/cmd.Env={{.Env.BUILD_ENVIRONMENT}} -X github.com/nikhilsbhat/gocd-cli/cmd.BuildDate={{.Date}} -X github.com/nikhilsbhat/gocd-cli/cmd.Revision={{.Commit}} -X github.com/nikhilsbhat/gocd-cli/cmd.GoVersion={{.Env.GOVERSION}} -X github.com/nikhilsbhat/gocd-cli/cmd.Platform={{ .Os }}/{{ .Arch }}'
+      - -s -w
+        -X github.com/nikhilsbhat/gocd-cli/cmd.Version={{.Version}}
+        -X github.com/nikhilsbhat/gocd-cli/cmd.Env={{.Env.BUILD_ENVIRONMENT}}
+        -X github.com/nikhilsbhat/gocd-cli/cmd.BuildDate={{.Date}}
+        -X github.com/nikhilsbhat/gocd-cli/cmd.Revision={{.Commit}}
+        -X github.com/nikhilsbhat/gocd-cli/cmd.GoVersion={{.Env.GOVERSION}}
+        -X github.com/nikhilsbhat/gocd-cli/cmd.Platform={{ .Os }}/{{ .Arch }}
     goos:
       - freebsd
       - windows

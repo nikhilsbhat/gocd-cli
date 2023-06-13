@@ -16,7 +16,7 @@ const (
 func registerAuthConfigCommand() *cobra.Command {
 	registerAuthConfigCmd := &cobra.Command{
 		Use:   "auth-config",
-		Short: "Command to set/remove the authorization configuration to be used by the cli",
+		Short: "Command to store/remove the authorization configuration to be used by the cli",
 		Long: `Using the auth config commands, one can cache the authorization configuration onto a file so it can be used by further calls made using this utility.
 Also, the cached authentication configurations can be erased using the same`,
 		RunE: func(cmd *cobra.Command, args []string) error {

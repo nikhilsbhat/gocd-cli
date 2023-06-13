@@ -22,6 +22,20 @@ This cli uses GoCD golang [sdk](https://github.com/nikhilsbhat/gocd-sdk-go). If 
 * [Go](https://golang.org/dl/) 1.17 or above . Installing go can be found [here](https://golang.org/doc/install).
 * Basic understanding of CI/CD server [GoCD](https://www.gocd.org/) and GoCD golang [sdk](https://github.com/nikhilsbhat/gocd-sdk-go).
 
+## Authorization
+
+The authorization configuration used for GoCD can be cached locally so that it can be used for future operations.
+
+The command `auth-config` will do the work.
+
+```shell
+gocd-cli auth-config store --server-url <gocd-url> --username <username> --password <password>
+# Running the above command should cache configurations under $HOME/.gocd/auth_config.yaml.
+
+# Once we have authorization configurations cached, we do not need to pass the credentials every time we invoke the cli.
+gocd-cli environment list
+```
+
 ## Documentation
 
 Updated documentation on all available commands and flags can be found [here](https://github.com/nikhilsbhat/gocd-cli/blob/main/docs/doc/gocd-cli.md).

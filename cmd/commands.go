@@ -20,7 +20,6 @@ type Config struct {
 	LogLevel        string    `yaml:"-"`
 	FromFile        string    `yaml:"-"`
 	ToFile          string    `yaml:"-"`
-	saveConfig      bool
 	skipCacheConfig bool
 }
 
@@ -47,6 +46,7 @@ func getGoCDCliCommands() *cobra.Command {
 	command.commands = append(command.commands, registerMaintenanceCommand())
 	command.commands = append(command.commands, registerJobsCommand())
 	command.commands = append(command.commands, registerArtifactCommand())
+	command.commands = append(command.commands, registerAuthConfigCommand())
 
 	return command.prepareCommands()
 }

@@ -51,13 +51,6 @@ func setCLIClient(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if cliCfg.saveConfig {
-		cliLogger.Debug("--save-config is enabled, hence saving authorisation configuration")
-		if err = cliCfg.saveAuthConfig(); err != nil {
-			return err
-		}
-	}
-
 	goCDClient := gocd.NewClient(
 		cliCfg.URL,
 		cliCfg.Auth,
@@ -80,55 +73,4 @@ func setCLIClient(cmd *cobra.Command, args []string) error {
 	cliRenderer = render.GetRenderer(writer, cliLogger, cliCfg.YAML, cliCfg.JSON)
 
 	return nil
-}
-
-func (cfg *Config) saveAuthConfig() error {
-	cliLogger.Debug("saving authorisation config to cache, so that it can be reused next")
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return err
-	}
-
-	authConfigDir := filepath.Join(home, ".gocd")
-	const filePermission = 0o644
-	if err = os.Mkdir(authConfigDir, filePermission); os.IsNotExist(err) {
-		return err
-	}
-
-	authConfigFile, err := os.Create(filepath.Join(authConfigDir, "auth_config.yaml"))
-	if err != nil {
-		return err
-	}
-
-	cliLogger.Debugf("authorisation config would be saved under %s", authConfigFile.Name())
-
-	cfgYAML, err := yaml.Marshal(cliCfg)
-	if err != nil {
-		return err
-	}
-
-	if _, err = authConfigFile.WriteString(string(cfgYAML)); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func checkForConfig() (bool, string, error) {
-	cliLogger.Debug("searching for authorisation configuration in cache")
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return false, "", err
-	}
-
-	authConfigDir := filepath.Join(home, ".gocd")
-	configPath := filepath.Join(authConfigDir, "auth_config.yaml")
-
-	if _, err = os.Stat(configPath); os.IsNotExist(err) {
-		cliLogger.Debug("no authorisation configuration found in cache")
-
-		return false, "", nil
-	}
-
-	return true, configPath, nil
 }

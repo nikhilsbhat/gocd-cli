@@ -30,17 +30,12 @@ func registerGlobalFlags(cmd *cobra.Command) {
 		"enable this to Render output in YAML format")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "no-color", "", false,
 		"enable this to Render output in YAML format")
-	cmd.PersistentFlags().BoolVarP(&cliCfg.saveConfig, "save-config", "", false,
-		"enable this to locally save auth configs used to connect GoCD server (path: $HOME/.gocd/auth_config.yaml)")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.skipCacheConfig, "skip-cache-config", "", false,
 		"if enabled locally save auth configs would not be used to authenticate GoCD server (path: $HOME/.gocd/auth_config.yaml)")
 	cmd.PersistentFlags().StringVarP(&cliCfg.FromFile, "from-file", "", "",
 		"file containing configurations of objects that needs to be created in GoCD, config-repo/pipeline-group/environment and etc.")
 	cmd.PersistentFlags().StringVarP(&cliCfg.ToFile, "to-file", "", "",
 		"file to which the output needs to be written to (this works only if --yaml or --json is enabled)")
-	//	cmd.PersistentFlags().StringSliceVarP(&queries, "query", "q", nil,
-	//		`query to filter the results, ex: '.material.attributes.url'. this uses library gojsonq beneath
-	// more queries can be found here https://github.com/thedevsaddam/gojsonq/wiki/Queries`)
 	cmd.PersistentFlags().StringVarP(&jsonQuery, "query", "q", "",
 		`query to filter the results, ex: '.material.attributes.type | id eq git'. this uses library gojsonq beneath
 more queries can be found here https://github.com/thedevsaddam/gojsonq/wiki/Queries`)

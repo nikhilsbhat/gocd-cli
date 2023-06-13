@@ -81,7 +81,7 @@ func AppVersion(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	cliVersionInfo := strings.Join([]string{"cli version", string(buildInfo), "\n"}, ": ")
+	cliVersionInfo := strings.Join([]string{"client version", string(buildInfo), "\n"}, ": ")
 	_, err = writer.Write([]byte(cliVersionInfo))
 	if err != nil {
 		log.Fatalln(err)

@@ -12,6 +12,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var agentProfileRaw bool
+
 func registerAgentProfilesCommand() *cobra.Command {
 	registerAgentProfilesCmd := &cobra.Command{
 		Use:   "elastic-agent-profile",
@@ -35,6 +37,7 @@ GET/CREATE/UPDATE/DELETE elastic agent profiles in GoCD (make sure you have appr
 	registerAgentProfilesCmd.AddCommand(updateAgentProfileCommand())
 	registerAgentProfilesCmd.AddCommand(deleteAgentProfileCommand())
 	registerAgentProfilesCmd.AddCommand(listAgentProfilesCommand())
+	registerAgentProfilesCmd.AddCommand(getAgentProfilesUsageCommand())
 
 	for _, command := range registerAgentProfilesCmd.Commands() {
 		command.SilenceUsage = true
@@ -232,4 +235,35 @@ func listAgentProfilesCommand() *cobra.Command {
 	}
 
 	return listElasticAgentProfilesCmd
+}
+
+func getAgentProfilesUsageCommand() *cobra.Command {
+	getAgentProfilesUsageCmd := &cobra.Command{
+		Use:     "usage",
+		Short:   "Command to GET an information about pipelines using elastic agent profiles",
+		Args:    cobra.RangeArgs(1, 1),
+		PreRunE: setCLIClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			response, err := client.GetElasticAgentProfileUsage(args[0])
+			if err != nil {
+				return err
+			}
+
+			if agentProfileRaw {
+				return cliRenderer.Render(response)
+			}
+
+			var elasticAgentProfilesUsage []string
+
+			for _, usage := range response {
+				elasticAgentProfilesUsage = append(elasticAgentProfilesUsage, usage.PipelineName)
+			}
+
+			return cliRenderer.Render(strings.Join(elasticAgentProfilesUsage, "\n"))
+		},
+	}
+
+	registerAgentProfileFlags(getAgentProfilesUsageCmd)
+
+	return getAgentProfilesUsageCmd
 }

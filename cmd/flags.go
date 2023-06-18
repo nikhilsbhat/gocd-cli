@@ -96,3 +96,13 @@ func registerMaintenanceFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVarP(&goCDDisableMaintenance, "disable", "", false,
 		"set this to disable maintenance mode in GoCD")
 }
+
+func registerAgentProfileFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVarP(&agentProfileRaw, "raw", "", false,
+		"enable this to see the raw output")
+}
+
+func registerMaterialFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringSliceVarP(&materialFilter, "filter", "", nil,
+		"name of the material to filter from the available material in GoCD")
+}

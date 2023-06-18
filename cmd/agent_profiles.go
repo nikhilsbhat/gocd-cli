@@ -9,6 +9,7 @@ import (
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
+	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )
 
@@ -256,7 +257,9 @@ func getAgentProfilesUsageCommand() *cobra.Command {
 			var elasticAgentProfilesUsage []string
 
 			for _, usage := range response {
-				elasticAgentProfilesUsage = append(elasticAgentProfilesUsage, usage.PipelineName)
+				if !funk.Contains(elasticAgentProfilesUsage, usage.PipelineName) {
+					elasticAgentProfilesUsage = append(elasticAgentProfilesUsage, usage.PipelineName)
+				}
 			}
 
 			return cliRenderer.Render(strings.Join(elasticAgentProfilesUsage, "\n"))

@@ -171,8 +171,11 @@ func getPipelineScheduleCommand() *cobra.Command {
 
 func getPipelineHistoryCommand() *cobra.Command {
 	getPipelineHistoryCmd := &cobra.Command{
-		Use:     "history",
-		Short:   "Command to GET pipeline run history present in GoCD [https://api.gocd.org/current/#get-pipeline-history]",
+		Use:   "history",
+		Short: "Command to GET pipeline run history present in GoCD [https://api.gocd.org/current/#get-pipeline-history]",
+		Long: `Command leverages GoCD api [https://api.gocd.org/current/#get-pipeline-history] to get the history
+This would be an expensive operation especially when you have more pipeline instance to fetch
+Prefer invoking this command when GoCD is not serving huge traffic`,
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline history sample-pipeline`,

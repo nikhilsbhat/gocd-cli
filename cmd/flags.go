@@ -106,3 +106,10 @@ func registerMaterialFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringSliceVarP(&materialFilter, "filter", "", nil,
 		"name of the material to filter from the available material in GoCD")
 }
+
+func registerPipelineHistoryFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().DurationVarP(&delay, "delay", "", defaultDelay,
+		"delay between the calls made to GoCD server to get the pipeline run history in seconds")
+	cmd.PersistentFlags().DurationVarP(&numberOfDays, "time", "", defaultDelay,
+		"time frame since the pipeline has not run")
+}

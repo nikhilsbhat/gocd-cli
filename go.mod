@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ghodss/yaml v1.0.0
-	github.com/nikhilsbhat/gocd-sdk-go v0.1.3-0.20230618095215-fce16a56c2d4
+	github.com/nikhilsbhat/gocd-sdk-go v0.1.4-0.20230625115516-de8a877ad07c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.2

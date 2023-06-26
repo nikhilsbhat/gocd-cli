@@ -16,8 +16,8 @@ github.com/jinzhu/copier v0.3.5/go.mod h1:DfbEm0FYsaqBcKcFuvmOZb218JkPGtvSHsKg8S
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
 github.com/kr/text v0.2.0/go.mod h1:eLer722TekiGuMkidMxC/pM04lWEeraHUUmBw8l2grE=
-github.com/nikhilsbhat/gocd-sdk-go v0.1.3-0.20230618095215-fce16a56c2d4 h1:tGTlRUC/v1Dh/nxbdvr42dCQPGDvC3t9pH0MORaCbxg=
-github.com/nikhilsbhat/gocd-sdk-go v0.1.3-0.20230618095215-fce16a56c2d4/go.mod h1:bIE3Xr7rRzOo0xSX/oa13kXNdFTgCR3JtCh/SontbwM=
+github.com/nikhilsbhat/gocd-sdk-go v0.1.4-0.20230625115516-de8a877ad07c h1:Bo2YENr+NGiXaO1edvt2O27Qta0sq8e1qpbtk2k5OnA=
+github.com/nikhilsbhat/gocd-sdk-go v0.1.4-0.20230625115516-de8a877ad07c/go.mod h1:bIE3Xr7rRzOo0xSX/oa13kXNdFTgCR3JtCh/SontbwM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

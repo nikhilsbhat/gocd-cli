@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
@@ -21,6 +22,7 @@ var (
 	goCDPausePipelineAtStart bool
 	goCDPipelinePause        bool
 	goCDPipelineUnPause      bool
+	numberOfDays             time.Duration
 )
 
 func registerPipelinesCommand() *cobra.Command {
@@ -53,6 +55,9 @@ GET/PAUSE/UNPAUSE/UNLOCK/SCHEDULE and comment on a GoCD pipeline`,
 	pipelineCommand.AddCommand(commentPipelineCommand())
 	pipelineCommand.AddCommand(pipelineExtractTemplateCommand())
 	pipelineCommand.AddCommand(listPipelinesCommand())
+	pipelineCommand.AddCommand(getPipelineScheduleCommand())
+	pipelineCommand.AddCommand(getPipelineHistoryCommand())
+	pipelineCommand.AddCommand(getPipelineNotSchedulesCommand())
 
 	for _, command := range pipelineCommand.Commands() {
 		command.SilenceUsage = true
@@ -97,7 +102,7 @@ func getPipelinesCommand() *cobra.Command {
 func getPipelineCommand() *cobra.Command {
 	getPipelineCmd := &cobra.Command{
 		Use:     "get",
-		Short:   "Command to GET pipeline config of a specified pipeline present in GoCD [https://api.gocd.org/current/#get-pipeline-config",
+		Short:   "Command to GET pipeline config of a specified pipeline present in GoCD [https://api.gocd.org/current/#get-pipeline-config]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline get sample-pipeline --query "[*] | name eq sample-group"`,
@@ -125,6 +130,142 @@ func getPipelineCommand() *cobra.Command {
 	}
 
 	return getPipelineCmd
+}
+
+func getPipelineScheduleCommand() *cobra.Command {
+	getPipelineScheduleCmd := &cobra.Command{
+		Use:     "last-schedule",
+		Short:   "Command to GET last scheduled time of the pipeline present in GoCD [/pipelineHistory.json?pipelineName=nameOfThePipeline]",
+		Args:    cobra.RangeArgs(1, 1),
+		PreRunE: setCLIClient,
+		Example: `gocd-cli pipeline last-schedule sample-pipeline`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			response, err := client.GetPipelineSchedules(args[0], "0", "1")
+			if err != nil {
+				return err
+			}
+
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(response, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
+			}
+
+			if response.Groups[0].History[0].ScheduledDate == "N/A" {
+				return nil
+			}
+
+			return cliRenderer.Render(response)
+		},
+	}
+
+	return getPipelineScheduleCmd
+}
+
+func getPipelineHistoryCommand() *cobra.Command {
+	getPipelineHistoryCmd := &cobra.Command{
+		Use:     "history",
+		Short:   "Command to GET pipeline run history present in GoCD [https://api.gocd.org/current/#get-pipeline-history]",
+		Args:    cobra.RangeArgs(1, 1),
+		PreRunE: setCLIClient,
+		Example: `gocd-cli pipeline history sample-pipeline`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			response, err := client.GetPipelineRunHistory(args[0], "10", delay)
+			if err != nil {
+				return err
+			}
+
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(response, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
+			}
+
+			return cliRenderer.Render(response)
+		},
+	}
+
+	registerPipelineHistoryFlags(getPipelineHistoryCmd)
+
+	return getPipelineHistoryCmd
+}
+
+func getPipelineNotSchedulesCommand() *cobra.Command {
+	getPipelineNotScheduledCmd := &cobra.Command{
+		Use:     "not-scheduled",
+		Short:   "Command to GET pipelines not scheduled in last X days from GoCD [/pipelineHistory.json?]",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		Example: `gocd-cli pipeline not-scheduled --time 10`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			pipelines, err := client.GetPipelines()
+			if err != nil {
+				return err
+			}
+
+			pipelineSchedules := make([]gocd.PipelineSchedules, 0)
+
+			for _, pipeline := range pipelines.Pipeline {
+				pipelineName, err := gocd.GetPipelineName(pipeline.Href)
+				if err != nil {
+					cliLogger.Errorf("fetching pipeline name from pipline url erored with:, %v", err)
+				}
+
+				cliLogger.Infof("fetching schedules of pipeline %s", pipelineName)
+				response, err := client.GetPipelineSchedules(pipelineName, "0", "1")
+				if err != nil {
+					return err
+				}
+
+				if response.Groups[0].History[0].ScheduledDate == "N/A" {
+					continue
+				}
+
+				timeThen := time.UnixMilli(response.Groups[0].History[0].ScheduledTimestamp).UTC()
+				timeNow := time.Now()
+
+				timeDiff := timeNow.Sub(timeThen).Round(1).Hours()
+				if timeDiff >= numberOfDays.Hours() {
+					pipelineSchedules = append(pipelineSchedules, response)
+				}
+
+				time.Sleep(delay)
+			}
+
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(pipelineSchedules, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
+			}
+
+			return cliRenderer.Render(pipelineSchedules)
+		},
+	}
+
+	registerPipelineHistoryFlags(getPipelineNotScheduledCmd)
+
+	return getPipelineNotScheduledCmd
 }
 
 func createPipelineCommand() *cobra.Command {

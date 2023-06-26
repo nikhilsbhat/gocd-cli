@@ -158,8 +158,16 @@ func getPipelineScheduleCommand() *cobra.Command {
 				return cliRenderer.Render(baseQuery.RunQuery())
 			}
 
-			if response.Groups[0].History[0].ScheduledDate == "N/A" {
-				return nil
+			const faultyLength = 2
+
+			if len(response.Groups) == faultyLength {
+				if response.Groups[1].History[0].ScheduledDate == "N/A" {
+					return nil
+				}
+			} else {
+				if response.Groups[0].History[0].ScheduledDate == "N/A" {
+					return nil
+				}
 			}
 
 			return cliRenderer.Render(response)
@@ -221,6 +229,7 @@ func getPipelineNotSchedulesCommand() *cobra.Command {
 			}
 
 			pipelineSchedules := make([]gocd.PipelineSchedules, 0)
+			var errors []string
 
 			for _, pipeline := range pipelines.Pipeline {
 				pipelineName, err := gocd.GetPipelineName(pipeline.Href)
@@ -231,15 +240,26 @@ func getPipelineNotSchedulesCommand() *cobra.Command {
 				cliLogger.Infof("fetching schedules of pipeline %s", pipelineName)
 				response, err := client.GetPipelineSchedules(pipelineName, "0", "1")
 				if err != nil {
-					return err
+					errors = append(errors, err.Error())
 				}
 
-				if response.Groups[0].History[0].ScheduledDate == "N/A" {
-					continue
-				}
-
-				timeThen := time.UnixMilli(response.Groups[0].History[0].ScheduledTimestamp).UTC()
 				timeNow := time.Now()
+				var timeThen time.Time
+
+				const faultyLength = 2
+				if len(response.Groups) == faultyLength {
+					if response.Groups[1].History[0].ScheduledDate == "N/A" {
+						continue
+					}
+
+					timeThen = time.UnixMilli(response.Groups[1].History[0].ScheduledTimestamp).UTC()
+				} else {
+					if response.Groups[0].History[0].ScheduledDate == "N/A" {
+						continue
+					}
+
+					timeThen = time.UnixMilli(response.Groups[0].History[0].ScheduledTimestamp).UTC()
+				}
 
 				timeDiff := timeNow.Sub(timeThen).Round(1).Hours()
 				if timeDiff >= numberOfDays.Hours() {
@@ -247,6 +267,10 @@ func getPipelineNotSchedulesCommand() *cobra.Command {
 				}
 
 				time.Sleep(delay)
+			}
+
+			if len(errors) != 0 {
+				cliLogger.Errorf("fetching pipeline schedules errored: %s", strings.Join(errors, ",\n"))
 			}
 
 			if len(jsonQuery) != 0 {

@@ -229,18 +229,21 @@ func getPipelineNotSchedulesCommand() *cobra.Command {
 			}
 
 			pipelineSchedules := make([]gocd.PipelineSchedules, 0)
-			var errors []string
 
 			for _, pipeline := range pipelines.Pipeline {
 				pipelineName, err := gocd.GetPipelineName(pipeline.Href)
 				if err != nil {
 					cliLogger.Errorf("fetching pipeline name from pipline url erored with:, %v", err)
+
+					continue
 				}
 
-				cliLogger.Infof("fetching schedules of pipeline %s", pipelineName)
+				cliLogger.Infof("fetching schedules of pipeline '%s'", pipelineName)
 				response, err := client.GetPipelineSchedules(pipelineName, "0", "1")
 				if err != nil {
-					errors = append(errors, err.Error())
+					cliLogger.Errorf("getting schedules for pipline '%s' errored with '%v'", pipelineName, err)
+
+					continue
 				}
 
 				timeNow := time.Now()
@@ -267,10 +270,6 @@ func getPipelineNotSchedulesCommand() *cobra.Command {
 				}
 
 				time.Sleep(delay)
-			}
-
-			if len(errors) != 0 {
-				cliLogger.Errorf("fetching pipeline schedules errored: %s", strings.Join(errors, ",\n"))
 			}
 
 			if len(jsonQuery) != 0 {

@@ -46,6 +46,13 @@ func registerEncryptionFlags(cmd *cobra.Command) {
 		"cipher key value used for decryption, the key should same which is used by GoCD server for encryption")
 }
 
+func registerConfigRepoDefinitionsFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVarP(&pipelines, "pipelines", "", false,
+		"set this flag to get only the pipelines from the config-repo")
+	cmd.PersistentFlags().BoolVarP(&environments, "environments", "", false,
+		"set this flag to get only the environments from the config-repo")
+}
+
 func registerConfigRepoPreflightFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&configRepoPreflightObj.pluginID, "plugin-id", "i", "",
 		"GoCD's config-repo plugin ID against which the pipelines has to be validated")

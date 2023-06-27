@@ -20,8 +20,9 @@ type configRepoPreflight struct {
 }
 
 var (
-	configRepoPreflightObj configRepoPreflight
-	queryEnabledMessage    = "since --query is passed, applying query '%v' to the output"
+	pipelines, environments bool
+	configRepoPreflightObj  configRepoPreflight
+	queryEnabledMessage     = "since --query is passed, applying query '%v' to the output"
 )
 
 func registerConfigRepoCommand() *cobra.Command {
@@ -50,6 +51,7 @@ GET/CREATE/UPDATE/DELETE and trigger update on the same`,
 	configRepoCommand.AddCommand(getDeleteConfigRepoCommand())
 	configRepoCommand.AddCommand(listConfigReposCommand())
 	configRepoCommand.AddCommand(getConfigRepoPreflightCheckCommand())
+	configRepoCommand.AddCommand(getConfigReposDefinitionsCommand())
 
 	for _, command := range configRepoCommand.Commands() {
 		command.SilenceUsage = true
@@ -90,6 +92,63 @@ func getConfigReposCommand() *cobra.Command {
 	configGetCommand.SetUsageTemplate(getUsageTemplate())
 
 	return configGetCommand
+}
+
+func getConfigReposDefinitionsCommand() *cobra.Command {
+	getConfigReposDefinitionsCmd := &cobra.Command{
+		Use:     "get-definitions",
+		Short:   "Command to GET config-repo definitions present in GoCD [https://api.gocd.org/current/#definitions-defined-in-config-repo]",
+		Args:    cobra.RangeArgs(1, 1),
+		PreRunE: setCLIClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			response, err := client.GetConfigRepoDefinitions(args[0])
+			if err != nil {
+				return err
+			}
+
+			var output interface{}
+			output = response
+
+			envsNPipelines := make([]string, 0)
+
+			if environments {
+				for _, env := range response.Environments {
+					envsNPipelines = append(envsNPipelines, env.Name)
+				}
+				output = envsNPipelines
+			}
+
+			if pipelines {
+				for _, group := range response.Groups {
+					for _, pipeline := range group.Pipelines {
+						envsNPipelines = append(envsNPipelines, pipeline.Name)
+					}
+				}
+				output = envsNPipelines
+			}
+
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(output, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
+			}
+
+			return cliRenderer.Render(output)
+		},
+	}
+
+	registerConfigRepoDefinitionsFlags(getConfigReposDefinitionsCmd)
+
+	getConfigReposDefinitionsCmd.SetUsageTemplate(getUsageTemplate())
+
+	return getConfigReposDefinitionsCmd
 }
 
 func getConfigRepoCommand() *cobra.Command {

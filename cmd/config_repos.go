@@ -52,6 +52,7 @@ GET/CREATE/UPDATE/DELETE and trigger update on the same`,
 	configRepoCommand.AddCommand(listConfigReposCommand())
 	configRepoCommand.AddCommand(getConfigRepoPreflightCheckCommand())
 	configRepoCommand.AddCommand(getConfigReposDefinitionsCommand())
+	configRepoCommand.AddCommand(getFailedConfigReposCommand())
 
 	for _, command := range configRepoCommand.Commands() {
 		command.SilenceUsage = true
@@ -88,6 +89,63 @@ func getConfigReposCommand() *cobra.Command {
 			return cliRenderer.Render(response)
 		},
 	}
+
+	configGetCommand.SetUsageTemplate(getUsageTemplate())
+
+	return configGetCommand
+}
+
+func getFailedConfigReposCommand() *cobra.Command {
+	var configRepoNames bool
+
+	configGetCommand := &cobra.Command{
+		Use:     "get-failed",
+		Short:   "Command to GET all config-repo that have failed in GoCD [https://api.gocd.org/current/#get-all-config-repos]",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			response, err := client.GetConfigReposInternal()
+			if err != nil {
+				return err
+			}
+
+			var repos interface{}
+			failedRepos := make([]gocd.ConfigRepo, 0)
+			for _, configRepo := range response {
+				if len(configRepo.ConfigRepoParseInfo.Error) != 0 {
+					failedRepos = append(failedRepos, configRepo)
+				}
+			}
+
+			if configRepoNames {
+				names := make([]string, 0)
+				for _, configRepo := range failedRepos {
+					names = append(names, configRepo.ID)
+				}
+				repos = names
+			} else {
+				repos = failedRepos
+			}
+
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(repos, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
+			}
+
+			return cliRenderer.Render(repos)
+		},
+	}
+
+	configGetCommand.PersistentFlags().BoolVarP(&configRepoNames, "names", "", false,
+		"list of config repo name those are failing")
 
 	configGetCommand.SetUsageTemplate(getUsageTemplate())
 

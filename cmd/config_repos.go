@@ -17,6 +17,9 @@ type configRepoPreflight struct {
 	pipelineFiles    []string
 	pipelineDir      string
 	pipelineExtRegex string
+	groovy           bool
+	json             bool
+	yaml             bool
 }
 
 var (
@@ -446,7 +449,7 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 					return &errors.ConfigRepoError{Message: "pipeline file regex not passed, make sure to set --regex if --pipeline-dir is set"}
 				}
 
-				pathAndPattern[0] = configRepoPreflightObj.pipelineDir
+				pathAndPattern = append(pathAndPattern, configRepoPreflightObj.pipelineDir)
 				pathAndPattern = append(pathAndPattern, configRepoPreflightObj.pipelineExtRegex)
 				file, err := client.GetPipelineFiles(pathAndPattern[0], pathAndPattern[1])
 				if err != nil {
@@ -458,7 +461,7 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 
 			pipelineMap := client.SetPipelineFiles(pipelineFiles)
 
-			response, err := client.ConfigRepoPreflightCheck(pipelineMap, configRepoPreflightObj.pluginID, args[0])
+			response, err := client.ConfigRepoPreflightCheck(pipelineMap, configRepoPreflightObj.getPluginID(), args[0])
 			if err != nil {
 				return err
 			}
@@ -475,4 +478,20 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 	registerConfigRepoPreflightFlags(configTriggerUpdateCommand)
 
 	return configTriggerUpdateCommand
+}
+
+func (cfg *configRepoPreflight) getPluginID() string {
+	if cfg.json {
+		return "json.config.plugin"
+	}
+
+	if cfg.yaml {
+		return "yaml.config.plugin"
+	}
+
+	if cfg.groovy {
+		return "cd.go.contrib.plugins.configrepo.groovy"
+	}
+
+	return cfg.pluginID
 }

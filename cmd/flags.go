@@ -63,6 +63,12 @@ func registerConfigRepoPreflightFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&configRepoPreflightObj.pipelineExtRegex, "regex", "", "*.gocd.yaml",
 		"regex to be used while identifying the pipeline files under the directory which was passed in pipeline-dir, "+
 			"should be co-used with --pipeline-dir")
+	cmd.PersistentFlags().BoolVarP(&configRepoPreflightObj.groovy, "groovy", "", false,
+		"setting this would set 'plugin-id' to 'cd.go.contrib.plugins.configrepo.groovy'")
+	cmd.PersistentFlags().BoolVarP(&configRepoPreflightObj.json, "json", "", false,
+		"setting this would set 'plugin-id' to 'json.config.plugin'")
+	cmd.PersistentFlags().BoolVarP(&configRepoPreflightObj.yaml, "yaml", "", false,
+		"setting this would set 'plugin-id' to 'yaml.config.plugin'")
 }
 
 const (

@@ -3,17 +3,20 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
+	"github.com/nikhilsbhat/gocd-sdk-go/pkg/plugin"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
 var (
+	rawOutput                bool
 	goCDPipelineInstance     int
 	goCDPipelineName         string
 	goCDPipelineMessage      string
@@ -22,6 +25,7 @@ var (
 	goCDPausePipelineAtStart bool
 	goCDPipelinePause        bool
 	goCDPipelineUnPause      bool
+	pluginID                 string
 	numberOfDays             time.Duration
 )
 
@@ -58,6 +62,8 @@ GET/PAUSE/UNPAUSE/UNLOCK/SCHEDULE and comment on a GoCD pipeline`,
 	pipelineCommand.AddCommand(getPipelineScheduleCommand())
 	pipelineCommand.AddCommand(getPipelineHistoryCommand())
 	pipelineCommand.AddCommand(getPipelineNotSchedulesCommand())
+	pipelineCommand.AddCommand(validatePipelinesCommand())
+	pipelineCommand.AddCommand(exportPipelineToConfigRepoFormatCommand())
 
 	for _, command := range pipelineCommand.Commands() {
 		command.SilenceUsage = true
@@ -640,4 +646,124 @@ func listPipelinesCommand() *cobra.Command {
 	}
 
 	return listPipelinesCmd
+}
+
+func validatePipelinesCommand() *cobra.Command {
+	type pipelineValidate struct {
+		pipelines         []string
+		pluginVersion     string
+		pluginLocalPath   string
+		pluginDownloadURL string
+	}
+
+	var pipelineValidateObj pipelineValidate
+
+	validatePipelinesCmd := &cobra.Command{
+		Use:     "validate-syntax",
+		Short:   "Command validate pipeline syntax by running it against appropriate GoCD plugin",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		Example: `gocd-cli pipeline validate-syntax --pipeline pipeline1 --pipeline pipeline2`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			pluginCfg := plugin.NewPluginConfig(
+				pipelineValidateObj.pluginVersion,
+				pipelineValidateObj.pluginLocalPath,
+				pipelineValidateObj.pluginDownloadURL,
+				cliCfg.LogLevel,
+			)
+
+			success, err := client.ValidatePipelineSyntax(pluginCfg, pipelineValidateObj.pipelines)
+			if err != nil {
+				return err
+			}
+
+			if !success {
+				cliLogger.Error("oops...!! pipeline syntax validation failed")
+				os.Exit(1)
+			}
+
+			fmt.Println("SUCCESS")
+
+			return nil
+		},
+	}
+
+	validatePipelinesCmd.PersistentFlags().StringVarP(&pipelineValidateObj.pluginVersion, "plugin-version", "", "",
+		"GoCD plugin version against which the pipeline has to be validated (the plugin type would be auto-detected);"+
+			" if missed, the pipeline would be validated against the latest version of the auto-detected plugin")
+	validatePipelinesCmd.PersistentFlags().StringSliceVarP(&pipelineValidateObj.pipelines, "pipeline", "", nil,
+		"list of pipelines for which the syntax has to be validated")
+	validatePipelinesCmd.PersistentFlags().StringVarP(&pipelineValidateObj.pluginDownloadURL, "plugin-download-url", "", "",
+		"Auto-detection of the plugin sets the download URL too (Github's release URL);"+
+			" if the URL needs to be set to something else, then it can be set using this")
+	validatePipelinesCmd.PersistentFlags().StringVarP(&pipelineValidateObj.pluginLocalPath, "plugin-path", "", "",
+		"if you prefer managing plugins outside the gocd-cli, the path to already downloaded plugins can be set using this")
+
+	return validatePipelinesCmd
+}
+
+func exportPipelineToConfigRepoFormatCommand() *cobra.Command {
+	var renderToFile bool
+
+	exportPipelineToConfigRepoFormatCmd := &cobra.Command{
+		Use: "export-format",
+		Short: "Command to export specified pipeline present in GoCD to appropriate config repo format " +
+			"[https://api.gocd.org/current/#export-pipeline-config-to-config-repo-format]",
+		Args:    cobra.RangeArgs(1, 1),
+		PreRunE: setCLIClient,
+		Example: `gocd-cli pipeline change-config-repo-format pipeline1 --plugin-id yaml.config.plugin`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			response, err := client.ExportPipelineToConfigRepoFormat(args[0], pluginID)
+			if err != nil {
+				return err
+			}
+
+			if renderToFile {
+				cliLogger.Debugf("--render-to-file is enabled, writing exported plugin to file '%s'", response.PipelineFileName)
+
+				file, err := os.Create(response.PipelineFileName)
+				if err != nil {
+					return err
+				}
+
+				if _, err = file.Write([]byte(response.PipelineContent)); err != nil {
+					return err
+				}
+
+				cliLogger.Debug("exported plugin was written to file successfully")
+
+				return nil
+			}
+
+			if !rawOutput {
+				fmt.Printf("%s\n", response.PipelineContent)
+
+				return nil
+			}
+
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(response, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
+			}
+
+			return cliRenderer.Render(response)
+		},
+	}
+
+	exportPipelineToConfigRepoFormatCmd.PersistentFlags().StringVarP(&pluginID, "plugin-id", "", "",
+		"if you prefer managing plugins outside the gocd-cli, the path to already downloaded plugins can be set using this")
+	exportPipelineToConfigRepoFormatCmd.PersistentFlags().BoolVarP(&rawOutput, "raw", "", false,
+		"if enabled, prints response in raw format")
+	exportPipelineToConfigRepoFormatCmd.PersistentFlags().BoolVarP(&renderToFile, "render-to-file", "", false,
+		"if enabled, the exported pipeline would we written to a file")
+
+	return exportPipelineToConfigRepoFormatCmd
 }

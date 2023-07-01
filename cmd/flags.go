@@ -35,7 +35,7 @@ func registerGlobalFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&cliCfg.FromFile, "from-file", "", "",
 		"file containing configurations of objects that needs to be created in GoCD, config-repo/pipeline-group/environment and etc.")
 	cmd.PersistentFlags().StringVarP(&cliCfg.ToFile, "to-file", "", "",
-		"file to which the output needs to be written to (this works only if --yaml or --json is enabled)")
+		"file to which the output needs to be written to")
 	cmd.PersistentFlags().StringVarP(&jsonQuery, "query", "q", "",
 		`query to filter the results, ex: '.material.attributes.type | id eq git'. this uses library gojsonq beneath
 more queries can be found here https://github.com/thedevsaddam/gojsonq/wiki/Queries`)
@@ -110,8 +110,8 @@ func registerMaintenanceFlags(cmd *cobra.Command) {
 		"set this to disable maintenance mode in GoCD")
 }
 
-func registerAgentProfileFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().BoolVarP(&agentProfileRaw, "raw", "", false,
+func registerRawFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVarP(&rawOutput, "raw", "", false,
 		"enable this to see the raw output")
 }
 

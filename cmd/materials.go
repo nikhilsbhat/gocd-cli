@@ -126,7 +126,7 @@ func getMaterialUsageCommand() *cobra.Command {
 		},
 	}
 
-	registerAgentProfileFlags(getAgentProfilesUsageCmd)
+	registerRawFlags(getAgentProfilesUsageCmd)
 
 	return getAgentProfilesUsageCmd
 }

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
-	"github.com/nikhilsbhat/gocd-sdk-go"
+	goCdLogger "github.com/nikhilsbhat/gocd-sdk-go/pkg/logger"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +14,7 @@ var log *logrus.Logger
 //nolint:gochecknoinits
 func init() {
 	logger := logrus.New()
-	logger.SetLevel(gocd.GetLoglevel("info"))
+	logger.SetLevel(goCdLogger.GetLoglevel("info"))
 	logger.WithField("gocd-cli", true)
 	logger.SetFormatter(&logrus.JSONFormatter{})
 	log = logger

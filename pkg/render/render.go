@@ -41,7 +41,17 @@ func (r *Renderer) Render(value interface{}) error {
 
 	r.logger.Debug("no format was specified for rendering output to defaults")
 
-	fmt.Printf("%v\n", value)
+	_, err := r.writer.Write([]byte(fmt.Sprintf("%v\n", value)))
+	if err != nil {
+		r.logger.Fatalln(err)
+	}
+
+	defer func(writer *bufio.Writer) {
+		err = writer.Flush()
+		if err != nil {
+			r.logger.Fatalln(err)
+		}
+	}(r.writer)
 
 	return nil
 }

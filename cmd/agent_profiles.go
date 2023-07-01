@@ -13,8 +13,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var agentProfileRaw bool
-
 func registerAgentProfilesCommand() *cobra.Command {
 	registerAgentProfilesCmd := &cobra.Command{
 		Use:   "elastic-agent-profile",
@@ -250,7 +248,7 @@ func getAgentProfilesUsageCommand() *cobra.Command {
 				return err
 			}
 
-			if agentProfileRaw {
+			if rawOutput {
 				return cliRenderer.Render(response)
 			}
 
@@ -266,7 +264,7 @@ func getAgentProfilesUsageCommand() *cobra.Command {
 		},
 	}
 
-	registerAgentProfileFlags(getAgentProfilesUsageCmd)
+	registerRawFlags(getAgentProfilesUsageCmd)
 
 	return getAgentProfilesUsageCmd
 }

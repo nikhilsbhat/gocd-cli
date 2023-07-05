@@ -44,3 +44,8 @@ Updated documentation on all available commands and flags can be found [here](ht
 
 * Recommend installing released versions. Release binaries are available on the [releases](https://github.com/nikhilsbhat/gocd-cli/releases) page and docker from [here](https://hub.docker.com/repository/docker/basnik/gocd-cli).
 * Can always build it locally by running `go build` against cloned repo.
+
+### Note
+
+* The command `gocd-cli pipeline validate-syntax` would use GoCD's plugin binary to validate the pipeline syntax.
+* Since the plugins are jars, it is expected to have Java installed, on the machine from which the command would be executed.

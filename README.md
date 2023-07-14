@@ -29,8 +29,13 @@ The authorization configuration used for GoCD can be cached locally so that it c
 The command `auth-config` will do the work.
 
 ```shell
+# Running the below command should cache configurations under $HOME/.gocd/auth_config.yaml.
 gocd-cli auth-config store --server-url <gocd-url> --username <username> --password <password>
-# Running the above command should cache configurations under $HOME/.gocd/auth_config.yaml.
+
+# User creds cached can be validated using below command.
+gocd-cli who-am-i
+# The response to the above command should be:
+# user: admin
 
 # Once we have authorization configurations cached, we do not need to pass the credentials every time we invoke the cli.
 gocd-cli environment list

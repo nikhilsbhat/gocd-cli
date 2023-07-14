@@ -28,8 +28,6 @@ GET/CREATE/UPDATE/DELETE/BULK-DELETE/BULK-UPDATE the users in GoCD server.`,
 
 	usersCommand.SetUsageTemplate(getUsageTemplate())
 
-	// registerBackupFlags(usersCommand)
-
 	usersCommand.AddCommand(usersGetCommand())
 	usersCommand.AddCommand(userGetCommand())
 	usersCommand.AddCommand(userCreateCommand())

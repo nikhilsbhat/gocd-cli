@@ -3,9 +3,13 @@ package cmd
 import (
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/spf13/cobra"
+	"os"
 )
 
-var cipherKey string
+var (
+	cipherKey     string
+	cipherKeyPath string
+)
 
 func registerEncryptionCommand() *cobra.Command {
 	encryptionCommand := &cobra.Command{
@@ -21,7 +25,7 @@ AES decryption while decrypting encrypted value [https://github.com/nikhilsbhat/
 			return nil
 		},
 	}
-	registerEncryptionFlags(encryptionCommand)
+
 	encryptionCommand.SetUsageTemplate(getUsageTemplate())
 	encryptionCommand.AddCommand(getEncryptCommand())
 	encryptionCommand.AddCommand(getDecryptCommand())
@@ -63,7 +67,7 @@ func getEncryptCommand() *cobra.Command {
 }
 
 func getDecryptCommand() *cobra.Command {
-	encryptionCommand := &cobra.Command{
+	decryptionCommand := &cobra.Command{
 		Use:     "decrypt",
 		Short:   "Command to decrypt encrypted value [https://github.com/nikhilsbhat/gocd-sdk-go/blob/master/encryption.go#L49]",
 		Args:    cobra.MinimumNArgs(1),
@@ -71,6 +75,15 @@ func getDecryptCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 1 {
 				return &errors.MoreArgError{Message: "encrypted/plain"}
+			}
+
+			if len(cipherKeyPath) != 0 {
+				out, err := os.ReadFile(cipherKeyPath)
+				if err != nil {
+					return err
+				}
+
+				cipherKey = string(out)
 			}
 
 			response, err := client.DecryptText(args[0], cipherKey)
@@ -86,7 +99,9 @@ func getDecryptCommand() *cobra.Command {
 		},
 	}
 
-	encryptionCommand.SetUsageTemplate(getUsageTemplate())
+	registerEncryptionFlags(decryptionCommand)
 
-	return encryptionCommand
+	decryptionCommand.SetUsageTemplate(getUsageTemplate())
+
+	return decryptionCommand
 }

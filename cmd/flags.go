@@ -44,6 +44,8 @@ more queries can be found here https://github.com/thedevsaddam/gojsonq/wiki/Quer
 func registerEncryptionFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&cipherKey, "cipher-key", "", "",
 		"cipher key value used for decryption, the key should same which is used by GoCD server for encryption")
+	cmd.PersistentFlags().StringVarP(&cipherKeyPath, "cipher-key-path", "", "",
+		"path to cipher key value used for decryption, the key should same which is used by GoCD server for encryption")
 }
 
 func registerConfigRepoDefinitionsFlags(cmd *cobra.Command) {

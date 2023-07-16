@@ -81,6 +81,7 @@ func getAgentProfileCommand() *cobra.Command {
 	getElasticAgentProfileCmd := &cobra.Command{
 		Use:     "get",
 		Short:   "Command to GET a specific elastic agent profile present in GoCD [https://api.gocd.org/current/#get-an-elastic-agent-profile]",
+		Example: "gocd-cli elastic-agent-profile get sample_kubernetes",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -113,6 +114,7 @@ func createAgentProfileCommand() *cobra.Command {
 	createElasticAgentProfileCmd := &cobra.Command{
 		Use:     "create",
 		Short:   "Command to CREATE a elastic agent profile with all specified configurations in GoCD [https://api.gocd.org/current/#create-an-elastic-agent-profile]",
+		Example: "gocd-cli elastic-agent-profile create sample_ec2 --from-file sample-ec2.yaml --log-level debug",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -155,6 +157,7 @@ func updateAgentProfileCommand() *cobra.Command {
 	updateElasticAgentProfileCmd := &cobra.Command{
 		Use:     "update",
 		Short:   "Command to UPDATE a elastic agent profile with all specified configurations in GoCD [https://api.gocd.org/current/#update-an-elastic-agent-profile]",
+		Example: "gocd-cli elastic-agent-profile update sample_ec2 --from-file sample-ec2.yaml --log-level debug",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -197,6 +200,7 @@ func deleteAgentProfileCommand() *cobra.Command {
 	deleteElasticAgentProfileCmd := &cobra.Command{
 		Use:     "delete",
 		Short:   "Command to DELETE a specific elastic agent profile present in GoCD [https://api.gocd.org/current/#delete-an-elastic-agent-profile]",
+		Example: "gocd-cli elastic-agent-profile delete sample_kubernetes",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -240,6 +244,7 @@ func getAgentProfilesUsageCommand() *cobra.Command {
 	getAgentProfilesUsageCmd := &cobra.Command{
 		Use:     "usage",
 		Short:   "Command to GET an information about pipelines using elastic agent profiles",
+		Example: "gocd-cli elastic-agent-profile usage sample_ec2",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {

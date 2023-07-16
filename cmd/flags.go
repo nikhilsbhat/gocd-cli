@@ -126,3 +126,10 @@ func registerPipelineHistoryFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().DurationVarP(&numberOfDays, "time", "", defaultDelay,
 		"time frame since the pipeline has not run")
 }
+
+func registerAgentsFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringVarP(&agentID, "id", "", "",
+		"id of the agent on whom the action is to be performed")
+	cmd.PersistentFlags().StringVarP(&agentName, "name", "", "",
+		"name of the agent on whom the action is to be performed")
+}

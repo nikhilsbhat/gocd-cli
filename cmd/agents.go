@@ -3,12 +3,18 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
+)
+
+var (
+	agentID   string
+	agentName string
 )
 
 func registerAgentCommand() *cobra.Command {
@@ -77,14 +83,41 @@ func getAgentsCommand() *cobra.Command {
 
 func getAgentCommand() *cobra.Command {
 	getAgentCmd := &cobra.Command{
-		Use:     "get",
-		Short:   "Command to GET all the agents present in GoCD [https://api.gocd.org/current/#get-one-agent]",
-		Args:    cobra.RangeArgs(1, 1),
+		Use:   "get",
+		Short: "Command to GET all the agents present in GoCD [https://api.gocd.org/current/#get-one-agent]",
+		Example: `gocd-cli agents get --name my-gocd-agent
+gocd-cli agents get --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			response, err := client.GetAgent(args[0])
-			if err != nil {
-				return err
+			var response gocd.Agent
+
+			if len(agentID) != 0 {
+				agentResponse, err := client.GetAgent(agentID)
+				if err != nil {
+					return err
+				}
+				response = agentResponse
+			}
+
+			if len(agentName) != 0 {
+				agentsResponse, err := client.GetAgents()
+				if err != nil {
+					return err
+				}
+				for _, agentResponse := range agentsResponse {
+					if agentResponse.Name == agentName {
+						response = agentResponse
+
+						break
+					}
+				}
+
+				if reflect.DeepEqual(response, gocd.Agent{}) {
+					cliLogger.Infof("agent with name '%s' does not exists in GoCD", agentName)
+
+					return nil
+				}
 			}
 
 			if len(jsonQuery) != 0 {
@@ -103,6 +136,8 @@ func getAgentCommand() *cobra.Command {
 			return cliRenderer.Render(response)
 		},
 	}
+
+	registerAgentsFlags(getAgentCmd)
 
 	return getAgentCmd
 }
@@ -146,12 +181,34 @@ func updateAgentCommand() *cobra.Command {
 
 func deleteAgentCommand() *cobra.Command {
 	deleteAgentCmd := &cobra.Command{
-		Use:     "delete",
-		Short:   "Command to DELETE a specific agent present in GoCD [https://api.gocd.org/current/#delete-an-agent]",
-		Args:    cobra.RangeArgs(1, 1),
+		Use:   "delete",
+		Short: "Command to DELETE a specific agent present in GoCD [https://api.gocd.org/current/#delete-an-agent]",
+		Example: `gocd-cli agents delete --name my-gocd-agent
+gocd-cli agents delete --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			response, err := client.GetAgent(args[0])
+			if len(agentName) != 0 {
+				agentsResponse, err := client.GetAgents()
+				if err != nil {
+					return err
+				}
+				for _, agentResponse := range agentsResponse {
+					if agentResponse.Name == agentName {
+						agentID = agentResponse.ID
+
+						break
+					}
+				}
+
+				if len(agentID) == 0 {
+					cliLogger.Errorf("failed to delete agent '%s', as it does not exists in GoCD", agentName)
+
+					return nil
+				}
+			}
+
+			response, err := client.DeleteAgent(agentID)
 			if err != nil {
 				return err
 			}
@@ -159,6 +216,8 @@ func deleteAgentCommand() *cobra.Command {
 			return cliRenderer.Render(response)
 		},
 	}
+
+	registerAgentsFlags(deleteAgentCmd)
 
 	return deleteAgentCmd
 }
@@ -195,12 +254,34 @@ func listAgentsCommand() *cobra.Command {
 
 func getJobRunHistoryCommand() *cobra.Command {
 	jobHistoryCmd := &cobra.Command{
-		Use:     "job-history",
-		Short:   "Command to GET information of the jobs that ran on a specific agent present in GoCD [https://api.gocd.org/current/#agent-job-run-history]",
-		Args:    cobra.RangeArgs(1, 1),
+		Use:   "job-history",
+		Short: "Command to GET information of the jobs that ran on a specific agent present in GoCD [https://api.gocd.org/current/#agent-job-run-history]",
+		Example: `gocd-cli agents job-history --name my-gocd-agent
+gocd-cli agents job-history --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			response, err := client.GetAgentJobRunHistory(args[0])
+			if len(agentName) != 0 {
+				agentsResponse, err := client.GetAgents()
+				if err != nil {
+					return err
+				}
+				for _, agentResponse := range agentsResponse {
+					if agentResponse.Name == agentName {
+						agentID = agentResponse.ID
+
+						break
+					}
+				}
+
+				if len(agentID) == 0 {
+					cliLogger.Errorf("failed to get job run history from agent '%s', as it does not exists in GoCD", agentName)
+
+					return nil
+				}
+			}
+
+			response, err := client.GetAgentJobRunHistory(agentID)
 			if err != nil {
 				return err
 			}
@@ -209,17 +290,41 @@ func getJobRunHistoryCommand() *cobra.Command {
 		},
 	}
 
+	registerAgentsFlags(jobHistoryCmd)
+
 	return jobHistoryCmd
 }
 
 func killTaskCommand() *cobra.Command {
-	jobHistoryCmd := &cobra.Command{
-		Use:     "kill-task",
-		Short:   "Command to KILL a specific task running on a specific agent present in GoCD [https://api.gocd.org/current/#kill-running-tasks]",
-		Args:    cobra.RangeArgs(1, 1),
+	killTaskCmd := &cobra.Command{
+		Use:   "kill-task",
+		Short: "Command to KILL a specific task running on a specific agent present in GoCD [https://api.gocd.org/current/#kill-running-tasks]",
+		Args:  cobra.NoArgs,
+		Example: `gocd-cli agents kill-task --name my-gocd-agent
+gocd-cli agents kill-task --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := client.AgentKillTask(gocd.Agent{ID: args[0]}); err != nil {
+			if len(agentName) != 0 {
+				agentsResponse, err := client.GetAgents()
+				if err != nil {
+					return err
+				}
+				for _, agentResponse := range agentsResponse {
+					if agentResponse.Name == agentName {
+						agentID = agentResponse.ID
+
+						break
+					}
+				}
+
+				if len(agentID) == 0 {
+					cliLogger.Errorf("failed to kill task from agent '%s', as it does not exists in GoCD", agentName)
+
+					return nil
+				}
+			}
+
+			if err := client.AgentKillTask(gocd.Agent{ID: agentID}); err != nil {
 				return err
 			}
 
@@ -227,5 +332,7 @@ func killTaskCommand() *cobra.Command {
 		},
 	}
 
-	return jobHistoryCmd
+	registerAgentsFlags(killTaskCmd)
+
+	return killTaskCmd
 }

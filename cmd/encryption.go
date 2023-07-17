@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var (

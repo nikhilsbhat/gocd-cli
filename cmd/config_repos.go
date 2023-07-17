@@ -103,7 +103,7 @@ func getFailedConfigReposCommand() *cobra.Command {
 
 	configGetCommand := &cobra.Command{
 		Use:     "get-failed",
-		Short:   "Command to GET all config-repo that have failed in GoCD [https://api.gocd.org/current/#get-all-config-repos]",
+		Short:   "Command to GET all config repos present in GoCD that are in a failed state [https://api.gocd.org/current/#get-all-config-repos]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {

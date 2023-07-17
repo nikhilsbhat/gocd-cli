@@ -1,6 +1,6 @@
 ## gocd-cli configrepo get-failed
 
-Command to GET all config-repo that have failed in GoCD [https://api.gocd.org/current/#get-all-config-repos]
+Command to GET all config repos present in GoCD that are in a failed state [https://api.gocd.org/current/#get-all-config-repos]
 
 ```
 gocd-cli configrepo get-failed [flags]

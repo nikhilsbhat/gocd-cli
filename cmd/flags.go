@@ -135,3 +135,16 @@ func registerAgentsFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&agentName, "name", "", "",
 		"name of the agent on whom the action is to be performed")
 }
+
+func registerJobsNStageFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringVarP(&stageConfig.Pipeline, "pipeline", "", "",
+		"pipeline name from which the jobs/stage to be triggered")
+	cmd.PersistentFlags().StringVarP(&stageConfig.Name, "stage", "", "",
+		"stage name that should to be operated")
+	cmd.PersistentFlags().StringVarP(&stageConfig.PipelineInstance, "pipeline-counter", "", "",
+		"instance of the pipeline that should be considered")
+	cmd.PersistentFlags().StringVarP(&stageConfig.StageCounter, "stage-counter", "", "",
+		"instance of the stage that should be considered")
+	cmd.PersistentFlags().StringSliceVarP(&stageConfig.Jobs, "job", "", nil,
+		"list of jobs that should be triggered")
+}

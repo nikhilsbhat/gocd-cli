@@ -6,10 +6,19 @@ Command to GET all the agents present in GoCD [https://api.gocd.org/current/#get
 gocd-cli agents get [flags]
 ```
 
+### Examples
+
+```
+gocd-cli agents get --name my-gocd-agent
+gocd-cli agents get --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b
+```
+
 ### Options
 
 ```
-  -h, --help   help for get
+  -h, --help          help for get
+      --id string     id of the agent on whom the action is to be performed
+      --name string   name of the agent on whom the action is to be performed
 ```
 
 ### Options inherited from parent commands

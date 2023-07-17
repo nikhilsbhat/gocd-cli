@@ -6,6 +6,12 @@ Command to CREATE a elastic agent profile with all specified configurations in G
 gocd-cli elastic-agent-profile create [flags]
 ```
 
+### Examples
+
+```
+gocd-cli elastic-agent-profile create sample_ec2 --from-file sample-ec2.yaml --log-level debug
+```
+
 ### Options
 
 ```

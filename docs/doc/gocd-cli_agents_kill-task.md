@@ -6,10 +6,19 @@ Command to KILL a specific task running on a specific agent present in GoCD [htt
 gocd-cli agents kill-task [flags]
 ```
 
+### Examples
+
+```
+gocd-cli agents kill-task --name my-gocd-agent
+gocd-cli agents kill-task --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b
+```
+
 ### Options
 
 ```
-  -h, --help   help for kill-task
+  -h, --help          help for kill-task
+      --id string     id of the agent on whom the action is to be performed
+      --name string   name of the agent on whom the action is to be performed
 ```
 
 ### Options inherited from parent commands

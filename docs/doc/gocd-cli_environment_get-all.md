@@ -9,7 +9,9 @@ gocd-cli environment get-all [flags]
 ### Options
 
 ```
-  -h, --help   help for get-all
+      --env-var strings   list of environment variables to fetch from the GoCD environment
+  -h, --help              help for get-all
+      --pipelines         when set fetches the pipeline alone
 ```
 
 ### Options inherited from parent commands

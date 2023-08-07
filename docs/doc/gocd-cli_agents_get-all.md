@@ -9,7 +9,10 @@ gocd-cli agents get-all [flags]
 ### Options
 
 ```
-  -h, --help   help for get-all
+      --environment strings   list of environment names to filter the agents from
+  -h, --help                  help for get-all
+      --os strings            list of operating system names to filter the agents from
+      --resource strings      list of resource names to filter the agents from
 ```
 
 ### Options inherited from parent commands

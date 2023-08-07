@@ -9,7 +9,13 @@ import (
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
+	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
+)
+
+var (
+	fetchPipeline        bool
+	environmentVariables []string
 )
 
 func registerEnvironmentsCommand() *cobra.Command {
@@ -56,6 +62,30 @@ func getEnvironmentsCommand() *cobra.Command {
 				return err
 			}
 
+			if fetchPipeline {
+				pipelineName := make([]string, 0)
+				for _, environment := range response {
+					for _, name := range environment.Pipelines {
+						pipelineName = append(pipelineName, name.Name)
+					}
+				}
+
+				return cliRenderer.Render(pipelineName)
+			}
+
+			if len(environmentVariables) != 0 {
+				envVars := make([]gocd.EnvVars, 0)
+				for _, environment := range response {
+					for _, envVar := range environment.EnvVars {
+						if funk.Contains(environmentVariables, envVar.Name) {
+							envVars = append(envVars, envVar)
+						}
+					}
+				}
+
+				return cliRenderer.Render(envVars)
+			}
+
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
@@ -72,6 +102,11 @@ func getEnvironmentsCommand() *cobra.Command {
 			return cliRenderer.Render(response)
 		},
 	}
+
+	getEnvironmentsCmd.PersistentFlags().BoolVarP(&fetchPipeline, "pipelines", "", false,
+		"when set fetches the pipeline alone")
+	getEnvironmentsCmd.PersistentFlags().StringSliceVarP(&environmentVariables, "env-var", "", nil,
+		"list of environment variables to fetch from the GoCD environment")
 
 	return getEnvironmentsCmd
 }
@@ -88,6 +123,27 @@ func getEnvironmentCommand() *cobra.Command {
 				return err
 			}
 
+			if fetchPipeline {
+				pipelineName := make([]string, 0)
+
+				for _, name := range response.Pipelines {
+					pipelineName = append(pipelineName, name.Name)
+				}
+
+				return cliRenderer.Render(pipelineName)
+			}
+
+			if len(environmentVariables) != 0 {
+				envVars := make([]gocd.EnvVars, 0)
+				for _, envVar := range response.EnvVars {
+					if funk.Contains(environmentVariables, envVar.Name) {
+						envVars = append(envVars, envVar)
+					}
+				}
+
+				return cliRenderer.Render(envVars)
+			}
+
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
@@ -104,6 +160,11 @@ func getEnvironmentCommand() *cobra.Command {
 			return cliRenderer.Render(response)
 		},
 	}
+
+	getEnvironmentCmd.PersistentFlags().BoolVarP(&fetchPipeline, "pipelines", "", false,
+		"when set fetches the pipeline alone")
+	getEnvironmentCmd.PersistentFlags().StringSliceVarP(&environmentVariables, "env-var", "", nil,
+		"list of environment variables to fetch from the GoCD environment")
 
 	return getEnvironmentCmd
 }

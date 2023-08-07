@@ -9,12 +9,13 @@ import (
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
+	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )
 
 var (
-	agentID   string
-	agentName string
+	agentName, agentID                         string
+	agentEnvironments, agentResources, agentOS []string
 )
 
 func registerAgentCommand() *cobra.Command {
@@ -61,6 +62,36 @@ func getAgentsCommand() *cobra.Command {
 				return err
 			}
 
+			if len(agentResources) != 0 {
+				response = funk.Filter(response, func(agent gocd.Agent) bool {
+					for _, resource := range agentResources {
+						return funk.Contains(agent.Resources, resource)
+					}
+
+					return false
+				}).([]gocd.Agent)
+			}
+
+			if len(agentEnvironments) != 0 {
+				response = funk.Filter(response, func(agent gocd.Agent) bool {
+					for _, environment := range agentEnvironments {
+						return funk.Contains(getEnvironmentNames(agent.Environments), environment)
+					}
+
+					return false
+				}).([]gocd.Agent)
+			}
+
+			if len(agentOS) != 0 {
+				response = funk.Filter(response, func(agent gocd.Agent) bool {
+					for _, os := range agentOS {
+						return funk.Contains(agent.OS, os)
+					}
+
+					return false
+				}).([]gocd.Agent)
+			}
+
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
@@ -77,6 +108,13 @@ func getAgentsCommand() *cobra.Command {
 			return cliRenderer.Render(response)
 		},
 	}
+
+	getAgentsCmd.PersistentFlags().StringSliceVarP(&agentResources, "resource", "", nil,
+		"list of resource names to filter the agents from")
+	getAgentsCmd.PersistentFlags().StringSliceVarP(&agentEnvironments, "environment", "", nil,
+		"list of environment names to filter the agents from")
+	getAgentsCmd.PersistentFlags().StringSliceVarP(&agentOS, "os", "", nil,
+		"list of operating system names to filter the agents from")
 
 	return getAgentsCmd
 }
@@ -229,17 +267,47 @@ func listAgentsCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			responses, err := client.GetAgents()
+			response, err := client.GetAgents()
 			if err != nil {
 				return err
 			}
 
+			if len(agentResources) != 0 {
+				response = funk.Filter(response, func(agent gocd.Agent) bool {
+					for _, resource := range agentResources {
+						return funk.Contains(agent.Resources, resource)
+					}
+
+					return false
+				}).([]gocd.Agent)
+			}
+
+			if len(agentEnvironments) != 0 {
+				response = funk.Filter(response, func(agent gocd.Agent) bool {
+					for _, environment := range agentEnvironments {
+						return funk.Contains(getEnvironmentNames(agent.Environments), environment)
+					}
+
+					return false
+				}).([]gocd.Agent)
+			}
+
+			if len(agentOS) != 0 {
+				response = funk.Filter(response, func(agent gocd.Agent) bool {
+					for _, os := range agentOS {
+						return funk.Contains(agent.OS, os)
+					}
+
+					return false
+				}).([]gocd.Agent)
+			}
+
 			agents := make([]map[string]string, 0)
 
-			for _, response := range responses {
+			for _, agentResponse := range response {
 				agent := map[string]string{
-					"id":   response.ID,
-					"name": response.Name,
+					"id":   agentResponse.ID,
+					"name": agentResponse.Name,
 				}
 
 				agents = append(agents, agent)
@@ -248,6 +316,13 @@ func listAgentsCommand() *cobra.Command {
 			return cliRenderer.Render(agents)
 		},
 	}
+
+	listAgentsCmd.PersistentFlags().StringSliceVarP(&agentResources, "resource", "", nil,
+		"list of resource names to filter the agents from")
+	listAgentsCmd.PersistentFlags().StringSliceVarP(&agentEnvironments, "environment", "", nil,
+		"list of environment names to filter the agents from")
+	listAgentsCmd.PersistentFlags().StringSliceVarP(&agentOS, "os", "", nil,
+		"list of operating system names to filter the agents from")
 
 	return listAgentsCmd
 }
@@ -335,4 +410,17 @@ gocd-cli agents kill-task --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 	registerAgentsFlags(killTaskCmd)
 
 	return killTaskCmd
+}
+
+func getEnvironmentNames(environments any) []string {
+	envs := environments.([]interface{})
+
+	envNames := make([]string, 0)
+
+	for _, value := range envs {
+		name := value.(map[string]interface{})
+		envNames = append(envNames, name["name"].(string))
+	}
+
+	return envNames
 }

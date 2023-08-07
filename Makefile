@@ -69,3 +69,6 @@ generate.document: ## generates cli documents using 'github.com/spf13/cobra/doc'
 
 test: ## runs test cases
 	@go test ./... -mod=vendor -coverprofile cover.out && go tool cover -html=cover.out -o cover.html && open cover.html
+
+docker.login: ## Should login to ghcr docker registry.
+	@echo "${GITHUB_TOKEN}" | docker login ghcr.io -u nikshilsbhat --password-stdin

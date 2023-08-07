@@ -37,9 +37,9 @@ dockers:
       - gocd-cli
     skip_push: false
     image_templates:
-      - "basnik/gocd-cli:latest"
-      - "basnik/gocd-cli:{{ .Tag }}"
-      - "basnik/gocd-cli:{{ .Tag }}-{{ .Env.GOVERSION }}"
+      - "ghcr.io/nikhilsbhat/gocd-cli:latest"
+      - "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}"
+      - "ghcr.io/nikhilsbhat/gocd-cli:{{ .Tag }}-{{ .Env.GOVERSION }}"
     dockerfile: Dockerfile
 
 archives:

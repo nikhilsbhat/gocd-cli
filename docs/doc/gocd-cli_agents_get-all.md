@@ -9,8 +9,10 @@ gocd-cli agents get-all [flags]
 ### Options
 
 ```
+      --disabled              when enabled, it fetches only the disabled agents
       --environment strings   list of environment names to filter the agents from
   -h, --help                  help for get-all
+      --name string           agent's name or pattern to match while filtering the results
       --os strings            list of operating system names to filter the agents from
       --resource strings      list of resource names to filter the agents from
 ```

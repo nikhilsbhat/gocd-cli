@@ -715,7 +715,7 @@ func validatePipelinesCommand() *cobra.Command {
 			success, err := client.ValidatePipelineSyntax(
 				pluginCfg,
 				pipelineValidateObj.pipelines,
-				pipelineValidateObj.fetchVersionFromServer,
+				!pipelineValidateObj.fetchVersionFromServer,
 			)
 			if err != nil {
 				return err
@@ -742,8 +742,8 @@ func validatePipelinesCommand() *cobra.Command {
 			" if the URL needs to be set to something else, then it can be set using this")
 	validatePipelinesCmd.PersistentFlags().StringVarP(&pipelineValidateObj.pluginLocalPath, "plugin-path", "", "",
 		"if you prefer managing plugins outside the gocd-cli, the path to already downloaded plugins can be set using this")
-	validatePipelinesCmd.PersistentFlags().BoolVarP(&pipelineValidateObj.fetchVersionFromServer, "fetch-version-from-server", "", false,
-		"if enabled, plugin(auto-detected) version would be fetched from GoCD server")
+	validatePipelinesCmd.PersistentFlags().BoolVarP(&pipelineValidateObj.fetchVersionFromServer, "no-fetch-version-from-server", "", false,
+		"if enabled, plugin(auto-detected) version would not be fetched from GoCD server")
 
 	return validatePipelinesCmd
 }

@@ -15,12 +15,12 @@ gocd-cli pipeline validate-syntax --pipeline pipeline1 --pipeline pipeline2
 ### Options
 
 ```
-      --fetch-version-from-server    if enabled, plugin(auto-detected) version would be fetched from GoCD server
-  -h, --help                         help for validate-syntax
-      --pipeline strings             list of pipelines for which the syntax has to be validated
-      --plugin-download-url string   Auto-detection of the plugin sets the download URL too (Github's release URL); if the URL needs to be set to something else, then it can be set using this
-      --plugin-path string           if you prefer managing plugins outside the gocd-cli, the path to already downloaded plugins can be set using this
-      --plugin-version string        GoCD plugin version against which the pipeline has to be validated (the plugin type would be auto-detected); if missed, the pipeline would be validated against the latest version of the auto-detected plugin
+  -h, --help                           help for validate-syntax
+      --no-fetch-version-from-server   if enabled, plugin(auto-detected) version would not be fetched from GoCD server
+      --pipeline strings               list of pipelines for which the syntax has to be validated
+      --plugin-download-url string     Auto-detection of the plugin sets the download URL too (Github's release URL); if the URL needs to be set to something else, then it can be set using this
+      --plugin-path string             if you prefer managing plugins outside the gocd-cli, the path to already downloaded plugins can be set using this
+      --plugin-version string          GoCD plugin version against which the pipeline has to be validated (the plugin type would be auto-detected); if missed, the pipeline would be validated against the latest version of the auto-detected plugin
 ```
 
 ### Options inherited from parent commands

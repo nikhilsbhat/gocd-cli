@@ -136,6 +136,19 @@ func registerAgentsFlags(cmd *cobra.Command) {
 		"name of the agent on whom the action is to be performed")
 }
 
+func registerAgentsFilterFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringSliceVarP(&agentResources, "resource", "", nil,
+		"list of resource names to filter the agents from")
+	cmd.PersistentFlags().StringSliceVarP(&agentEnvironments, "environment", "", nil,
+		"list of environment names to filter the agents from")
+	cmd.PersistentFlags().StringSliceVarP(&agentOS, "os", "", nil,
+		"list of operating system names to filter the agents from")
+	cmd.PersistentFlags().BoolVarP(&agentsDisabled, "disabled", "", false,
+		"when enabled, it fetches only the disabled agents")
+	cmd.PersistentFlags().StringVarP(&agentName, "name", "", "",
+		"agent's name or pattern to match while filtering the results")
+}
+
 func registerJobsNStageFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&stageConfig.Pipeline, "pipeline", "", "",
 		"pipeline name from which the jobs/stage to be triggered")

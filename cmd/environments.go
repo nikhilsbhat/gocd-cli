@@ -77,8 +77,10 @@ func getEnvironmentsCommand() *cobra.Command {
 				envVars := make([]gocd.EnvVars, 0)
 				for _, environment := range response {
 					for _, envVar := range environment.EnvVars {
-						if funk.Contains(environmentVariables, envVar.Name) {
-							envVars = append(envVars, envVar)
+						for _, environmentVariable := range environmentVariables {
+							if funk.Contains(envVar.Name, environmentVariable) {
+								envVars = append(envVars, envVar)
+							}
 						}
 					}
 				}
@@ -136,8 +138,10 @@ func getEnvironmentCommand() *cobra.Command {
 			if len(environmentVariables) != 0 {
 				envVars := make([]gocd.EnvVars, 0)
 				for _, envVar := range response.EnvVars {
-					if funk.Contains(environmentVariables, envVar.Name) {
-						envVars = append(envVars, envVar)
+					for _, environmentVariable := range environmentVariables {
+						if funk.Contains(envVar.Name, environmentVariable) {
+							envVars = append(envVars, envVar)
+						}
 					}
 				}
 
@@ -322,13 +326,13 @@ func listEnvironmentsCommand() *cobra.Command {
 				return err
 			}
 
-			var environments []string
+			var goCdEnvironments []string
 
 			for _, environment := range response {
-				environments = append(environments, environment.Name)
+				goCdEnvironments = append(goCdEnvironments, environment.Name)
 			}
 
-			return cliRenderer.Render(strings.Join(environments, "\n"))
+			return cliRenderer.Render(strings.Join(goCdEnvironments, "\n"))
 		},
 	}
 

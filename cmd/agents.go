@@ -14,6 +14,7 @@ import (
 )
 
 var (
+	agentsDisabled                             bool
 	agentName, agentID                         string
 	agentEnvironments, agentResources, agentOS []string
 )
@@ -62,35 +63,7 @@ func getAgentsCommand() *cobra.Command {
 				return err
 			}
 
-			if len(agentResources) != 0 {
-				response = funk.Filter(response, func(agent gocd.Agent) bool {
-					for _, resource := range agentResources {
-						return funk.Contains(agent.Resources, resource)
-					}
-
-					return false
-				}).([]gocd.Agent)
-			}
-
-			if len(agentEnvironments) != 0 {
-				response = funk.Filter(response, func(agent gocd.Agent) bool {
-					for _, environment := range agentEnvironments {
-						return funk.Contains(getEnvironmentNames(agent.Environments), environment)
-					}
-
-					return false
-				}).([]gocd.Agent)
-			}
-
-			if len(agentOS) != 0 {
-				response = funk.Filter(response, func(agent gocd.Agent) bool {
-					for _, os := range agentOS {
-						return funk.Contains(agent.OS, os)
-					}
-
-					return false
-				}).([]gocd.Agent)
-			}
+			response = filterAgentsResponse(response)
 
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
@@ -109,12 +82,7 @@ func getAgentsCommand() *cobra.Command {
 		},
 	}
 
-	getAgentsCmd.PersistentFlags().StringSliceVarP(&agentResources, "resource", "", nil,
-		"list of resource names to filter the agents from")
-	getAgentsCmd.PersistentFlags().StringSliceVarP(&agentEnvironments, "environment", "", nil,
-		"list of environment names to filter the agents from")
-	getAgentsCmd.PersistentFlags().StringSliceVarP(&agentOS, "os", "", nil,
-		"list of operating system names to filter the agents from")
+	registerAgentsFilterFlags(getAgentsCmd)
 
 	return getAgentsCmd
 }
@@ -272,35 +240,7 @@ func listAgentsCommand() *cobra.Command {
 				return err
 			}
 
-			if len(agentResources) != 0 {
-				response = funk.Filter(response, func(agent gocd.Agent) bool {
-					for _, resource := range agentResources {
-						return funk.Contains(agent.Resources, resource)
-					}
-
-					return false
-				}).([]gocd.Agent)
-			}
-
-			if len(agentEnvironments) != 0 {
-				response = funk.Filter(response, func(agent gocd.Agent) bool {
-					for _, environment := range agentEnvironments {
-						return funk.Contains(getEnvironmentNames(agent.Environments), environment)
-					}
-
-					return false
-				}).([]gocd.Agent)
-			}
-
-			if len(agentOS) != 0 {
-				response = funk.Filter(response, func(agent gocd.Agent) bool {
-					for _, os := range agentOS {
-						return funk.Contains(agent.OS, os)
-					}
-
-					return false
-				}).([]gocd.Agent)
-			}
+			response = filterAgentsResponse(response)
 
 			agents := make([]map[string]string, 0)
 
@@ -317,12 +257,7 @@ func listAgentsCommand() *cobra.Command {
 		},
 	}
 
-	listAgentsCmd.PersistentFlags().StringSliceVarP(&agentResources, "resource", "", nil,
-		"list of resource names to filter the agents from")
-	listAgentsCmd.PersistentFlags().StringSliceVarP(&agentEnvironments, "environment", "", nil,
-		"list of environment names to filter the agents from")
-	listAgentsCmd.PersistentFlags().StringSliceVarP(&agentOS, "os", "", nil,
-		"list of operating system names to filter the agents from")
+	registerAgentsFilterFlags(listAgentsCmd)
 
 	return listAgentsCmd
 }
@@ -423,4 +358,60 @@ func getEnvironmentNames(environments any) []string {
 	}
 
 	return envNames
+}
+
+func filterAgentsResponse(response []gocd.Agent) []gocd.Agent {
+	if agentsDisabled {
+		response = funk.Filter(response, func(agent gocd.Agent) bool {
+			return agent.ConfigState == "Disabled"
+		}).([]gocd.Agent)
+	}
+
+	if len(agentName) != 0 {
+		response = funk.Filter(response, func(agent gocd.Agent) bool {
+			return funk.Contains(agent.Name, agentName)
+		}).([]gocd.Agent)
+	}
+
+	if len(agentOS) != 0 {
+		response = funk.Filter(response, func(agent gocd.Agent) bool {
+			for _, os := range agentOS {
+				return funk.Contains(agent.OS, os)
+			}
+
+			return false
+		}).([]gocd.Agent)
+	}
+
+	if len(agentResources) != 0 {
+		response = funk.Filter(response, func(agent gocd.Agent) bool {
+			for _, resource := range agentResources {
+				return funk.Contains(agent.Resources, resource)
+			}
+
+			return false
+		}).([]gocd.Agent)
+	}
+
+	if len(agentEnvironments) != 0 {
+		response = funk.Filter(response, func(agent gocd.Agent) bool {
+			for _, environment := range agentEnvironments {
+				return funk.Contains(getEnvironmentNames(agent.Environments), environment)
+			}
+
+			return false
+		}).([]gocd.Agent)
+	}
+
+	if len(agentOS) != 0 {
+		response = funk.Filter(response, func(agent gocd.Agent) bool {
+			for _, os := range agentOS {
+				return funk.Contains(agent.OS, os)
+			}
+
+			return false
+		}).([]gocd.Agent)
+	}
+
+	return response
 }

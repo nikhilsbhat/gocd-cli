@@ -206,6 +206,7 @@ func scheduleBackup() *cobra.Command {
 
 				if response.Status != "COMPLETED" && response.Status != "IN_PROGRESS" {
 					cliLogger.Errorf("looks like backup status is neither IN_PROGRESS nor COMPLETED rather it is %s", response.Status)
+					cliLogger.Error(response.Message)
 
 					return err
 				}

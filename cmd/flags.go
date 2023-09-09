@@ -56,8 +56,6 @@ func registerConfigRepoDefinitionsFlags(cmd *cobra.Command) {
 }
 
 func registerConfigRepoPreflightFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVarP(&configRepoPreflightObj.pluginID, "plugin-id", "i", "",
-		"GoCD's config-repo plugin ID against which the pipelines has to be validated")
 	cmd.PersistentFlags().StringSliceVarP(&configRepoPreflightObj.pipelineFiles, "pipeline-file", "f", nil,
 		"GoCD pipeline files that should be considered for config-repo preflight checks")
 	cmd.PersistentFlags().StringVarP(&configRepoPreflightObj.pipelineDir, "pipeline-dir", "", "",
@@ -65,11 +63,17 @@ func registerConfigRepoPreflightFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&configRepoPreflightObj.pipelineExtRegex, "regex", "", "*.gocd.yaml",
 		"regex to be used while identifying the pipeline files under the directory which was passed in pipeline-dir, "+
 			"should be co-used with --pipeline-dir")
-	cmd.PersistentFlags().BoolVarP(&configRepoPreflightObj.groovy, "groovy", "", false,
+	commonPluginFlags(cmd)
+}
+
+func commonPluginFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringVarP(&goCdPluginObj.pluginID, "plugin-id", "i", "",
+		"GoCD's config-repo plugin ID against which the pipelines has to be validated/exported")
+	cmd.PersistentFlags().BoolVarP(&goCdPluginObj.groovy, "groovy", "", false,
 		"setting this would set 'plugin-id' to 'cd.go.contrib.plugins.configrepo.groovy'")
-	cmd.PersistentFlags().BoolVarP(&configRepoPreflightObj.json, "json", "", false,
+	cmd.PersistentFlags().BoolVarP(&goCdPluginObj.json, "json", "", false,
 		"setting this would set 'plugin-id' to 'json.config.plugin'")
-	cmd.PersistentFlags().BoolVarP(&configRepoPreflightObj.yaml, "yaml", "", false,
+	cmd.PersistentFlags().BoolVarP(&goCdPluginObj.yaml, "yaml", "", false,
 		"setting this would set 'plugin-id' to 'yaml.config.plugin'")
 }
 

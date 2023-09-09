@@ -13,13 +13,9 @@ import (
 )
 
 type configRepoPreflight struct {
-	pluginID         string
 	pipelineFiles    []string
 	pipelineDir      string
 	pipelineExtRegex string
-	groovy           bool
-	json             bool
-	yaml             bool
 }
 
 var (
@@ -461,7 +457,7 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 
 			pipelineMap := client.SetPipelineFiles(pipelineFiles)
 
-			response, err := client.ConfigRepoPreflightCheck(pipelineMap, configRepoPreflightObj.getPluginID(), args[0])
+			response, err := client.ConfigRepoPreflightCheck(pipelineMap, goCdPluginObj.getPluginID(), args[0])
 			if err != nil {
 				return err
 			}
@@ -480,7 +476,7 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 	return configTriggerUpdateCommand
 }
 
-func (cfg *configRepoPreflight) getPluginID() string {
+func (cfg *goCdPlugin) getPluginID() string {
 	if cfg.json {
 		return "json.config.plugin"
 	}

@@ -12,6 +12,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type goCdPlugin struct {
+	pluginID string
+	groovy   bool
+	json     bool
+	yaml     bool
+}
+
+var goCdPluginObj goCdPlugin
+
 func registerPluginsCommand() *cobra.Command {
 	pluginCommand := &cobra.Command{
 		Use:   "plugin",

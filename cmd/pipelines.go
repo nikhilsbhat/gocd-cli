@@ -27,7 +27,6 @@ var (
 	goCDPausePipelineAtStart bool
 	goCDPipelinePause        bool
 	goCDPipelineUnPause      bool
-	pluginID                 string
 	numberOfDays             time.Duration
 )
 
@@ -759,7 +758,7 @@ func exportPipelineToConfigRepoFormatCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline change-config-repo-format pipeline1 --plugin-id yaml.config.plugin`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			response, err := client.ExportPipelineToConfigRepoFormat(args[0], pluginID)
+			response, err := client.ExportPipelineToConfigRepoFormat(args[0], goCdPluginObj.getPluginID())
 			if err != nil {
 				return err
 			}
@@ -804,8 +803,7 @@ func exportPipelineToConfigRepoFormatCommand() *cobra.Command {
 		},
 	}
 
-	exportPipelineToConfigRepoFormatCmd.PersistentFlags().StringVarP(&pluginID, "plugin-id", "", "",
-		"if you prefer managing plugins outside the gocd-cli, the path to already downloaded plugins can be set using this")
+	commonPluginFlags(exportPipelineToConfigRepoFormatCmd)
 	exportPipelineToConfigRepoFormatCmd.PersistentFlags().BoolVarP(&rawOutput, "raw", "", false,
 		"if enabled, prints response in raw format")
 	exportPipelineToConfigRepoFormatCmd.PersistentFlags().BoolVarP(&renderToFile, "render-to-file", "", false,

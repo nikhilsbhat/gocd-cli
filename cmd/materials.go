@@ -1,13 +1,20 @@
 package cmd
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/thoas/go-funk"
 )
 
-var materialFilter []string
+var (
+	materialName    []string
+	materialFilters []string
+	materialFailed  bool
+)
 
 func registerMaterialsCommand() *cobra.Command {
 	registerAgentProfilesCmd := &cobra.Command{
@@ -49,10 +56,49 @@ func getMaterialsCommand() *cobra.Command {
 				return err
 			}
 
-			if len(materialFilter) != 0 {
+			if materialFailed {
 				response = funk.Filter(response, func(material gocd.Material) bool {
-					return funk.Contains(materialFilter, material.Attributes.Name)
+					return len(material.Messages) != 0
 				}).([]gocd.Material)
+			}
+
+			if len(materialName) != 0 {
+				response = funk.Filter(response, func(material gocd.Material) bool {
+					return funk.Contains(materialName, material.Config.Attributes.URL)
+				}).([]gocd.Material)
+			}
+
+			if len(materialFilters) != 0 {
+				for _, materialFilter := range materialFilters {
+					filter := strings.Split(materialFilter, "=")
+
+					response = funk.Filter(response, func(material gocd.Material) bool {
+						switch strings.ToLower(filter[0]) {
+						case "url":
+							if funk.Contains(material.Config.Attributes.URL, filter[1]) {
+								return true
+							}
+
+							return false
+						case "type":
+							if funk.Contains(material.Config.Type, filter[1]) {
+								return true
+							}
+
+							return false
+						case "can_update":
+							boolValue, _ := strconv.ParseBool(strings.ToLower(filter[1]))
+
+							return material.CanTriggerUpdate == boolValue
+						case "auto_update":
+							boolValue, _ := strconv.ParseBool(strings.ToLower(filter[1]))
+
+							return material.Config.Attributes.AutoUpdate == boolValue
+						}
+
+						return false
+					}).([]gocd.Material)
+				}
 			}
 
 			if len(jsonQuery) != 0 {

@@ -11,8 +11,10 @@ import (
 )
 
 var (
-	materialName    []string
+	materialNames   []string
 	materialFilters []string
+	materialName    string
+	materialID      string
 	materialFailed  bool
 )
 
@@ -36,6 +38,7 @@ GET/LIST and get USAGE of material present in GoCD (make sure you have appropria
 	registerAgentProfilesCmd.AddCommand(getMaterialsCommand())
 	registerAgentProfilesCmd.AddCommand(getMaterialUsageCommand())
 	registerAgentProfilesCmd.AddCommand(listMaterialsCommand())
+	registerAgentProfilesCmd.AddCommand(triggerMaterialUpdateCommand())
 
 	for _, command := range registerAgentProfilesCmd.Commands() {
 		command.SilenceUsage = true
@@ -62,9 +65,9 @@ func getMaterialsCommand() *cobra.Command {
 				}).([]gocd.Material)
 			}
 
-			if len(materialName) != 0 {
+			if len(materialNames) != 0 {
 				response = funk.Filter(response, func(material gocd.Material) bool {
-					return funk.Contains(materialName, material.Config.Attributes.URL)
+					return funk.Contains(materialNames, material.Config.Attributes.URL)
 				}).([]gocd.Material)
 			}
 
@@ -175,4 +178,32 @@ func getMaterialUsageCommand() *cobra.Command {
 	registerRawFlags(getAgentProfilesUsageCmd)
 
 	return getAgentProfilesUsageCmd
+}
+
+func triggerMaterialUpdateCommand() *cobra.Command {
+	triggerMaterialUpdateCmd := &cobra.Command{
+		Use:     "trigger-update",
+		Short:   "Command to trigger update on the specified material",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			response, err := client.MaterialTriggerUpdate(materialID)
+			if err != nil {
+				return err
+			}
+
+			return cliRenderer.Render(response)
+		},
+	}
+
+	triggerMaterialUpdateCmd.PersistentFlags().StringVarP(&materialName, "name", "", "",
+		"name of the material for which the update needs to be triggered")
+	triggerMaterialUpdateCmd.PersistentFlags().StringVarP(&materialID, "id", "", "",
+		"ID of the material for which the update needs to be triggered")
+
+	if err := triggerMaterialUpdateCmd.MarkPersistentFlagRequired("id"); err != nil {
+		cliLogger.Fatalf("%v", err)
+	}
+
+	return triggerMaterialUpdateCmd
 }

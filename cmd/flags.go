@@ -124,7 +124,7 @@ func registerRawFlags(cmd *cobra.Command) {
 func registerMaterialFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringSliceVarP(&materialFilters, "filter", "", nil,
 		"filter to be applied on all available materials in GoCD, filter can be applied as key=value (ex: --filter type=git)")
-	cmd.PersistentFlags().StringSliceVarP(&materialName, "names", "", nil,
+	cmd.PersistentFlags().StringSliceVarP(&materialNames, "names", "", nil,
 		"name of the material to filter from the available material in GoCD")
 	cmd.PersistentFlags().BoolVarP(&materialFailed, "failed", "", false,
 		"if enabled, only the failed material would be retrieved")

@@ -23,5 +23,5 @@ func (e *UnknownObjectTypeError) Error() string {
 }
 
 func (e *MaterialError) Error() string {
-	return fmt.Sprintf("%s", e.Message)
+	return e.Message
 }

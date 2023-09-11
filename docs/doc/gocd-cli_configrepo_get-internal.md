@@ -1,16 +1,18 @@
-## gocd-cli configrepo get-failed
+## gocd-cli configrepo get-internal
 
-Command to GET all config repos present in GoCD that are in a failed state [https://api.gocd.org/current/#get-all-config-repos]
+Command to GET all config repo information present in GoCD using internal api [/api/internal/config_repos]
+Do not use this command unless you know what you are doing with it
 
 ```
-gocd-cli configrepo get-failed [flags]
+gocd-cli configrepo get-internal [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help    help for get-failed
-      --names   list of config repo name those are failing
+      --failed   when enabled, fetches only the failed config repositories
+  -h, --help     help for get-internal
+      --names    list of config repo name those are failing
 ```
 
 ### Options inherited from parent commands

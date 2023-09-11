@@ -9,6 +9,7 @@ import (
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
+	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )
 
@@ -96,10 +97,12 @@ func getConfigReposCommand() *cobra.Command {
 
 func getFailedConfigReposCommand() *cobra.Command {
 	var configRepoNames bool
+	var configRepoFailed bool
 
 	configGetCommand := &cobra.Command{
-		Use:     "get-failed",
-		Short:   "Command to GET all config repos present in GoCD that are in a failed state [https://api.gocd.org/current/#get-all-config-repos]",
+		Use: "get-internal",
+		Short: `Command to GET all config repo information present in GoCD using internal api [/api/internal/config_repos]
+Do not use this command unless you know what you are doing with it`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -109,21 +112,21 @@ func getFailedConfigReposCommand() *cobra.Command {
 			}
 
 			var repos interface{}
-			failedRepos := make([]gocd.ConfigRepo, 0)
-			for _, configRepo := range response {
-				if len(configRepo.ConfigRepoParseInfo.Error) != 0 {
-					failedRepos = append(failedRepos, configRepo)
-				}
+
+			if configRepoFailed {
+				response = funk.Filter(response, func(configRepo gocd.ConfigRepo) bool {
+					return len(configRepo.ConfigRepoParseInfo.Error) != 0
+				}).([]gocd.ConfigRepo)
 			}
 
 			if configRepoNames {
 				names := make([]string, 0)
-				for _, configRepo := range failedRepos {
+				for _, configRepo := range response {
 					names = append(names, configRepo.ID)
 				}
 				repos = names
 			} else {
-				repos = failedRepos
+				repos = response
 			}
 
 			if len(jsonQuery) != 0 {
@@ -145,6 +148,8 @@ func getFailedConfigReposCommand() *cobra.Command {
 
 	configGetCommand.PersistentFlags().BoolVarP(&configRepoNames, "names", "", false,
 		"list of config repo name those are failing")
+	configGetCommand.PersistentFlags().BoolVarP(&configRepoFailed, "failed", "", false,
+		"when enabled, fetches only the failed config repositories")
 
 	configGetCommand.SetUsageTemplate(getUsageTemplate())
 

@@ -19,3 +19,7 @@ type UnknownObjectTypeError struct {
 type ConfigRepoError struct {
 	Message string
 }
+
+type MaterialError struct {
+	Message string
+}

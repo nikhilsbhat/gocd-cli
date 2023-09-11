@@ -27,11 +27,7 @@ func registerMaterialsCommand() *cobra.Command {
 GET/LIST and get USAGE of material present in GoCD (make sure you have appropriate plugin is installed before using this)`,
 		Example: "gocd-cli materials [sub-command] [arg] [--flags]",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 

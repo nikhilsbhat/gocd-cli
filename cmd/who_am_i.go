@@ -26,11 +26,7 @@ func registerWhoAmICommand() *cobra.Command {
 				return nil
 			}
 
-			if err = cliRenderer.Render(response); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(response)
 		},
 	}
 

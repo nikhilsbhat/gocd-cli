@@ -12,6 +12,8 @@ import (
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/nikhilsbhat/gocd-sdk-go/pkg/plugin"
 	"github.com/spf13/cobra"
+	"github.com/thoas/go-funk"
+	"github.com/tidwall/gjson"
 	"gopkg.in/yaml.v3"
 )
 
@@ -28,6 +30,8 @@ var (
 	goCDPipelinePause        bool
 	goCDPipelineUnPause      bool
 	numberOfDays             time.Duration
+	downStreamPipeline       bool
+	upStreamPipeline         bool
 )
 
 func registerPipelinesCommand() *cobra.Command {
@@ -38,11 +42,7 @@ func registerPipelinesCommand() *cobra.Command {
 [https://api.gocd.org/current/#pipeline-instances, https://api.gocd.org/current/#pipeline-config, https://api.gocd.org/current/#pipelines] to 
 GET/PAUSE/UNPAUSE/UNLOCK/SCHEDULE and comment on a GoCD pipeline`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 
@@ -65,6 +65,7 @@ GET/PAUSE/UNPAUSE/UNLOCK/SCHEDULE and comment on a GoCD pipeline`,
 	pipelineCommand.AddCommand(getPipelineNotSchedulesCommand())
 	pipelineCommand.AddCommand(validatePipelinesCommand())
 	pipelineCommand.AddCommand(exportPipelineToConfigRepoFormatCommand())
+	pipelineCommand.AddCommand(getPipelineVSMCommand())
 
 	for _, command := range pipelineCommand.Commands() {
 		command.SilenceUsage = true
@@ -104,6 +105,63 @@ func getPipelinesCommand() *cobra.Command {
 	}
 
 	return getPipelinesCmd
+}
+
+func getPipelineVSMCommand() *cobra.Command {
+	getPipelineVSMCmd := &cobra.Command{
+		Use:     "vsm",
+		Short:   "Command to GET downstream pipelines of a specified pipeline present in GoCD [https://api.gocd.org/current/#get-pipeline-config]",
+		Args:    cobra.RangeArgs(1, 1),
+		PreRunE: setCLIClient,
+		Example: `gocd-cli pipeline get sample-pipeline --query "[*] | name eq sample-group"`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			pipelineName := args[0]
+
+			pipelineHistory, err := client.GetLimitedPipelineRunHistory(args[0], "10", "0")
+			if err != nil {
+				return err
+			}
+
+			cliLogger.Debugf("run history for pipeline '%s' was fetched successfully", pipelineName)
+
+			response, err := client.GetPipelineVSM(pipelineHistory[0].Name, fmt.Sprintf("%d", pipelineHistory[0].Counter))
+			if err != nil {
+				return err
+			}
+
+			cliLogger.Debugf("VSM details for pipeline '%s' instace '%d' was fetched successfully", pipelineName, pipelineHistory[0].Counter)
+
+			var pipelineStreams []string
+
+			if downStreamPipeline {
+				cliLogger.Debugf("since --down-stream is set fetching downstream pipelines")
+
+				pipelineStreams = findDownStreamPipelines(pipelineName, response)
+			}
+
+			if upStreamPipeline {
+				cliLogger.Debugf("since --up-stream is set fetching upstream pipelines")
+
+				pipelineStreams = findUpStreamPipelines(pipelineName, response)
+			}
+
+			fmt.Println(pipelineStreams)
+			pipelineDependencies, err := parsePipelineConfig(pipelineName, pipelineStreams)
+			if err != nil {
+				return err
+			}
+
+			return cliRenderer.Render(pipelineDependencies)
+		},
+	}
+
+	getPipelineVSMCmd.PersistentFlags().BoolVarP(&downStreamPipeline, "down-stream", "", false,
+		"when enabled, will fetch all downstream pipelines of a specified pipeline.")
+	getPipelineVSMCmd.PersistentFlags().BoolVarP(&upStreamPipeline, "up-stream", "", false,
+		"when enabled, will fetch all upstream pipelines of a specified pipeline. (NOTE: flag up-stream is still in experimental phase)")
+	getPipelineVSMCmd.MarkFlagsMutuallyExclusive("down-stream", "up-stream")
+
+	return getPipelineVSMCmd
 }
 
 func getPipelineCommand() *cobra.Command {
@@ -771,6 +829,7 @@ func exportPipelineToConfigRepoFormatCommand() *cobra.Command {
 					return err
 				}
 
+				//nolint:mirror
 				if _, err = file.Write([]byte(response.PipelineContent)); err != nil {
 					return err
 				}
@@ -810,4 +869,122 @@ func exportPipelineToConfigRepoFormatCommand() *cobra.Command {
 		"if enabled, the exported pipeline would we written to a file")
 
 	return exportPipelineToConfigRepoFormatCmd
+}
+
+func findDownStreamPipelines(pipelineName string, resp gocd.VSM) []string {
+	newParents := []string{pipelineName}
+	for _, level := range resp.Level {
+		for _, node := range level.Nodes {
+			for _, newParent := range newParents {
+				if funk.Contains(node.Parents, newParent) {
+					newParents = append(newParents, node.Name)
+				}
+			}
+		}
+	}
+
+	newParents = GetUniqEntries(newParents)
+
+	return newParents
+}
+
+func findUpStreamPipelines(pipelineName string, resp gocd.VSM) []string {
+	newChilds := []string{pipelineName}
+	for _, level := range resp.Level {
+		for _, node := range level.Nodes {
+			for _, newChild := range newChilds {
+				if funk.Contains(node.Dependents, newChild) {
+					newChilds = append(newChilds, node.Name)
+				}
+			}
+		}
+	}
+
+	newChilds = GetUniqEntries(newChilds)
+
+	return newChilds
+}
+
+func GetUniqEntries(slice []string) []string {
+	for slc := 0; slc < len(slice); slc++ {
+		if Contains(slice[slc+1:], slice[slc]) {
+			slice = append(slice[:slc], slice[slc+1:]...)
+			slc--
+		}
+	}
+
+	return slice
+}
+
+func Contains(slice []string, image string) bool {
+	for _, slc := range slice {
+		if slc == image {
+			return true
+		}
+	}
+
+	return false
+}
+
+func parsePipelineConfig(pipelineName string, pipelineStreams []string) ([]string, error) {
+	var pipelineDependencies []string
+
+	for _, pipelineStream := range pipelineStreams {
+		if pipelineStream != pipelineName {
+			pipelineConfig, err := client.GetPipelineConfig(pipelineStream)
+			if err != nil {
+				return nil, err
+			}
+
+			cliLogger.Debugf("config of pipeline '%s' was fetched successfully", pipelineStream)
+			cliLogger.Debugf("parsing pipeline '%s' to check the VSM mappings", pipelineStream)
+
+			bytes, err := json.Marshal(pipelineConfig.Config)
+			if err != nil {
+				return nil, err
+			}
+
+			pipelineCfg := string(bytes)
+			if gjson.Valid(pipelineCfg) {
+				for _, material := range gjson.Get(pipelineCfg, "materials").Array() {
+					if funk.Contains(gjson.Get(material.String(), "attributes.name").String(), pipelineName) {
+						pipelineDependencies = append(pipelineDependencies, pipelineStream)
+					}
+					if funk.Contains(gjson.Get(material.String(), "attributes.url").String(), pipelineName) {
+						pipelineDependencies = append(pipelineDependencies, pipelineStream)
+					}
+					if funk.Contains(gjson.Get(material.String(), "attributes.pipeline").String(), pipelineName) {
+						pipelineDependencies = append(pipelineDependencies, pipelineStream)
+					}
+				}
+				for _, material := range gjson.Get(pipelineCfg, "parameters").Array() {
+					if funk.Contains(gjson.Get(material.String(), "name").String(), pipelineName) {
+						pipelineDependencies = append(pipelineDependencies, pipelineStream)
+					}
+					if funk.Contains(gjson.Get(material.String(), "value").String(), pipelineName) {
+						pipelineDependencies = append(pipelineDependencies, pipelineStream)
+					}
+				}
+				for _, stage := range gjson.Get(pipelineCfg, "stages").Array() {
+					for _, job := range gjson.Get(stage.String(), "jobs").Array() {
+						for _, tasks := range gjson.Get(job.String(), "tasks").Array() {
+							if gjson.Get(tasks.String(), "type").String() == "fetch" {
+								if funk.Contains(gjson.Get(tasks.String(), "attributes.pipeline").String(), pipelineName) {
+									cliLogger.Debugf("pipeline '%s' is mapped as dependency for '%s'", pipelineStream, pipelineName)
+
+									pipelineDependencies = append(pipelineDependencies, pipelineStream)
+								}
+							}
+						}
+					}
+				}
+
+				cliLogger.Debugf("pipeline '%s' parsed successfully", pipelineConfig.Config["name"])
+			}
+		}
+	}
+
+	pipelineDependencies = GetUniqEntries(pipelineDependencies)
+
+	return pipelineDependencies, nil
 }

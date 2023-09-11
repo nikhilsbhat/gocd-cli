@@ -74,11 +74,7 @@ func getRootCommand() *cobra.Command {
 		Long:    `Command line interface for GoCD that helps in interacting with GoCD CI/CD server`,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 	rootCommand.SetUsageTemplate(getUsageTemplate())

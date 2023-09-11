@@ -16,7 +16,7 @@ var (
 	cliRenderer render.Renderer
 )
 
-func setCLIClient(cmd *cobra.Command, args []string) error {
+func setCLIClient(_ *cobra.Command, _ []string) error {
 	var caContent []byte
 
 	SetLogger(cliCfg.LogLevel)

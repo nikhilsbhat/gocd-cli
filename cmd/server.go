@@ -12,11 +12,7 @@ func registerServerCommand() *cobra.Command {
 		Long: `Command leverages GoCD health apis' [https://api.gocd.org/current/#server-health-messages, https://api.gocd.org/current/#server-health] to 
 GET GoCD server's health and health messages'`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 

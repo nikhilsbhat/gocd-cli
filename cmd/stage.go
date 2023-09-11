@@ -10,11 +10,7 @@ func registerStageCommand() *cobra.Command {
 [https://api.gocd.org/current/#stage-instancess] to
 CANCEL/RUN stage of specific pipeline present GoCD`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 

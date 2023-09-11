@@ -19,11 +19,7 @@ func registerArtifactCommand() *cobra.Command {
 		Long: `Command leverages GoCD agents apis' [https://api.gocd.org/current/#artifacts-config, https://api.gocd.org/current/#artifact-store] to 
 GET/CREATE/UPDATE/DELETE GoCD artifact`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 

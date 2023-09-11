@@ -32,11 +32,7 @@ func registerConfigRepoCommand() *cobra.Command {
 		Long: `Command leverages GoCD config repo apis' [https://api.gocd.org/current/#config-repo] to 
 GET/CREATE/UPDATE/DELETE and trigger update on the same`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 
@@ -277,11 +273,7 @@ func getCreateConfigRepoCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(fmt.Sprintf("config repo %s created successfully", configRepo.ID)); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(fmt.Sprintf("config repo %s created successfully", configRepo.ID))
 		},
 	}
 
@@ -341,11 +333,7 @@ func getDeleteConfigRepoCommand() *cobra.Command {
 				return err
 			}
 
-			if err := cliRenderer.Render(fmt.Sprintf("config repo deleted: %s", args[0])); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(fmt.Sprintf("config repo deleted: %s", args[0]))
 		},
 	}
 
@@ -389,11 +377,7 @@ func getConfigRepoStatusCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(response); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(response)
 		},
 	}
 
@@ -414,11 +398,7 @@ func getConfigRepoTriggerUpdateCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(response); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(response)
 		},
 	}
 
@@ -467,11 +447,7 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(response); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(response)
 		},
 	}
 

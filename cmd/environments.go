@@ -25,11 +25,7 @@ func registerEnvironmentsCommand() *cobra.Command {
 		Long: `Command leverages GoCD environments apis' [https://api.gocd.org/current/#environment-config] to 
 GET/CREATE/UPDATE/PATCH/DELETE and list GoCD environments`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 

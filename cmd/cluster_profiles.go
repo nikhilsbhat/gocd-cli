@@ -19,11 +19,7 @@ func registerClusterProfilesCommand() *cobra.Command {
 		Long: `Command leverages GoCD cluster-profile apis' [https://api.gocd.org/current/#cluster-profiles] to 
 GET/CREATE/UPDATE/DELETE cluster profiles present in GoCD`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 

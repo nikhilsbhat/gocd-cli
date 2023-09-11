@@ -28,11 +28,7 @@ func registerPluginsCommand() *cobra.Command {
 		Long: `Command leverages GoCD config repo apis' [https://api.gocd.org/current/#plugin-settings, https://api.gocd.org/current/#plugin-info] to 
 GET/CREATE/UPDATE plugins settings or information`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 

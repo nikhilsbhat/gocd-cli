@@ -19,11 +19,7 @@ func registerEncryptionCommand() *cobra.Command {
 		Long: `Command leverages GoCD api [https://api.gocd.org/current/#encryption] during value encryption and 
 AES decryption while decrypting encrypted value [https://github.com/nikhilsbhat/gocd-sdk-go/blob/master/encryption.go#L49]`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 
@@ -54,11 +50,7 @@ func getEncryptCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(response); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(response)
 		},
 	}
 
@@ -92,11 +84,7 @@ func getDecryptCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(response); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(response)
 		},
 	}
 

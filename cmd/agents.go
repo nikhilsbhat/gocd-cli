@@ -26,11 +26,7 @@ func registerAgentCommand() *cobra.Command {
 		Long: `Command leverages GoCD agents apis' [https://api.gocd.org/current/#agents] to 
 GET/UPDATE/DELETE GoCD agent also kill task and job run history from an agent`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 

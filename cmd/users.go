@@ -18,11 +18,7 @@ func registerUsersCommand() *cobra.Command {
 		Long: `Command leverages GoCD users apis' [https://api.gocd.org/current/#users] to 
 GET/CREATE/UPDATE/DELETE/BULK-DELETE/BULK-UPDATE the users in GoCD server.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 
@@ -54,11 +50,7 @@ func usersGetCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(response); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(response)
 		},
 	}
 
@@ -77,11 +69,7 @@ func userGetCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(response); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(response)
 		},
 	}
 
@@ -119,11 +107,7 @@ func userCreateCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(fmt.Sprintf("user %s created successfully", user.Name)); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(fmt.Sprintf("user %s created successfully", user.Name))
 		},
 	}
 
@@ -161,11 +145,7 @@ func userUpdateCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(fmt.Sprintf("user %s updated successfully", user.Name)); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(fmt.Sprintf("user %s updated successfully", user.Name))
 		},
 	}
 
@@ -183,11 +163,7 @@ func userDeleteCommand() *cobra.Command {
 				return err
 			}
 
-			if err := cliRenderer.Render(fmt.Sprintf("user deleted: %s", args[0])); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(fmt.Sprintf("user deleted: %s", args[0]))
 		},
 	}
 
@@ -224,11 +200,7 @@ func bulkDeleteUsersCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render("users deleted in bulk"); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render("users deleted in bulk")
 		},
 	}
 

@@ -24,11 +24,7 @@ func registerBackupCommand() *cobra.Command {
 		Long: `Command leverages GoCD backup apis' [https://api.gocd.org/current/#backups] to 
 GET/CREATE/UPDATE/DELETE/SCHEDULE the backup in GoCD server.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 
@@ -61,11 +57,7 @@ func getBackupConfig() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(response); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(response)
 		},
 	}
 
@@ -143,11 +135,7 @@ func getBackupStats() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(response); err != nil {
-				return err
-			}
-
-			return nil
+			return cliRenderer.Render(response)
 		},
 	}
 

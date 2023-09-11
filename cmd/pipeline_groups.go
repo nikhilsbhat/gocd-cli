@@ -19,11 +19,7 @@ func registerPipelineGroupsCommand() *cobra.Command {
 		Long: `Command leverages GoCD pipeline group config apis' [https://api.gocd.org/current/#pipeline-group-config] to 
 GET/CREATE/UPDATE/DELETE and list GoCD pipeline groups`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 

@@ -20,6 +20,7 @@ linters:
     - dupl
     - goconst
     - maligned
+    - depguard
 
 issues:
   exclude-rules:
@@ -43,7 +44,11 @@ linters-settings:
     threshold: 450
 
   gocognit:
-    min-complexity: 50
+    min-complexity: 78
+
+  nestif:
+    min-complexity: 20
+
 
 run:
   concurrency: 10

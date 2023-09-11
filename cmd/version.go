@@ -32,12 +32,12 @@ var (
 
 // BuildInfo represents version of utility.
 type BuildInfo struct {
-	Version     string
-	Revision    string
-	Environment string
-	BuildDate   string
-	GoVersion   string
-	Platform    string
+	Version     string `json:"version,omitempty"`
+	Revision    string `json:"revision,omitempty"`
+	Environment string `json:"environment,omitempty"`
+	BuildDate   string `json:"buildDate,omitempty"`
+	GoVersion   string `json:"goVersion,omitempty"`
+	Platform    string `json:"platform,omitempty"`
 }
 
 // GetBuildInfo return the version and other build info of the application.
@@ -56,7 +56,7 @@ func GetBuildInfo() BuildInfo {
 	}
 }
 
-func AppVersion(cmd *cobra.Command, args []string) error {
+func AppVersion(_ *cobra.Command, _ []string) error {
 	buildInfo, err := json.Marshal(GetBuildInfo())
 	if err != nil {
 		log.Fatalf("fetching version of GoCD cli failed with: %v\n", err)
@@ -75,14 +75,14 @@ func AppVersion(cmd *cobra.Command, args []string) error {
 		}
 		serverVersionInfo = strings.Join([]string{"server version", string(serverVersionJSON), "\n"}, ": ")
 
-		_, err = writer.Write([]byte(serverVersionInfo))
+		_, err = writer.Write([]byte(serverVersionInfo)) //nolint:mirror
 		if err != nil {
 			log.Fatalln(err)
 		}
 	}
 
 	cliVersionInfo := strings.Join([]string{"client version", string(buildInfo), "\n"}, ": ")
-	_, err = writer.Write([]byte(cliVersionInfo))
+	_, err = writer.Write([]byte(cliVersionInfo)) //nolint:mirror
 	if err != nil {
 		log.Fatalln(err)
 	}

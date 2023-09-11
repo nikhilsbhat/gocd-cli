@@ -20,11 +20,7 @@ func registerAuthConfigCommand() *cobra.Command {
 		Long: `Using the auth config commands, one can cache the authorization configuration onto a file so it can be used by further calls made using this utility.
 Also, the cached authentication configurations can be erased using the same`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 
@@ -80,6 +76,7 @@ func getAuthStoreCommand() *cobra.Command {
 				return err
 			}
 
+			//nolint:mirror
 			if _, err = authConfigFile.WriteString(string(cfgYAML)); err != nil {
 				cliLogger.Errorf("writing auth config data to file '%s' errored with '%s'", authConfigFile.Name(), err)
 

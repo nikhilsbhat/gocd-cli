@@ -24,19 +24,11 @@ type Renderer struct {
 // If none is selected it prints as the source.
 func (r *Renderer) Render(value interface{}) error {
 	if r.JSON {
-		if err := r.toJSON(value); err != nil {
-			return err
-		}
-
-		return nil
+		return r.toJSON(value)
 	}
 
 	if r.YAML {
-		if err := r.toYAML(value); err != nil {
-			return err
-		}
-
-		return nil
+		return r.toYAML(value)
 	}
 
 	r.logger.Debug("no format was specified for rendering output to defaults")

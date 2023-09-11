@@ -15,11 +15,7 @@ func registerJobsCommand() *cobra.Command {
 [https://api.gocd.org/current/#scheduled-jobs] to
 SCHEDULE/RUN/RUN-FAILED jobs of specific pipeline present GoCD`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 

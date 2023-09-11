@@ -80,7 +80,7 @@ func TestObject_GetQuery(t *testing.T) {
 		assert.Equal(t, expected, response)
 	})
 
-	t.Run("should be able to to identify query as find execute the query successfully", func(t *testing.T) {
+	t.Run("should be able to identify query as find executes the query successfully", func(t *testing.T) {
 		data := []gocd.ConfigRepo{
 			{
 				ID:       "sample-repo",

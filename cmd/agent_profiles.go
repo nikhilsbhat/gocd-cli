@@ -20,11 +20,7 @@ func registerAgentProfilesCommand() *cobra.Command {
 		Long: `Command leverages GoCD elastic-agent-profile apis' [https://api.gocd.org/current/#elastic-agent-profiles] to 
 GET/CREATE/UPDATE/DELETE elastic agent profiles in GoCD (make sure you have appropriate plugin is installed before using this)`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 

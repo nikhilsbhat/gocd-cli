@@ -23,11 +23,7 @@ https://api.gocd.org/current/#create-or-update-siteurls-config
 
 to operate on GoCD server's configuration`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 
@@ -53,11 +49,7 @@ https://api.gocd.org/current/#get-artifacts-config,
 https://api.gocd.org/current/#update-artifacts-config
 to operate on artifacts in GoCD`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 
@@ -82,11 +74,7 @@ https://api.gocd.org/current/#create-or-update-mailserver-config
 
 to operate on GoCD's site-url configuration`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 
@@ -111,11 +99,7 @@ https://api.gocd.org/current/#update-job-timeout-config
 
 to operate on GoCD's default job timeout configuration`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 
@@ -141,11 +125,7 @@ https://api.gocd.org/current/#delete-mailserver-config
 
 to operate on GoCD server's mail-server configuration'`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 

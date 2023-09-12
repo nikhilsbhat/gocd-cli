@@ -418,8 +418,8 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 			var pathAndPattern []string
 
 			if len(configRepoPreflightObj.pipelineFiles) != 0 {
-				for _, pipelinefile := range configRepoPreflightObj.pipelineFiles {
-					file, err := client.GetPipelineFiles(pipelinefile)
+				for _, pipelineFile := range configRepoPreflightObj.pipelineFiles {
+					file, err := client.GetPipelineFiles(pipelineFile)
 					if err != nil {
 						return err
 					}

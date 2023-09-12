@@ -30,8 +30,6 @@ var (
 	goCDPipelinePause        bool
 	goCDPipelineUnPause      bool
 	numberOfDays             time.Duration
-	downStreamPipeline       bool
-	upStreamPipeline         bool
 )
 
 func registerPipelinesCommand() *cobra.Command {
@@ -108,58 +106,91 @@ func getPipelinesCommand() *cobra.Command {
 }
 
 func getPipelineVSMCommand() *cobra.Command {
+	var (
+		downStreamPipeline bool
+		upStreamPipeline   bool
+		goCDPipelines      []string
+	)
+
+	type pipelineVSM struct {
+		Pipeline            string   `json:"pipeline,omitempty"             yaml:"pipeline,omitempty"`
+		DownstreamPipelines []string `json:"downstream_pipelines,omitempty" yaml:"downstream_pipelines,omitempty"`
+		UpstreamPipelines   []string `json:"upstream_pipelines,omitempty"   yaml:"upstream_pipelines,omitempty"`
+	}
+
 	getPipelineVSMCmd := &cobra.Command{
 		Use:     "vsm",
 		Short:   "Command to GET downstream pipelines of a specified pipeline present in GoCD [https://api.gocd.org/current/#get-pipeline-config]",
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline get sample-pipeline --query "[*] | name eq sample-group"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pipelineName := args[0]
+			vsm := make([]pipelineVSM, 0)
 
-			pipelineHistory, err := client.GetLimitedPipelineRunHistory(args[0], "10", "0")
-			if err != nil {
-				return err
+			for _, goCDPipeline := range goCDPipelines {
+				pipelineHistory, err := client.GetLimitedPipelineRunHistory(goCDPipeline, "10", "0")
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf("run history for pipeline '%s' was fetched successfully", goCDPipeline)
+
+				response, err := client.GetPipelineVSM(pipelineHistory[0].Name, fmt.Sprintf("%d", pipelineHistory[0].Counter))
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf("VSM details for pipeline '%s' instace '%d' was fetched successfully", goCDPipeline, pipelineHistory[0].Counter)
+
+				var pipelineStreams []string
+
+				if downStreamPipeline {
+					cliLogger.Debugf("since --down-stream is set fetching downstream pipelines")
+
+					pipelineStreams = findDownStreamPipelines(goCDPipeline, response)
+				}
+
+				if upStreamPipeline {
+					cliLogger.Debugf("since --up-stream is set fetching upstream pipelines")
+
+					pipelineStreams = findUpStreamPipelines(goCDPipeline, response)
+				}
+
+				pipelineDependencies, err := parsePipelineConfig(goCDPipeline, pipelineStreams)
+				if err != nil {
+					return err
+				}
+
+				if upStreamPipeline {
+					vsm = append(vsm, pipelineVSM{
+						Pipeline:          goCDPipeline,
+						UpstreamPipelines: pipelineDependencies,
+					})
+				}
+
+				if downStreamPipeline {
+					vsm = append(vsm, pipelineVSM{
+						Pipeline:            goCDPipeline,
+						DownstreamPipelines: pipelineDependencies,
+					})
+				}
 			}
 
-			cliLogger.Debugf("run history for pipeline '%s' was fetched successfully", pipelineName)
-
-			response, err := client.GetPipelineVSM(pipelineHistory[0].Name, fmt.Sprintf("%d", pipelineHistory[0].Counter))
-			if err != nil {
-				return err
-			}
-
-			cliLogger.Debugf("VSM details for pipeline '%s' instace '%d' was fetched successfully", pipelineName, pipelineHistory[0].Counter)
-
-			var pipelineStreams []string
-
-			if downStreamPipeline {
-				cliLogger.Debugf("since --down-stream is set fetching downstream pipelines")
-
-				pipelineStreams = findDownStreamPipelines(pipelineName, response)
-			}
-
-			if upStreamPipeline {
-				cliLogger.Debugf("since --up-stream is set fetching upstream pipelines")
-
-				pipelineStreams = findUpStreamPipelines(pipelineName, response)
-			}
-
-			fmt.Println(pipelineStreams)
-			pipelineDependencies, err := parsePipelineConfig(pipelineName, pipelineStreams)
-			if err != nil {
-				return err
-			}
-
-			return cliRenderer.Render(pipelineDependencies)
+			return cliRenderer.Render(vsm)
 		},
 	}
 
+	getPipelineVSMCmd.PersistentFlags().StringSliceVarP(&goCDPipelines, "pipeline", "", nil,
+		"name of the pipeline for which the VSM has to be retrieved")
 	getPipelineVSMCmd.PersistentFlags().BoolVarP(&downStreamPipeline, "down-stream", "", false,
 		"when enabled, will fetch all downstream pipelines of a specified pipeline.")
 	getPipelineVSMCmd.PersistentFlags().BoolVarP(&upStreamPipeline, "up-stream", "", false,
 		"when enabled, will fetch all upstream pipelines of a specified pipeline. (NOTE: flag up-stream is still in experimental phase)")
 	getPipelineVSMCmd.MarkFlagsMutuallyExclusive("down-stream", "up-stream")
+
+	if err := getPipelineVSMCmd.MarkPersistentFlagRequired("pipeline"); err != nil {
+		cliLogger.Fatalf("%v", err)
+	}
 
 	return getPipelineVSMCmd
 }

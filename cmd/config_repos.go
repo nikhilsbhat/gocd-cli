@@ -3,7 +3,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
+	"time"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
@@ -92,8 +94,17 @@ func getConfigReposCommand() *cobra.Command {
 }
 
 func getFailedConfigReposCommand() *cobra.Command {
-	var configRepoNames bool
-	var configRepoFailed bool
+	var (
+		configRepoNames  bool
+		configRepoFailed bool
+		getLastModified  bool
+	)
+
+	type configRepoLastModified struct {
+		LastModified float64 `json:"lastModified,omitempty" yaml:"lastModified,omitempty"`
+		Name         string  `json:"name,omitempty" yaml:"name,omitempty"`
+		URL          string  `json:"url,omitempty" yaml:"url,omitempty"`
+	}
 
 	configGetCommand := &cobra.Command{
 		Use: "get-internal",
@@ -125,6 +136,25 @@ Do not use this command unless you know what you are doing with it`,
 				repos = response
 			}
 
+			if getLastModified {
+				configRepo := make([]configRepoLastModified, 0)
+				for _, cfgRepo := range response {
+					modificationTime := cfgRepo.ConfigRepoParseInfo.LatestParsedModification["modified_time"]
+					if modificationTime != nil {
+						modifiedDate := modificationTime.(string)
+						configRepo = append(configRepo, configRepoLastModified{
+							LastModified: lastUpdatedCommit(modifiedDate),
+							Name:         cfgRepo.ID,
+							URL:          cfgRepo.Material.Attributes.URL,
+						})
+					} else {
+						cliLogger.Debugf("looks like config repo '%s' was never parsed, check the status of it", cfgRepo.ID)
+					}
+				}
+
+				return cliRenderer.Render(configRepo)
+			}
+
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
@@ -146,6 +176,9 @@ Do not use this command unless you know what you are doing with it`,
 		"list of config repo name those are failing")
 	configGetCommand.PersistentFlags().BoolVarP(&configRepoFailed, "failed", "", false,
 		"when enabled, fetches only the failed config repositories")
+	configGetCommand.PersistentFlags().BoolVarP(&getLastModified, "last-modified", "", false,
+		"list config repo with last modified in number of days")
+	configGetCommand.MarkFlagsMutuallyExclusive("last-modified", "names")
 
 	configGetCommand.SetUsageTemplate(getUsageTemplate())
 
@@ -471,4 +504,25 @@ func (cfg *goCdPlugin) getPluginID() string {
 	}
 
 	return cfg.pluginID
+}
+
+func lastUpdatedCommit(date string) float64 {
+	const hoursInADay = 24
+
+	loc, err := time.LoadLocation("Asia/Kolkata")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	tm, err := time.ParseInLocation(time.RFC3339, date, loc)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	parsedTime := tm.In(loc)
+
+	timeNow := time.Now().In(loc)
+
+	diff := timeNow.Sub(parsedTime).Hours() / hoursInADay
+
+	return diff
 }

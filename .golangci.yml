@@ -21,6 +21,7 @@ linters:
     - goconst
     - maligned
     - depguard
+    - tagalign
 
 issues:
   exclude-rules:

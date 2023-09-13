@@ -64,6 +64,7 @@ GET/PAUSE/UNPAUSE/UNLOCK/SCHEDULE and comment on a GoCD pipeline`,
 	pipelineCommand.AddCommand(validatePipelinesCommand())
 	pipelineCommand.AddCommand(exportPipelineToConfigRepoFormatCommand())
 	pipelineCommand.AddCommand(getPipelineVSMCommand())
+	pipelineCommand.AddCommand(getPipelineMapping())
 
 	for _, command := range pipelineCommand.Commands() {
 		command.SilenceUsage = true
@@ -900,6 +901,87 @@ func exportPipelineToConfigRepoFormatCommand() *cobra.Command {
 		"if enabled, the exported pipeline would we written to a file")
 
 	return exportPipelineToConfigRepoFormatCmd
+}
+
+func getPipelineMapping() *cobra.Command {
+	getPipelineMappingCmd := &cobra.Command{
+		Use:     "get-mappings",
+		Short:   "Command to Identify the given pipeline is part of which config-repo/environment of GoCD",
+		Example: "gocd-cli pipeline get-mappings helm-images --yaml",
+		Args:    cobra.RangeArgs(1, 1),
+		PreRunE: setCLIClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			pipelineName := args[0]
+			var goCDConfigRepoName, goCDEnvironmentName string
+
+			cliLogger.Debugf("all configrepo's information would be fetched, to identify pipeline is part of which config repos")
+			configRepos, err := client.GetConfigRepos()
+			if err != nil {
+				return err
+			}
+
+			cliLogger.Debugf("all configrepo's information was fetched successfully")
+
+			for _, configRepo := range configRepos {
+				cliLogger.Debugf("fetching config repo definition, to identify pipeline is part of which config repo")
+				configRepoDefinition, err := client.GetConfigRepoDefinitions(configRepo.ID)
+				if err != nil {
+					if !strings.Contains(err.Error(), "got 404 from GoCD") {
+						return err
+					}
+				}
+				for _, pipelineGroup := range configRepoDefinition.Groups {
+					for _, pipeline := range pipelineGroup.Pipelines {
+						if pipeline.Name == pipelineName {
+							goCDConfigRepoName = configRepo.ID
+						}
+					}
+				}
+			}
+
+			cliLogger.Debugf("all GoCD environment information would be fetched, to identify pipeline is part of which environment")
+
+			environmentNames, err := client.GetEnvironments()
+			if err != nil {
+				return err
+			}
+
+			cliLogger.Debugf("all GoCD environment information was fetched successfully")
+
+			for _, environmentName := range environmentNames {
+				for _, pipeline := range environmentName.Pipelines {
+					if pipeline.Name == pipelineName {
+						goCDEnvironmentName = environmentName.Name
+					}
+				}
+			}
+
+			output := map[string]string{
+				"pipeline":    pipelineName,
+				"config_repo": goCDConfigRepoName,
+				"environment": goCDEnvironmentName,
+			}
+
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := render.SetQuery(output, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
+			}
+
+			return cliRenderer.Render(output)
+		},
+	}
+
+	getPipelineMappingCmd.SetUsageTemplate(getUsageTemplate())
+
+	return getPipelineMappingCmd
 }
 
 func findDownStreamPipelines(pipelineName string, resp gocd.VSM) []string {

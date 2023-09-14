@@ -912,34 +912,21 @@ func getPipelineMapping() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pipelineName := args[0]
-			var goCDConfigRepoName, goCDEnvironmentName string
+			var goCDConfigRepoName, goCDEnvironmentName, originGoCD string
 
-			cliLogger.Debugf("all configrepo's information would be fetched, to identify pipeline is part of which config repos")
-			configRepos, err := client.GetConfigRepos()
+			cliLogger.Debugf("fetching pipeline config to identify which config repo this pipeline is part of")
+			pipelineConfig, err := client.GetPipelineConfig(pipelineName)
 			if err != nil {
 				return err
 			}
 
-			cliLogger.Debugf("all configrepo's information was fetched successfully")
+			cliLogger.Debugf("pipeline config was retrieved successfully")
 
-			for _, configRepo := range configRepos {
-				cliLogger.Debugf("fetching config repo definition, to identify pipeline is part of which config repo")
-				configRepoDefinition, err := client.GetConfigRepoDefinitions(configRepo.ID)
-				if err != nil {
-					if !strings.Contains(err.Error(), "got 404 from GoCD") {
-						return err
-					}
-				}
-				for _, pipelineGroup := range configRepoDefinition.Groups {
-					for _, pipeline := range pipelineGroup.Pipelines {
-						if pipeline.Name == pipelineName {
-							goCDConfigRepoName = configRepo.ID
-						}
-					}
-				}
+			originGoCD = "true"
+			if pipelineConfig.Origin.Type != "gocd" {
+				goCDConfigRepoName = pipelineConfig.Origin.ID
+				originGoCD = "false"
 			}
-
-			cliLogger.Debugf("all GoCD environment information would be fetched, to identify pipeline is part of which environment")
 
 			environmentNames, err := client.GetEnvironments()
 			if err != nil {
@@ -960,6 +947,7 @@ func getPipelineMapping() *cobra.Command {
 				"pipeline":    pipelineName,
 				"config_repo": goCDConfigRepoName,
 				"environment": goCDEnvironmentName,
+				"origin_gocd": originGoCD,
 			}
 
 			if len(jsonQuery) != 0 {

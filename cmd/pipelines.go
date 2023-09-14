@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -108,9 +109,10 @@ func getPipelinesCommand() *cobra.Command {
 
 func getPipelineVSMCommand() *cobra.Command {
 	var (
-		downStreamPipeline bool
-		upStreamPipeline   bool
-		goCDPipelines      []string
+		downStreamPipeline         bool
+		upStreamPipeline           bool
+		goCDPipelineInstanceNumber []string
+		goCDPipelines              []string
 	)
 
 	type pipelineVSM struct {
@@ -128,6 +130,7 @@ func getPipelineVSMCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			vsm := make([]pipelineVSM, 0)
 
+			vsmErrors := make(map[string]string, 0)
 			for _, goCDPipeline := range goCDPipelines {
 				pipelineHistory, err := client.GetLimitedPipelineRunHistory(goCDPipeline, "10", "0")
 				if err != nil {
@@ -136,12 +139,37 @@ func getPipelineVSMCommand() *cobra.Command {
 
 				cliLogger.Debugf("run history for pipeline '%s' was fetched successfully", goCDPipeline)
 
-				response, err := client.GetPipelineVSM(pipelineHistory[0].Name, fmt.Sprintf("%d", pipelineHistory[0].Counter))
-				if err != nil {
-					return err
+				instance := fmt.Sprintf("%d", pipelineHistory[0].Counter)
+
+				for _, pipelineInstance := range goCDPipelineInstanceNumber {
+					filter := strings.Split(pipelineInstance, "=")
+					if filter[0] == goCDPipeline {
+						cliLogger.Debugf("instance for pipeline '%s' is set to '%s' hence using the same to get VSM", goCDPipeline, filter[1])
+
+						pipelineCounter, err := strconv.Atoi(filter[1])
+						if err != nil {
+							return err
+						}
+
+						if _, err = client.GetPipelineInstance(gocd.PipelineObject{
+							Name:    goCDPipeline,
+							Counter: pipelineCounter,
+						}); err != nil {
+							return err
+						}
+
+						instance = filter[1]
+					}
 				}
 
-				cliLogger.Debugf("VSM details for pipeline '%s' instace '%d' was fetched successfully", goCDPipeline, pipelineHistory[0].Counter)
+				response, err := client.GetPipelineVSM(goCDPipeline, instance)
+				if err != nil {
+					vsmErrors[goCDPipeline] = err.Error()
+
+					continue
+				}
+
+				cliLogger.Debugf("VSM details for pipeline '%s' instace '%s' was fetched successfully", goCDPipeline, instance)
 
 				var pipelineStreams []string
 
@@ -177,6 +205,13 @@ func getPipelineVSMCommand() *cobra.Command {
 				}
 			}
 
+			if len(vsmErrors) != 0 {
+				cliLogger.Errorf("fetching VSM of following pipelines errored")
+				for pipeline, vsmError := range vsmErrors {
+					cliLogger.Errorf("pipeline '%s': '%s'", pipeline, vsmError)
+				}
+			}
+
 			return cliRenderer.Render(vsm)
 		},
 	}
@@ -187,6 +222,8 @@ func getPipelineVSMCommand() *cobra.Command {
 		"when enabled, will fetch all downstream pipelines of a specified pipeline.")
 	getPipelineVSMCmd.PersistentFlags().BoolVarP(&upStreamPipeline, "up-stream", "", false,
 		"when enabled, will fetch all upstream pipelines of a specified pipeline. (NOTE: flag up-stream is still in experimental phase)")
+	getPipelineVSMCmd.PersistentFlags().StringSliceVarP(&goCDPipelineInstanceNumber, "instance", "", nil,
+		"instance of the selected pipeline for which the VSM has to be retrieved, the latest VSM number would be picked if not passed. ex: --instance pipeline1=20")
 	getPipelineVSMCmd.MarkFlagsMutuallyExclusive("down-stream", "up-stream")
 
 	if err := getPipelineVSMCmd.MarkPersistentFlagRequired("pipeline"); err != nil {

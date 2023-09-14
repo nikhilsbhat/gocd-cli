@@ -9,7 +9,7 @@ gocd-cli pipeline vsm [flags]
 ### Examples
 
 ```
-gocd-cli pipeline get sample-pipeline --query "[*] | name eq sample-group"
+gocd-cli pipeline vsm --pipeline animation-movies --pipeline animation-and-action-movies --down-stream --instance animation-movies=14 --yaml"
 ```
 
 ### Options

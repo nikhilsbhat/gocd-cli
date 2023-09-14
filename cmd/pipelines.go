@@ -25,6 +25,7 @@ var (
 	goCDPipelineMessage      string
 	goCDPipelineETAG         string
 	goCDPipelineTemplateName string
+	goCDPipelines            []string
 	goCDPipelineGroups       []string
 	goCDEnvironments         []string
 	goCDPausePipelineAtStart bool
@@ -112,7 +113,6 @@ func getPipelineVSMCommand() *cobra.Command {
 		downStreamPipeline         bool
 		upStreamPipeline           bool
 		goCDPipelineInstanceNumber []string
-		goCDPipelines              []string
 	)
 
 	type pipelineVSM struct {
@@ -126,7 +126,7 @@ func getPipelineVSMCommand() *cobra.Command {
 		Short:   "Command to GET downstream pipelines of a specified pipeline present in GoCD [https://api.gocd.org/current/#get-pipeline-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		Example: `gocd-cli pipeline get sample-pipeline --query "[*] | name eq sample-group"`,
+		Example: `gocd-cli pipeline vsm --pipeline animation-movies --pipeline animation-and-action-movies --down-stream --instance animation-movies=14 --yaml"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			vsm := make([]pipelineVSM, 0)
 
@@ -944,53 +944,56 @@ func getPipelineMapping() *cobra.Command {
 	getPipelineMappingCmd := &cobra.Command{
 		Use:     "get-mappings",
 		Short:   "Command to Identify the given pipeline is part of which config-repo/environment of GoCD",
-		Example: "gocd-cli pipeline get-mappings helm-images --yaml",
-		Args:    cobra.RangeArgs(1, 1),
+		Example: "gocd-cli pipeline get-mappings --pipeline helm-images --yaml",
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pipelineName := args[0]
-			var goCDConfigRepoName, goCDEnvironmentName, originGoCD string
+			pipelineMappings := make([]map[string]string, 0)
 
-			cliLogger.Debugf("fetching pipeline config to identify which config repo this pipeline is part of")
-			pipelineConfig, err := client.GetPipelineConfig(pipelineName)
-			if err != nil {
-				return err
-			}
+			for _, goCDPipeline := range goCDPipelines {
+				var goCDConfigRepoName, goCDEnvironmentName, originGoCD string
 
-			cliLogger.Debugf("pipeline config was retrieved successfully")
+				cliLogger.Debugf("fetching pipeline config to identify which config repo this pipeline is part of")
+				pipelineConfig, err := client.GetPipelineConfig(goCDPipeline)
+				if err != nil {
+					return err
+				}
 
-			originGoCD = "true"
-			if pipelineConfig.Origin.Type != "gocd" {
-				goCDConfigRepoName = pipelineConfig.Origin.ID
-				originGoCD = "false"
-			}
+				cliLogger.Debugf("pipeline config was retrieved successfully")
 
-			environmentNames, err := client.GetEnvironments()
-			if err != nil {
-				return err
-			}
+				originGoCD = "true"
+				if pipelineConfig.Origin.Type != "gocd" {
+					goCDConfigRepoName = pipelineConfig.Origin.ID
+					originGoCD = "false"
+				}
 
-			cliLogger.Debugf("all GoCD environment information was fetched successfully")
+				environmentNames, err := client.GetEnvironments()
+				if err != nil {
+					return err
+				}
 
-			for _, environmentName := range environmentNames {
-				for _, pipeline := range environmentName.Pipelines {
-					if pipeline.Name == pipelineName {
-						goCDEnvironmentName = environmentName.Name
+				cliLogger.Debugf("all GoCD environment information was fetched successfully")
+
+				for _, environmentName := range environmentNames {
+					for _, pipeline := range environmentName.Pipelines {
+						if pipeline.Name == goCDPipeline {
+							goCDEnvironmentName = environmentName.Name
+						}
 					}
 				}
-			}
 
-			output := map[string]string{
-				"pipeline":    pipelineName,
-				"config_repo": goCDConfigRepoName,
-				"environment": goCDEnvironmentName,
-				"origin_gocd": originGoCD,
+				pipelineMappings = append(pipelineMappings, map[string]string{
+					"pipeline":    goCDPipeline,
+					"config_repo": goCDConfigRepoName,
+					"environment": goCDEnvironmentName,
+					"origin_gocd": originGoCD,
+				})
 			}
 
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(output, jsonQuery)
+				baseQuery, err := render.SetQuery(pipelineMappings, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -1000,11 +1003,12 @@ func getPipelineMapping() *cobra.Command {
 				return cliRenderer.Render(baseQuery.RunQuery())
 			}
 
-			return cliRenderer.Render(output)
+			return cliRenderer.Render(pipelineMappings)
 		},
 	}
 
-	getPipelineMappingCmd.SetUsageTemplate(getUsageTemplate())
+	getPipelineMappingCmd.PersistentFlags().StringSliceVarP(&goCDPipelines, "pipeline", "", nil,
+		"name of the pipeline for which the environment and config repo mappings to be fetched")
 
 	return getPipelineMappingCmd
 }

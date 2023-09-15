@@ -950,13 +950,24 @@ func getPipelineMapping() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pipelineMappings := make([]map[string]string, 0)
 
+			cliLogger.Debugf("fetching all GoCD environment information to identify which environment the selected pipeline is part of ")
+
+			environmentNames, err := client.GetEnvironments()
+			if err != nil {
+				return err
+			}
+
+			cliLogger.Debugf("all GoCD environment information was fetched successfully")
+
+			pipelineErrors := make(map[string]string, 0)
+
 			for _, goCDPipeline := range goCDPipelines {
 				var goCDConfigRepoName, goCDEnvironmentName, originGoCD string
 
 				cliLogger.Debugf("fetching pipeline config to identify which config repo this pipeline is part of")
 				pipelineConfig, err := client.GetPipelineConfig(goCDPipeline)
 				if err != nil {
-					return err
+					pipelineErrors[goCDPipeline] = err.Error()
 				}
 
 				cliLogger.Debugf("pipeline config was retrieved successfully")
@@ -966,13 +977,6 @@ func getPipelineMapping() *cobra.Command {
 					goCDConfigRepoName = pipelineConfig.Origin.ID
 					originGoCD = "false"
 				}
-
-				environmentNames, err := client.GetEnvironments()
-				if err != nil {
-					return err
-				}
-
-				cliLogger.Debugf("all GoCD environment information was fetched successfully")
 
 				for _, environmentName := range environmentNames {
 					for _, pipeline := range environmentName.Pipelines {
@@ -988,6 +992,13 @@ func getPipelineMapping() *cobra.Command {
 					"environment": goCDEnvironmentName,
 					"origin_gocd": originGoCD,
 				})
+			}
+
+			if len(pipelineErrors) != 0 {
+				cliLogger.Errorf("fetching mappings of following pipelines errored")
+				for pipeline, pipelineError := range pipelineErrors {
+					cliLogger.Errorf("pipeline '%s': '%s'", pipeline, pipelineError)
+				}
 			}
 
 			if len(jsonQuery) != 0 {

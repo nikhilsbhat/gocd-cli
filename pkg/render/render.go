@@ -2,6 +2,7 @@ package render
 
 import (
 	"bufio"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -94,6 +95,17 @@ func (r *Renderer) toJSON(value interface{}) error {
 	}(r.writer)
 
 	return nil
+}
+
+func (r *Renderer) ToCSV(fileName string) (*csv.Writer, error) {
+	csvFile, err := os.Create(fileName)
+	if err != nil {
+		r.logger.Fatalln("failed to create the CSV")
+	}
+
+	csvWriter := csv.NewWriter(csvFile)
+
+	return csvWriter, nil
 }
 
 // GetRenderer returns the new instance of Renderer.

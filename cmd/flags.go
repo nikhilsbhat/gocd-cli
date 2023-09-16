@@ -35,7 +35,7 @@ func registerGlobalFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&cliCfg.FromFile, "from-file", "", "",
 		"file containing configurations of objects that needs to be created in GoCD, config-repo/pipeline-group/environment and etc.")
 	cmd.PersistentFlags().StringVarP(&cliCfg.ToFile, "to-file", "", "",
-		"file to which the output needs to be written to")
+		"file to which the output needs to be written")
 	cmd.PersistentFlags().StringVarP(&jsonQuery, "query", "q", "",
 		`query to filter the results, ex: '.material.attributes.type | id eq git'. this uses library gojsonq beneath
 more queries can be found here https://github.com/thedevsaddam/gojsonq/wiki/Queries`)

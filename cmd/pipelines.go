@@ -19,6 +19,7 @@ import (
 )
 
 var (
+	toCSV                    string
 	rawOutput                bool
 	goCDPipelineInstance     int
 	goCDPipelineName         string
@@ -33,6 +34,12 @@ var (
 	goCDPipelineUnPause      bool
 	numberOfDays             time.Duration
 )
+
+type PipelineVSM struct {
+	Pipeline            string   `json:"pipeline,omitempty"             yaml:"pipeline,omitempty"`
+	DownstreamPipelines []string `json:"downstream_pipelines,omitempty" yaml:"downstream_pipelines,omitempty"`
+	UpstreamPipelines   []string `json:"upstream_pipelines,omitempty"   yaml:"upstream_pipelines,omitempty"`
+}
 
 func registerPipelinesCommand() *cobra.Command {
 	pipelineCommand := &cobra.Command{
@@ -115,12 +122,6 @@ func getPipelineVSMCommand() *cobra.Command {
 		goCDPipelineInstanceNumber []string
 	)
 
-	type pipelineVSM struct {
-		Pipeline            string   `json:"pipeline,omitempty"             yaml:"pipeline,omitempty"`
-		DownstreamPipelines []string `json:"downstream_pipelines,omitempty" yaml:"downstream_pipelines,omitempty"`
-		UpstreamPipelines   []string `json:"upstream_pipelines,omitempty"   yaml:"upstream_pipelines,omitempty"`
-	}
-
 	getPipelineVSMCmd := &cobra.Command{
 		Use:     "vsm",
 		Short:   "Command to GET downstream pipelines of a specified pipeline present in GoCD [https://api.gocd.org/current/#get-pipeline-config]",
@@ -128,7 +129,7 @@ func getPipelineVSMCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline vsm --pipeline animation-movies --pipeline animation-and-action-movies --down-stream --instance animation-movies=14 --yaml"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			vsm := make([]pipelineVSM, 0)
+			vsms := make([]PipelineVSM, 0)
 
 			vsmErrors := make(map[string]string, 0)
 			for _, goCDPipeline := range goCDPipelines {
@@ -191,14 +192,14 @@ func getPipelineVSMCommand() *cobra.Command {
 				}
 
 				if upStreamPipeline {
-					vsm = append(vsm, pipelineVSM{
+					vsms = append(vsms, PipelineVSM{
 						Pipeline:          goCDPipeline,
 						UpstreamPipelines: pipelineDependencies,
 					})
 				}
 
 				if downStreamPipeline {
-					vsm = append(vsm, pipelineVSM{
+					vsms = append(vsms, PipelineVSM{
 						Pipeline:            goCDPipeline,
 						DownstreamPipelines: pipelineDependencies,
 					})
@@ -212,18 +213,25 @@ func getPipelineVSMCommand() *cobra.Command {
 				}
 			}
 
-			return cliRenderer.Render(vsm)
+			if len(toCSV) != 0 {
+				return renderVSMtoCSV(vsms, upStreamPipeline)
+			}
+
+			return cliRenderer.Render(vsms)
 		},
 	}
 
 	getPipelineVSMCmd.PersistentFlags().StringSliceVarP(&goCDPipelines, "pipeline", "", nil,
 		"name of the pipeline for which the VSM has to be retrieved")
 	getPipelineVSMCmd.PersistentFlags().BoolVarP(&downStreamPipeline, "down-stream", "", false,
-		"when enabled, will fetch all downstream pipelines of a specified pipeline.")
+		"when enabled, will fetch all downstream pipelines of a specified pipeline")
 	getPipelineVSMCmd.PersistentFlags().BoolVarP(&upStreamPipeline, "up-stream", "", false,
 		"when enabled, will fetch all upstream pipelines of a specified pipeline. (NOTE: flag up-stream is still in experimental phase)")
 	getPipelineVSMCmd.PersistentFlags().StringSliceVarP(&goCDPipelineInstanceNumber, "instance", "", nil,
 		"instance of the selected pipeline for which the VSM has to be retrieved, the latest VSM number would be picked if not passed. ex: --instance pipeline1=20")
+	getPipelineVSMCmd.PersistentFlags().StringVarP(&toCSV, "to-csv", "", "",
+		"csv file, to which the output needs to be written")
+
 	getPipelineVSMCmd.MarkFlagsMutuallyExclusive("down-stream", "up-stream")
 
 	if err := getPipelineVSMCmd.MarkPersistentFlagRequired("pipeline"); err != nil {
@@ -1140,4 +1148,30 @@ func parsePipelineConfig(pipelineName string, pipelineStreams []string) ([]strin
 	pipelineDependencies = GetUniqEntries(pipelineDependencies)
 
 	return pipelineDependencies, nil
+}
+
+func renderVSMtoCSV(pipelineVSMs []PipelineVSM, upstream bool) error {
+	csvWriter, err := cliRenderer.ToCSV(toCSV)
+	if err != nil {
+		return err
+	}
+
+	defer csvWriter.Flush()
+
+	if err = csvWriter.Write([]string{"Pipeline", "Downstream Pipelines"}); err != nil {
+		return err
+	}
+
+	for _, pipelineVSM := range pipelineVSMs {
+		goCdPipelines := pipelineVSM.DownstreamPipelines
+		if upstream {
+			goCdPipelines = pipelineVSM.UpstreamPipelines
+		}
+
+		if err = csvWriter.Write([]string{pipelineVSM.Pipeline, strings.Join(goCdPipelines, " | ")}); err != nil {
+			return err
+		}
+	}
+
+	return err
 }

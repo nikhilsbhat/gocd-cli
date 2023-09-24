@@ -8,6 +8,7 @@ import (
 
 func registerWhoAmICommand() *cobra.Command {
 	var raw bool
+
 	whoCmd := &cobra.Command{
 		Use:     "who-am-i",
 		Short:   "Command to check which user being used by GoCD Command line interface",

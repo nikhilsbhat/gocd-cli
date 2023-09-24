@@ -28,18 +28,22 @@ func setCLIClient(_ *cobra.Command, _ []string) error {
 
 	if localConfig && !cliCfg.skipCacheConfig {
 		cliLogger.Debugf("found authorisation configuration in cache, loading config from %s", localConfigPath)
+
 		yamlConfig, err := os.ReadFile(localConfigPath)
 		if err != nil {
 			return err
 		}
+
 		if err = yaml.Unmarshal(yamlConfig, &cliCfg); err != nil {
 			return err
 		}
+
 		cliLogger.Debug("authorisation configuration loaded from cache successfully")
 	}
 
 	if len(cliCfg.CaPath) != 0 {
 		cliLogger.Debug("CA based auth is enabled, hence reading ca from the path")
+
 		caAbs, err := filepath.Abs(cliCfg.CaPath)
 		if err != nil {
 			return err
@@ -61,12 +65,15 @@ func setCLIClient(_ *cobra.Command, _ []string) error {
 	client = goCDClient
 
 	writer := os.Stdout
+
 	if len(cliCfg.ToFile) != 0 {
 		cliLogger.Debugf("--to-file is opted, output would be saved under a file '%s'", cliCfg.ToFile)
+
 		filePTR, err := os.Create(cliCfg.ToFile)
 		if err != nil {
 			return err
 		}
+
 		writer = filePTR
 	}
 

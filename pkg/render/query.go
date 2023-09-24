@@ -53,6 +53,7 @@ func (q *Query) ConstructQuery(query string) {
 		q.object = queryLHSObject
 		queryRHS := strings.TrimLeftFunc(queryLHS[1], unicode.IsSpace)
 		queryRHSObject := strings.Split(queryRHS, " ")
+
 		switch len(queryRHSObject) {
 		case defaultLengthGetOrPluck:
 			q.key = queryRHSObject[0]

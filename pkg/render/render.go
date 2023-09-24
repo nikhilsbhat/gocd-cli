@@ -51,6 +51,7 @@ func (r *Renderer) Render(value interface{}) error {
 
 func (r *Renderer) toYAML(value interface{}) error {
 	r.logger.Debug("rendering output in yaml format since --yaml is enabled")
+
 	valueYAML, err := yaml.Marshal(value)
 	if err != nil {
 		return err
@@ -75,6 +76,7 @@ func (r *Renderer) toYAML(value interface{}) error {
 
 func (r *Renderer) toJSON(value interface{}) error {
 	r.logger.Debug("rendering output in json format since --json is enabled")
+
 	valueJSON, err := json.MarshalIndent(value, "", "     ")
 	if err != nil {
 		return err

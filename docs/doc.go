@@ -10,8 +10,8 @@ import (
 //go:generate go run github.com/nikhilsbhat/gocd-cli/docs
 func main() {
 	commands := cmd.SetGoCDCliCommands()
-	err := doc.GenMarkdownTree(commands, "doc")
-	if err != nil {
+
+	if err := doc.GenMarkdownTree(commands, "doc"); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -216,6 +216,7 @@ func artifactConfigGetCommand() *cobra.Command {
 
 func artifactConfigUpdateCommand() *cobra.Command {
 	var artifactDir string
+
 	var purgeStartDiskSpace, purgeUptoDiskSpace float64
 
 	artifactConfigUpdateCmd := &cobra.Command{

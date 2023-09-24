@@ -1034,6 +1034,7 @@ func getPipelineMapping() *cobra.Command {
 
 func findDownStreamPipelines(pipelineName string, resp gocd.VSM) []string {
 	newParents := []string{pipelineName}
+
 	for _, level := range resp.Level {
 		for _, node := range level.Nodes {
 			for _, newParent := range newParents {
@@ -1051,6 +1052,7 @@ func findDownStreamPipelines(pipelineName string, resp gocd.VSM) []string {
 
 func findUpStreamPipelines(pipelineName string, resp gocd.VSM) []string {
 	newChilds := []string{pipelineName}
+
 	for _, level := range resp.Level {
 		for _, node := range level.Nodes {
 			for _, newChild := range newChilds {
@@ -1106,26 +1108,32 @@ func parsePipelineConfig(pipelineName string, pipelineStreams []string) ([]strin
 			}
 
 			pipelineCfg := string(bytes)
+
 			if gjson.Valid(pipelineCfg) {
 				for _, material := range gjson.Get(pipelineCfg, "materials").Array() {
 					if funk.Contains(gjson.Get(material.String(), "attributes.name").String(), pipelineName) {
 						pipelineDependencies = append(pipelineDependencies, pipelineStream)
 					}
+
 					if funk.Contains(gjson.Get(material.String(), "attributes.url").String(), pipelineName) {
 						pipelineDependencies = append(pipelineDependencies, pipelineStream)
 					}
+
 					if funk.Contains(gjson.Get(material.String(), "attributes.pipeline").String(), pipelineName) {
 						pipelineDependencies = append(pipelineDependencies, pipelineStream)
 					}
 				}
+
 				for _, material := range gjson.Get(pipelineCfg, "parameters").Array() {
 					if funk.Contains(gjson.Get(material.String(), "name").String(), pipelineName) {
 						pipelineDependencies = append(pipelineDependencies, pipelineStream)
 					}
+
 					if funk.Contains(gjson.Get(material.String(), "value").String(), pipelineName) {
 						pipelineDependencies = append(pipelineDependencies, pipelineStream)
 					}
 				}
+
 				for _, stage := range gjson.Get(pipelineCfg, "stages").Array() {
 					for _, job := range gjson.Get(stage.String(), "jobs").Array() {
 						for _, tasks := range gjson.Get(job.String(), "tasks").Array() {

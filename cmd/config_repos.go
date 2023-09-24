@@ -518,6 +518,7 @@ func lastUpdatedCommit(date string) float64 {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	parsedTime := tm.In(loc)
 
 	timeNow := time.Now().In(loc)

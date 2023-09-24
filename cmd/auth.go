@@ -127,6 +127,7 @@ func getAuthEraseCommand() *cobra.Command {
 
 func checkForConfig() (bool, string, error) {
 	cliLogger.Debug("searching for authorisation configuration in cache")
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return false, "", err

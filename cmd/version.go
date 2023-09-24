@@ -65,7 +65,9 @@ func AppVersion(_ *cobra.Command, _ []string) error {
 	writer := bufio.NewWriter(os.Stdout)
 
 	var serverVersionInfo string
+
 	cliLogger.Debug("a call to GoCD server would be made to collect server version")
+
 	if serverVersion, _ := client.GetVersionInfo(); !reflect.DeepEqual(serverVersion, gocd.ServerVersion{}) {
 		cliLogger.Debug("got an update from GoCD server about server version")
 
@@ -73,17 +75,19 @@ func AppVersion(_ *cobra.Command, _ []string) error {
 		if err != nil {
 			cliLogger.Errorf("fetching version of GoCD server failed with %v\n", err)
 		}
+
 		serverVersionInfo = strings.Join([]string{"server version", string(serverVersionJSON), "\n"}, ": ")
 
-		_, err = writer.Write([]byte(serverVersionInfo)) //nolint:mirror
-		if err != nil {
+		//nolint:mirror
+		if _, err = writer.Write([]byte(serverVersionInfo)); err != nil {
 			log.Fatalln(err)
 		}
 	}
 
 	cliVersionInfo := strings.Join([]string{"client version", string(buildInfo), "\n"}, ": ")
-	_, err = writer.Write([]byte(cliVersionInfo)) //nolint:mirror
-	if err != nil {
+
+	//nolint:mirror
+	if _, err = writer.Write([]byte(cliVersionInfo)); err != nil {
 		log.Fatalln(err)
 	}
 

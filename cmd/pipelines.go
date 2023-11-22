@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -34,6 +35,8 @@ var (
 	goCDPipelineUnPause      bool
 	numberOfDays             time.Duration
 )
+
+var defaultGoCDPipelinePatterns = []string{"*.gocd.yaml", "*.gocd.json", "*.gocd.groovy"}
 
 type PipelineVSM struct {
 	Pipeline            string   `json:"pipeline,omitempty"             yaml:"pipeline,omitempty"`
@@ -74,6 +77,7 @@ GET/PAUSE/UNPAUSE/UNLOCK/SCHEDULE and comment on a GoCD pipeline`,
 	pipelineCommand.AddCommand(exportPipelineToConfigRepoFormatCommand())
 	pipelineCommand.AddCommand(getPipelineVSMCommand())
 	pipelineCommand.AddCommand(getPipelineMapping())
+	pipelineCommand.AddCommand(getPipelineFilesCommand())
 
 	for _, command := range pipelineCommand.Commands() {
 		command.SilenceUsage = true
@@ -1030,6 +1034,58 @@ func getPipelineMapping() *cobra.Command {
 		"name of the pipeline for which the environment and config repo mappings to be fetched")
 
 	return getPipelineMappingCmd
+}
+
+func getPipelineFilesCommand() *cobra.Command {
+	var (
+		goCDPipelinesPath     string
+		goCDPipelinesPatterns []string
+		absPath               bool
+	)
+
+	findPipelineCmd := &cobra.Command{
+		Use:     "find",
+		Short:   "Command to find all GoCD pipeline files present in a directory (it recursively finds for pipeline files in all sub-directory)",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		Example: `gocd-cli pipeline find --path /path/to/pipelines --pattern *.gocd.yaml --pattern *.gocd.json`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliLogger.Debugf("searching GoCD pipelines under '%s'", goCDPipelinesPath)
+
+			return filepath.Walk(goCDPipelinesPath, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				for _, goCDPipelinesPattern := range goCDPipelinesPatterns {
+					match, err := filepath.Match(goCDPipelinesPattern, info.Name())
+					if err != nil {
+						cliLogger.Errorf("matching GoCD pipeline file errored with '%s'", err)
+					}
+
+					if match {
+						if !absPath {
+							fmt.Printf("%s\n", info.Name())
+
+							continue
+						}
+
+						fmt.Printf("%s\n", path)
+					}
+				}
+
+				return nil
+			})
+		},
+	}
+
+	findPipelineCmd.PersistentFlags().StringVarP(&goCDPipelinesPath, "path", "f", "",
+		"path to search for all GoCD pipeline files")
+	findPipelineCmd.PersistentFlags().StringSliceVarP(&goCDPipelinesPatterns, "pattern", "", defaultGoCDPipelinePatterns,
+		"list of patterns to match while searching for all GoCD pipeline files")
+	findPipelineCmd.PersistentFlags().BoolVarP(&absPath, "absolute-path", "a", false,
+		"when enabled prints absolute path of the pipelines")
+
+	return findPipelineCmd
 }
 
 func findDownStreamPipelines(pipelineName string, resp gocd.VSM) []string {

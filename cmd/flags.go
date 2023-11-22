@@ -135,6 +135,8 @@ func registerPipelineHistoryFlags(cmd *cobra.Command) {
 		"delay between the calls made to GoCD server to get the pipeline run history in seconds")
 	cmd.PersistentFlags().DurationVarP(&numberOfDays, "time", "", defaultDelay,
 		"time frame since the pipeline has not run")
+	cmd.PersistentFlags().StringSliceVarP(&configRepoNames, "from-config-repo", "", nil,
+		"name of the config repo from which the pipeline not scheduled to be retrieved")
 }
 
 func registerAgentsFlags(cmd *cobra.Command) {

@@ -35,6 +35,7 @@ var (
 	goCDPipelinePause        bool
 	goCDPipelineUnPause      bool
 	numberOfDays             time.Duration
+	configRepoNames          []string
 )
 
 var defaultGoCDPipelinePatterns = []string{"*.gocd.yaml", "*.gocd.json", "*.gocd.groovy"}
@@ -371,25 +372,49 @@ func getPipelineNotSchedulesCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline not-scheduled --time 10`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pipelines, err := client.GetPipelines()
-			if err != nil {
-				return err
+			goCDPipelineNames := make([]string, 0)
+
+			if len(configRepoNames) != 0 {
+				cliLogger.Debugf("fetching pipelines from config repo is enabled, hence identifying limiting pipelines to config repo '%v'", configRepoNames)
+
+				for _, configRepoName := range configRepoNames {
+					definitions, err := client.GetConfigRepoDefinitions(configRepoName)
+					if err != nil {
+						return err
+					}
+
+					for _, group := range definitions.Groups {
+						for _, pipelineName := range group.Pipelines {
+							goCDPipelineNames = append(goCDPipelineNames, pipelineName.Name)
+						}
+					}
+				}
+			} else {
+				cliLogger.Debugf("not limiting config repo while identifying pipelines")
+
+				goCdPipelines, err := client.GetPipelines()
+				if err != nil {
+					return err
+				}
+
+				for _, pipeline := range goCdPipelines.Pipeline {
+					pipelineName, err := gocd.GetPipelineName(pipeline.Href)
+					if err != nil {
+						cliLogger.Errorf("fetching pipeline name from pipline url erored with:, %v", err)
+
+						continue
+					}
+					goCDPipelineNames = append(goCDPipelineNames, pipelineName)
+				}
 			}
 
 			pipelineSchedules := make([]gocd.PipelineSchedules, 0)
 
-			for _, pipeline := range pipelines.Pipeline {
-				pipelineName, err := gocd.GetPipelineName(pipeline.Href)
+			for _, pipeline := range goCDPipelineNames {
+				cliLogger.Infof("fetching schedules of pipeline '%s'", pipeline)
+				response, err := client.GetPipelineSchedules(pipeline, "0", "1")
 				if err != nil {
-					cliLogger.Errorf("fetching pipeline name from pipline url erored with:, %v", err)
-
-					continue
-				}
-
-				cliLogger.Infof("fetching schedules of pipeline '%s'", pipelineName)
-				response, err := client.GetPipelineSchedules(pipelineName, "0", "1")
-				if err != nil {
-					cliLogger.Errorf("getting schedules for pipline '%s' errored with '%v'", pipelineName, err)
+					cliLogger.Errorf("getting schedules for pipline '%s' errored with '%v'", pipeline, err)
 
 					continue
 				}

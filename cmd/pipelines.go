@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -78,6 +79,7 @@ GET/PAUSE/UNPAUSE/UNLOCK/SCHEDULE and comment on a GoCD pipeline`,
 	pipelineCommand.AddCommand(getPipelineVSMCommand())
 	pipelineCommand.AddCommand(getPipelineMapping())
 	pipelineCommand.AddCommand(getPipelineFilesCommand())
+	pipelineCommand.AddCommand(showPipelineCommand())
 
 	for _, command := range pipelineCommand.Commands() {
 		command.SilenceUsage = true
@@ -1085,7 +1087,77 @@ func getPipelineFilesCommand() *cobra.Command {
 	findPipelineCmd.PersistentFlags().BoolVarP(&absPath, "absolute-path", "a", false,
 		"when enabled prints absolute path of the pipelines")
 
+	if err := findPipelineCmd.MarkPersistentFlagRequired("path"); err != nil {
+		cliLogger.Fatalf("%v", err)
+	}
+
 	return findPipelineCmd
+}
+
+func showPipelineCommand() *cobra.Command {
+	var goCDPipeline string
+
+	showPipelinePipelineCmd := &cobra.Command{
+		Use:     "show",
+		Short:   "Command to analyse pipelines part of a selected pipeline file",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		Example: `gocd-cli show --pipeline /path/to/sample.gocd.yaml`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliLogger.Debugf("analysing GoCD pipeline file '%s'", goCDPipeline)
+
+			fileData, err := os.ReadFile(goCDPipeline)
+			if err != nil {
+				cliLogger.Errorf("reading GoCD pipeline file errored with '%s'", err.Error())
+
+				return err
+			}
+
+			type Pipelines struct {
+				Config map[string]interface{} `json:"pipelines,omitempty" yaml:"pipelines,omitempty"`
+			}
+
+			var fileJSON Pipelines
+
+			object := render.Object(fileData)
+
+			switch objType := object.CheckFileType(cliLogger); objType {
+			case render.FileTypeYAML:
+				if err = yaml.Unmarshal(fileData, &fileJSON); err != nil {
+					cliLogger.Errorf("deserializing yaml GoCD pipeline file errored with '%s'", err.Error())
+
+					return err
+				}
+			case render.FileTypeJSON:
+				if err = json.Unmarshal(fileData, &fileJSON); err != nil {
+					cliLogger.Errorf("deserializing json GoCD pipeline file errored with '%s'", err.Error())
+
+					return err
+				}
+			default:
+				cliLogger.Errorf("the command `pipeline show` does not support reading pipeline config file that was passed")
+
+				return &errors.UnknownObjectTypeError{Name: objType}
+			}
+
+			pipelineNames := make([]string, 0)
+
+			for _, val := range reflect.ValueOf(fileJSON.Config).MapKeys() {
+				pipelineNames = append(pipelineNames, val.String())
+			}
+
+			return cliRenderer.Render(pipelineNames)
+		},
+	}
+
+	showPipelinePipelineCmd.PersistentFlags().StringVarP(&goCDPipeline, "pipeline", "f", "",
+		"path to GoCD pipeline config file to identify pipeline names")
+
+	if err := showPipelinePipelineCmd.MarkPersistentFlagRequired("pipeline"); err != nil {
+		cliLogger.Fatalf("%v", err)
+	}
+
+	return showPipelinePipelineCmd
 }
 
 func findDownStreamPipelines(pipelineName string, resp gocd.VSM) []string {

@@ -9,7 +9,7 @@ gocd-cli pipeline schedule [flags]
 ### Examples
 
 ```
-gocd-cli pipeline schedule --name sample --from-file schedule-config.yaml
+gocd-cli pipeline schedule sample --from-file schedule-config.yaml
 ```
 
 ### Options
@@ -19,7 +19,6 @@ gocd-cli pipeline schedule --name sample --from-file schedule-config.yaml
   -h, --help                   help for schedule
   -i, --instance int           instance number of a pipeline
   -m, --message string         message to be passed while pausing/unpausing or commenting on pipeline present in GoCD
-  -n, --name string            name of the pipeline present in GoCD
       --pause                  enable to pause a pipeline
       --pause-at-start         enabling this will create the pipeline in the paused state
       --template-name string   name of the template to which the pipeline has to be extracted

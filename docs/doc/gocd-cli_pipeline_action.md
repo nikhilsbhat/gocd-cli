@@ -20,7 +20,6 @@ gocd-cli pipeline action sample-pipeline --pause/--un-pause
   -h, --help                   help for action
   -i, --instance int           instance number of a pipeline
   -m, --message string         message to be passed while pausing/unpausing or commenting on pipeline present in GoCD
-  -n, --name string            name of the pipeline present in GoCD
       --pause                  enable to pause a pipeline
       --pause-at-start         enabling this will create the pipeline in the paused state
       --template-name string   name of the template to which the pipeline has to be extracted

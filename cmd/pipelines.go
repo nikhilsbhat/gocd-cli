@@ -25,7 +25,6 @@ var (
 	toCSV                    string
 	rawOutput                bool
 	goCDPipelineInstance     int
-	goCDPipelineName         string
 	goCDPipelineMessage      string
 	goCDPipelineETAG         string
 	goCDPipelineTemplateName string
@@ -80,7 +79,7 @@ GET/PAUSE/UNPAUSE/UNLOCK/SCHEDULE and comment on a GoCD pipeline`,
 	pipelineCommand.AddCommand(exportPipelineToConfigRepoFormatCommand())
 	pipelineCommand.AddCommand(getPipelineVSMCommand())
 	pipelineCommand.AddCommand(getPipelineMapping())
-	pipelineCommand.AddCommand(getPipelineFilesCommand())
+	pipelineCommand.AddCommand(findPipelineFilesCommand())
 	pipelineCommand.AddCommand(showPipelineCommand())
 
 	for _, command := range pipelineCommand.Commands() {
@@ -700,9 +699,9 @@ func schedulePipelineCommand() *cobra.Command {
 	schedulePipelineCmd := &cobra.Command{
 		Use:     "schedule",
 		Short:   "Command to SCHEDULE a specific pipeline present in GoCD [https://api.gocd.org/current/#scheduling-pipelines]",
-		Args:    cobra.NoArgs,
+		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		Example: `gocd-cli pipeline schedule --name sample --from-file schedule-config.yaml`,
+		Example: `gocd-cli pipeline schedule sample --from-file schedule-config.yaml`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var schedule gocd.Schedule
 			object, err := readObject(cmd)
@@ -723,11 +722,11 @@ func schedulePipelineCommand() *cobra.Command {
 				return &errors.UnknownObjectTypeError{Name: objType}
 			}
 
-			if err = client.SchedulePipeline(goCDPipelineName, schedule); err != nil {
+			if err = client.SchedulePipeline(args[0], schedule); err != nil {
 				return err
 			}
 
-			return cliRenderer.Render(fmt.Sprintf("pipeline '%s' scheduled successfully", goCDPipelineName))
+			return cliRenderer.Render(fmt.Sprintf("pipeline '%s' scheduled successfully", args[0]))
 		},
 	}
 
@@ -740,12 +739,12 @@ func commentPipelineCommand() *cobra.Command {
 	commentOnPipelineCmd := &cobra.Command{
 		Use:     "comment",
 		Short:   "Command to COMMENT on a specific pipeline instance present in GoCD [https://api.gocd.org/current/#comment-on-pipeline-instance]",
-		Args:    cobra.NoArgs,
+		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline comment --message "message to be commented"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pipelineObject := gocd.PipelineObject{
-				Name:    goCDPipelineName,
+				Name:    args[0],
 				Counter: goCDPipelineInstance,
 				Message: goCDPipelineMessage,
 			}
@@ -754,7 +753,7 @@ func commentPipelineCommand() *cobra.Command {
 				return err
 			}
 
-			return cliRenderer.Render(fmt.Sprintf("commented on pipeline '%s' successfully", goCDPipelineName))
+			return cliRenderer.Render(fmt.Sprintf("commented on pipeline '%s' successfully", args[0]))
 		},
 	}
 
@@ -1064,7 +1063,7 @@ func getPipelineMapping() *cobra.Command {
 	return getPipelineMappingCmd
 }
 
-func getPipelineFilesCommand() *cobra.Command {
+func findPipelineFilesCommand() *cobra.Command {
 	var (
 		goCDPipelinesPath     string
 		goCDPipelinesPatterns []string

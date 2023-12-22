@@ -11,6 +11,12 @@ var (
 	jsonQuery string
 )
 
+const (
+	defaultRetryCount    = 30
+	defaultDelay         = 5 * time.Second
+	defaultInstanceCount = 0
+)
+
 func registerGlobalFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&cliCfg.URL, "server-url", "", "http://localhost:8153/go",
 		"GoCD server URL base path")
@@ -80,12 +86,6 @@ func commonPluginFlags(cmd *cobra.Command) {
 		"setting this would set 'plugin-id' to 'yaml.config.plugin'")
 }
 
-const (
-	defaultRetryCount    = 30
-	defaultDelay         = 5 * time.Second
-	defaultInstanceCount = 0
-)
-
 func registerBackupFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().IntVarP(&backupRetry, "retry", "", defaultRetryCount,
 		"number of times to retry to get backup stats when backup status is not ready")
@@ -96,8 +96,6 @@ func registerBackupFlags(cmd *cobra.Command) {
 func registerPipelineFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().IntVarP(&goCDPipelineInstance, "instance", "i", defaultInstanceCount,
 		"instance number of a pipeline")
-	cmd.PersistentFlags().StringVarP(&goCDPipelineName, "name", "n", "",
-		"name of the pipeline present in GoCD")
 	cmd.PersistentFlags().StringVarP(&goCDPipelineETAG, "etag", "", "",
 		"etag used to identify the pipeline config. If you don't have one get it by using pipeline get command")
 	cmd.PersistentFlags().StringVarP(&goCDPipelineMessage, "message", "m", "",

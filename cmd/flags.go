@@ -23,7 +23,10 @@ func registerGlobalFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&cliCfg.CaPath, "ca-file-path", "", "",
 		"path to file containing CA cert used to authenticate GoCD server, if you have one")
 	cmd.PersistentFlags().StringVarP(&cliCfg.LogLevel, "log-level", "l", "info",
-		"log level for gocd cli, log levels supported by [https://github.com/sirupsen/logrus] will work")
+		"log level for GoCD cli, log levels supported by [https://github.com/sirupsen/logrus] will work")
+	cmd.PersistentFlags().StringVarP(&cliCfg.APILogLevel, "api-log-level", "", "info",
+		"log level for GoCD API calls, this sets log level to [https://pkg.go.dev/github.com/go-resty/resty/v2#Client.SetLogger],"+
+			"log levels supported by [https://github.com/sirupsen/logrus] will work")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.JSON, "json", "", false,
 		"enable this to Render output in JSON format")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "yaml", "", false,

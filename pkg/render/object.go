@@ -3,8 +3,8 @@ package render
 import (
 	"encoding/json"
 
+	goYAML "github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
 )
 
 // Object implements method that check for file content type.
@@ -27,7 +27,7 @@ func IsJSON(content string) bool {
 func IsYAML(content string) bool {
 	var js interface{}
 
-	return yaml.Unmarshal([]byte(content), &js) == nil
+	return goYAML.Unmarshal([]byte(content), &js) == nil
 }
 
 // CheckFileType checks the file type of the content passed, it validates for YAML/JSON.

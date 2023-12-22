@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	goYAML "github.com/goccy/go-yaml"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
@@ -1078,6 +1079,8 @@ func getPipelineFilesCommand() *cobra.Command {
 		Example: `gocd-cli pipeline find --path /path/to/pipelines --pattern *.gocd.yaml --pattern *.gocd.json`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliLogger.Debugf("searching GoCD pipelines under '%s'", goCDPipelinesPath)
+			cliLogger.Debug("Below is a list of files that may be identified as GoCD's pipeline files. " +
+				"A single file may contain multiple pipeline configurations. Use the command 'gocd-cli pipeline show' to see the pipelines in a given file.")
 
 			return filepath.Walk(goCDPipelinesPath, func(path string, info os.FileInfo, err error) error {
 				if err != nil {
@@ -1120,7 +1123,7 @@ func getPipelineFilesCommand() *cobra.Command {
 }
 
 func showPipelineCommand() *cobra.Command {
-	var goCDPipeline string
+	var detailed bool
 
 	showPipelinePipelineCmd := &cobra.Command{
 		Use:     "show",
@@ -1129,56 +1132,71 @@ func showPipelineCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli show --pipeline /path/to/sample.gocd.yaml`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliLogger.Debugf("analysing GoCD pipeline file '%s'", goCDPipeline)
-
-			fileData, err := os.ReadFile(goCDPipeline)
-			if err != nil {
-				cliLogger.Errorf("reading GoCD pipeline file errored with '%s'", err.Error())
-
-				return err
-			}
-
-			type Pipelines struct {
-				Config map[string]interface{} `json:"pipelines,omitempty" yaml:"pipelines,omitempty"`
-			}
-
-			var fileJSON Pipelines
-
-			object := render.Object(fileData)
-
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
-				if err = yaml.Unmarshal(fileData, &fileJSON); err != nil {
-					cliLogger.Errorf("deserializing yaml GoCD pipeline file errored with '%s'", err.Error())
-
-					return err
-				}
-			case render.FileTypeJSON:
-				if err = json.Unmarshal(fileData, &fileJSON); err != nil {
-					cliLogger.Errorf("deserializing json GoCD pipeline file errored with '%s'", err.Error())
-
-					return err
-				}
-			default:
-				cliLogger.Errorf("the command `pipeline show` does not support reading pipeline config file that was passed")
-
-				return &errors.UnknownObjectTypeError{Name: objType}
-			}
-
+			detailedPipelineNames := make(map[string][]string, 0)
 			pipelineNames := make([]string, 0)
 
-			for _, val := range reflect.ValueOf(fileJSON.Config).MapKeys() {
-				pipelineNames = append(pipelineNames, val.String())
+			for _, goCDPipeline := range goCDPipelines {
+				cliLogger.Debugf("analysing GoCD pipeline file '%s'", goCDPipeline)
+
+				fileData, err := os.ReadFile(goCDPipeline)
+				if err != nil {
+					cliLogger.Errorf("reading GoCD pipeline file errored with '%s'", err.Error())
+
+					return err
+				}
+
+				type Pipelines struct {
+					Config map[string]interface{} `json:"pipelines,omitempty" yaml:"pipelines,omitempty"`
+				}
+
+				var fileYAML Pipelines
+
+				object := render.Object(fileData)
+
+				switch objType := object.CheckFileType(cliLogger); objType {
+				case render.FileTypeYAML:
+					if err = goYAML.Unmarshal(fileData, &fileYAML); err != nil {
+						cliLogger.Errorf("deserializing yaml GoCD pipeline file errored with '%s'", err.Error())
+
+						return err
+					}
+
+					for _, val := range reflect.ValueOf(fileYAML.Config).MapKeys() {
+						pipelineNames = append(pipelineNames, val.String())
+					}
+				case render.FileTypeJSON:
+					var fileJSON map[string]interface{}
+
+					if err = json.Unmarshal(fileData, &fileJSON); err != nil {
+						cliLogger.Errorf("deserializing json GoCD pipeline file errored with '%s'", err.Error())
+
+						return err
+					}
+
+					pipelineNames = append(pipelineNames, fileJSON["name"].(string))
+				default:
+					cliLogger.Errorf("the command `pipeline show` does not support reading pipeline config file that was passed")
+
+					return &errors.UnknownObjectTypeError{Name: objType}
+				}
+
+				detailedPipelineNames[goCDPipeline] = pipelineNames
+			}
+
+			if detailed {
+				return cliRenderer.Render(detailedPipelineNames)
 			}
 
 			return cliRenderer.Render(pipelineNames)
 		},
 	}
 
-	showPipelinePipelineCmd.PersistentFlags().StringVarP(&goCDPipeline, "pipeline", "f", "",
+	showPipelinePipelineCmd.PersistentFlags().StringSliceVarP(&goCDPipelines, "pipelines", "f", nil,
 		"path to GoCD pipeline config file to identify pipeline names")
+	showPipelinePipelineCmd.PersistentFlags().BoolVarP(&detailed, "detailed", "", false,
+		"when enabled prints the information in detail")
 
-	if err := showPipelinePipelineCmd.MarkPersistentFlagRequired("pipeline"); err != nil {
+	if err := showPipelinePipelineCmd.MarkPersistentFlagRequired("pipelines"); err != nil {
 		cliLogger.Fatalf("%v", err)
 	}
 

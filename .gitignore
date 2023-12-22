@@ -6,3 +6,4 @@ cover.out
 cover.html
 gocd-cli
 helm-images.yaml
+sample_pipeline.gocd.yaml

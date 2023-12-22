@@ -58,7 +58,7 @@ func setCLIClient(_ *cobra.Command, _ []string) error {
 	goCDClient := gocd.NewClient(
 		cliCfg.URL,
 		cliCfg.Auth,
-		cliCfg.LogLevel,
+		cliCfg.APILogLevel,
 		caContent,
 	)
 

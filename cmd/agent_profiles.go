@@ -45,6 +45,7 @@ func getAgentProfilesCommand() *cobra.Command {
 	getElasticAgentProfilesCmd := &cobra.Command{
 		Use:     "get-all",
 		Short:   "Command to GET all the elastic agent profiles present in GoCD [https://api.gocd.org/current/#get-all-elastic-agent-profiles]",
+		Example: "gocd-cli elastic-agent-profile get-all",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {

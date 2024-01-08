@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
@@ -371,6 +372,21 @@ func deleteMailServerConfigCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cliShellReadConfig.ShellMessage = "do you want to delete GoCD's mail server config"
+
+			if !cliCfg.Yes {
+				contains, option := cliShellReadConfig.Reader()
+				if !contains {
+					cliLogger.Fatalln("user input validation failed, cannot proceed further")
+				}
+
+				if option.Short == "n" {
+					cliLogger.Warn("not proceeding further since 'no' was opted")
+
+					os.Exit(0)
+				}
+			}
+
 			if err := client.DeleteMailServerConfig(); err != nil {
 				return err
 			}

@@ -579,11 +579,27 @@ func deletePipelineCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline delete movies`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := client.DeletePipeline(args[0]); err != nil {
+			pipelineName := args[0]
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete pipeline '%s'", pipelineName)
+
+			if !cliCfg.Yes {
+				contains, option := cliShellReadConfig.Reader()
+				if !contains {
+					cliLogger.Fatalln("user input validation failed, cannot proceed further")
+				}
+
+				if option.Short == "n" {
+					cliLogger.Warn("not proceeding further since 'no' was opted")
+
+					os.Exit(0)
+				}
+			}
+
+			if err := client.DeletePipeline(pipelineName); err != nil {
 				return err
 			}
 
-			return cliRenderer.Render(fmt.Sprintf("pipeline deleted: %s", args[0]))
+			return cliRenderer.Render(fmt.Sprintf("pipeline deleted: %s", pipelineName))
 		},
 	}
 

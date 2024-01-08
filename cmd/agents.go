@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
@@ -207,6 +208,21 @@ gocd-cli agents delete --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 					cliLogger.Errorf("failed to delete agent '%s', as it does not exists in GoCD", agentName)
 
 					return nil
+				}
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete agent '%s'", agentID)
+
+			if !cliCfg.Yes {
+				contains, option := cliShellReadConfig.Reader()
+				if !contains {
+					cliLogger.Fatalln("user input validation failed, cannot proceed further")
+				}
+
+				if option.Short == "n" {
+					cliLogger.Warn("not proceeding further since 'no' was opted")
+
+					os.Exit(0)
 				}
 			}
 

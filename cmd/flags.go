@@ -37,6 +37,8 @@ func registerGlobalFlags(cmd *cobra.Command) {
 		"enable this to Render output in JSON format")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "yaml", "", false,
 		"enable this to Render output in YAML format")
+	cmd.PersistentFlags().BoolVarP(&cliCfg.Yes, "yes", "y", false,
+		"when enabled, end user confirmation would be skipped")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "no-color", "", false,
 		"enable this to Render output in YAML format")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.skipCacheConfig, "skip-cache-config", "", false,

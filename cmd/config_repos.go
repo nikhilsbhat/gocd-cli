@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -368,11 +369,27 @@ func getDeleteConfigRepoCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := client.DeleteConfigRepo(args[0]); err != nil {
+			configRepoName := args[0]
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete config repo '%s'", configRepoName)
+
+			if !cliCfg.Yes {
+				contains, option := cliShellReadConfig.Reader()
+				if !contains {
+					cliLogger.Fatalln("user input validation failed, cannot proceed further")
+				}
+
+				if option.Short == "n" {
+					cliLogger.Warn("not proceeding further since 'no' was opted")
+
+					os.Exit(0)
+				}
+			}
+
+			if err := client.DeleteConfigRepo(configRepoName); err != nil {
 				return err
 			}
 
-			return cliRenderer.Render(fmt.Sprintf("config repo deleted: %s", args[0]))
+			return cliRenderer.Render(fmt.Sprintf("config repo deleted: %s", configRepoName))
 		},
 	}
 

@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
@@ -201,11 +202,27 @@ func deleteAgentProfileCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := client.DeleteElasticAgentProfile(args[0]); err != nil {
+			profileName := args[0]
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete elastic-agent-profile '%s'", profileName)
+
+			if !cliCfg.Yes {
+				contains, option := cliShellReadConfig.Reader()
+				if !contains {
+					cliLogger.Fatalln("user input validation failed, cannot proceed further")
+				}
+
+				if option.Short == "n" {
+					cliLogger.Warn("not proceeding further since 'no' was opted")
+
+					os.Exit(0)
+				}
+			}
+
+			if err := client.DeleteElasticAgentProfile(profileName); err != nil {
 				return err
 			}
 
-			return cliRenderer.Render(fmt.Sprintf("elastic agent profile '%s' deleted successfully", args[0]))
+			return cliRenderer.Render(fmt.Sprintf("elastic agent profile '%s' deleted successfully", profileName))
 		},
 	}
 

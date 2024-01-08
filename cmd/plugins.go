@@ -83,7 +83,7 @@ func getPluginSettingsCommand() *cobra.Command {
 }
 
 func createPluginSettingsCommand() *cobra.Command {
-	deletePluginSettingsCmd := &cobra.Command{
+	createPluginSettingsCmd := &cobra.Command{
 		Use:     "create-settings",
 		Short:   "Command to CREATE settings of a specified plugin present in GoCD [https://api.gocd.org/current/#create-plugin-settings]",
 		Args:    cobra.NoArgs,
@@ -121,9 +121,9 @@ func createPluginSettingsCommand() *cobra.Command {
 		},
 	}
 
-	deletePluginSettingsCmd.SetUsageTemplate(getUsageTemplate())
+	createPluginSettingsCmd.SetUsageTemplate(getUsageTemplate())
 
-	return deletePluginSettingsCmd
+	return createPluginSettingsCmd
 }
 
 func updatePluginSettingsCommand() *cobra.Command {

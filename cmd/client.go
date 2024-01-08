@@ -6,14 +6,16 @@ import (
 	"path/filepath"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
+	"github.com/nikhilsbhat/gocd-cli/pkg/utils"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
 var (
-	client      gocd.GoCd
-	cliRenderer render.Renderer
+	client             gocd.GoCd
+	cliRenderer        render.Renderer
+	cliShellReadConfig *utils.ReadConfig
 )
 
 func setCLIClient(_ *cobra.Command, _ []string) error {
@@ -78,6 +80,9 @@ func setCLIClient(_ *cobra.Command, _ []string) error {
 	}
 
 	cliRenderer = render.GetRenderer(writer, cliLogger, cliCfg.YAML, cliCfg.JSON)
+
+	inputOptions := []utils.Options{{Name: "yes", Short: "y"}, {Name: "no", Short: "n"}}
+	cliShellReadConfig = utils.NewReadConfig("gocd-cli", "", inputOptions, cliLogger)
 
 	return nil
 }

@@ -14,6 +14,7 @@ type Config struct {
 	URL             string    `yaml:"url,omitempty"`
 	CaPath          string    `yaml:"ca_path,omitempty"`
 	Auth            gocd.Auth `yaml:"auth,omitempty"`
+	Yes             bool      `yaml:"-"`
 	JSON            bool      `yaml:"-"`
 	YAML            bool      `yaml:"-"`
 	NoColor         bool      `yaml:"-"`

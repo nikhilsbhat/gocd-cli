@@ -370,7 +370,7 @@ func getDeleteConfigRepoCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			configRepoName := args[0]
-			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete config repo '%s'", configRepoName)
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete config repo '%s' [y/n]", configRepoName)
 
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()

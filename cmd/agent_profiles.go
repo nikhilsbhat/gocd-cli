@@ -203,7 +203,7 @@ func deleteAgentProfileCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			profileName := args[0]
-			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete elastic-agent-profile '%s'", profileName)
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete elastic-agent-profile '%s' [y/n]", profileName)
 
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()

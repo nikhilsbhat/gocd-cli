@@ -312,7 +312,7 @@ func deleteEnvironmentCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			environmentName := args[0]
 
-			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete gocd environment '%s'", environmentName)
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete gocd environment '%s' [y/n]", environmentName)
 
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()

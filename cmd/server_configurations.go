@@ -372,7 +372,7 @@ func deleteMailServerConfigCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliShellReadConfig.ShellMessage = "do you want to delete GoCD's mail server config"
+			cliShellReadConfig.ShellMessage = "do you want to delete GoCD's mail server config [y/n]"
 
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()

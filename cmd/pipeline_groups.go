@@ -202,7 +202,7 @@ func deletePipelineGroupCommand() *cobra.Command {
 		Example: `gocd-cli pipeline-group delete movies`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pipelineGroupName := args[0]
-			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete pipeline-group '%s'", pipelineGroupName)
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete pipeline-group '%s' [y/n]", pipelineGroupName)
 
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()

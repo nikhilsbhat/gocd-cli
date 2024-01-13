@@ -161,7 +161,7 @@ func userDeleteCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			userName := args[0]
-			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete user '%s'", userName)
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete user '%s' [y/n]", userName)
 
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()

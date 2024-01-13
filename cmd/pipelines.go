@@ -580,7 +580,7 @@ func deletePipelineCommand() *cobra.Command {
 		Example: `gocd-cli pipeline delete movies`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pipelineName := args[0]
-			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete pipeline '%s'", pipelineName)
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete pipeline '%s' [y/n]", pipelineName)
 
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()

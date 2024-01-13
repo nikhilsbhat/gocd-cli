@@ -196,7 +196,7 @@ func deleteClusterProfileCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clusterProfile := args[0]
-			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete cluster profile '%s'", clusterProfile)
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete cluster profile '%s' [y/n]", clusterProfile)
 
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()

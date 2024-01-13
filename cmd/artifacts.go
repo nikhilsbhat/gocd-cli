@@ -274,7 +274,7 @@ func deleteArtifactStoreCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			storeName := args[0]
-			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete store '%s'", storeName)
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete store '%s' [y/n]", storeName)
 
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()

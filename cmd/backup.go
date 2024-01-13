@@ -111,7 +111,7 @@ func deleteBackupConfig() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliShellReadConfig.ShellMessage = "do you want to delete GoCD's backup configuration"
+			cliShellReadConfig.ShellMessage = "do you want to delete GoCD's backup configuration [y/n]"
 
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()

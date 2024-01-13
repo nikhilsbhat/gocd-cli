@@ -211,7 +211,7 @@ gocd-cli agents delete --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 				}
 			}
 
-			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete agent '%s'", agentID)
+			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete agent '%s' [y/n]", agentID)
 
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()

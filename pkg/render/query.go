@@ -5,6 +5,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/nikhilsbhat/common/content"
 	"github.com/thedevsaddam/gojsonq/v2"
 )
 
@@ -26,13 +27,13 @@ type Query struct {
 
 // SetQuery processes the data into a format FromString of gojsonq understands and return finally processed query.
 func SetQuery(data interface{}, query string) (*Query, error) {
-	objectString, err := Marshal(data)
+	objectString, err := content.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
 
 	queryObj := &Query{
-		JSONQ: objectString.getBaseQuery(),
+		JSONQ: getBaseQuery(objectString),
 	}
 
 	queryObj.ConstructQuery(query)
@@ -71,7 +72,7 @@ func (q *Query) ConstructQuery(query string) {
 	}
 }
 
-func (obj Object) getBaseQuery() *gojsonq.JSONQ {
+func getBaseQuery(obj content.Object) *gojsonq.JSONQ {
 	return gojsonq.New().FromString(obj.String())
 }
 

@@ -1173,7 +1173,7 @@ func showPipelineCommand() *cobra.Command {
 
 				var fileYAML Pipelines
 
-				object := render.Object(fileData)
+				object := content.Object(fileData)
 
 				switch objType := object.CheckFileType(cliLogger); objType {
 				case content.FileTypeYAML:

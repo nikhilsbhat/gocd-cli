@@ -9,7 +9,7 @@ gocd-cli pipeline-group get [flags]
 ### Examples
 
 ```
-gocd-cli pipeline-group get movies --query "pipelines.[*] | name" --yaml
+gocd-cli pipeline-group get movies --query "pipelines.[*] | name" -o yaml
 // should return only the list of pipeline names based on the query
 ```
 

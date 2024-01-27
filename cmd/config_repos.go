@@ -122,7 +122,7 @@ func getFailedConfigReposCommand() *cobra.Command {
 		Use: "get-internal",
 		Short: `Command to GET all config repo information present in GoCD using internal api [/api/internal/config_repos]
 Do not use this command unless you know what you are doing with it`,
-		Example: "gocd-cli configrepo get-internal --failed --detailed --yaml",
+		Example: "gocd-cli configrepo get-internal --failed --detailed -o yaml",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -202,8 +202,8 @@ func getConfigReposDefinitionsCommand() *cobra.Command {
 	getConfigReposDefinitionsCmd := &cobra.Command{
 		Use:   "get-definitions",
 		Short: "Command to GET config-repo definitions present in GoCD [https://api.gocd.org/current/#definitions-defined-in-config-repo]",
-		Example: `gocd-cli configrepo get-definitions sample-repo --yaml
-gocd-cli configrepo get-definitions sample-repo --yaml --pipelines #should print only pipeline names`,
+		Example: `gocd-cli configrepo get-definitions sample-repo -o yaml
+gocd-cli configrepo get-definitions sample-repo -o yaml --pipelines #should print only pipeline names`,
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -491,7 +491,7 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 	configTriggerUpdateCommand := &cobra.Command{
 		Use:     "preflight-check",
 		Short:   "Command to PREFLIGHT check the config repo configurations [https://api.gocd.org/current/#preflight-check-of-config-repo-configurations]",
-		Example: `gocd-cli configrepo preflight-check -f path/to/pipeline1.gocd.yaml -f path/to/pipeline2.gocd.yaml --repo-name helm-images --yaml`,
+		Example: `gocd-cli configrepo preflight-check -f path/to/pipeline1.gocd.yaml -f path/to/pipeline2.gocd.yaml --repo-name helm-images -o yaml`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {

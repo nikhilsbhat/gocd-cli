@@ -9,7 +9,7 @@ gocd-cli environment list [flags]
 ### Examples
 
 ```
-gocd-cli environment list --yaml
+gocd-cli environment list -o yaml
 ```
 
 ### Options

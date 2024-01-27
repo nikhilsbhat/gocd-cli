@@ -9,9 +9,9 @@ gocd-cli environment get-all [flags]
 ### Examples
 
 ```
-gocd-cli environment get-all --yaml
-gocd-cli environment get-all --env-var ENVIRONMENT_VAR_1 --env-var ENVIRONMENT_VAR_2 --yaml
-gocd-cli environment get-all --pipelines --yaml
+gocd-cli environment get-all -o yaml
+gocd-cli environment get-all --env-var ENVIRONMENT_VAR_1 --env-var ENVIRONMENT_VAR_2 -o yaml
+gocd-cli environment get-all --pipelines -o yaml
 ```
 
 ### Options

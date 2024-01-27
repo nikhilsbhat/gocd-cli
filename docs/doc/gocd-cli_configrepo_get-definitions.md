@@ -9,8 +9,8 @@ gocd-cli configrepo get-definitions [flags]
 ### Examples
 
 ```
-gocd-cli configrepo get-definitions sample-repo --yaml
-gocd-cli configrepo get-definitions sample-repo --yaml --pipelines #should print only pipeline names
+gocd-cli configrepo get-definitions sample-repo -o yaml
+gocd-cli configrepo get-definitions sample-repo -o yaml --pipelines #should print only pipeline names
 ```
 
 ### Options

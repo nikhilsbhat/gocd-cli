@@ -52,9 +52,9 @@ func getEnvironmentsCommand() *cobra.Command {
 	getEnvironmentsCmd := &cobra.Command{
 		Use:   "get-all",
 		Short: "Command to GET all the environments present in GoCD [https://api.gocd.org/current/#get-all-environments]",
-		Example: `gocd-cli environment get-all --yaml
-gocd-cli environment get-all --env-var ENVIRONMENT_VAR_1 --env-var ENVIRONMENT_VAR_2 --yaml
-gocd-cli environment get-all --pipelines --yaml`,
+		Example: `gocd-cli environment get-all -o yaml
+gocd-cli environment get-all --env-var ENVIRONMENT_VAR_1 --env-var ENVIRONMENT_VAR_2 -o yaml
+gocd-cli environment get-all --pipelines -o yaml`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -119,8 +119,8 @@ func getEnvironmentCommand() *cobra.Command {
 		Use:   "get",
 		Short: "Command to GET a specific environments present in GoCD [https://api.gocd.org/current/#get-environment-config]",
 		Example: `gocd-cli environment get gocd_environment_1
-gocd-cli environment get gocd_environment_1 --env-var ENVIRONMENT_VAR_1 --env-var ENVIRONMENT_VAR_2 --yaml
-gocd-cli environment get gocd_environment_1 --pipelines --yaml`,
+gocd-cli environment get gocd_environment_1 --env-var ENVIRONMENT_VAR_1 --env-var ENVIRONMENT_VAR_2 -o yaml
+gocd-cli environment get gocd_environment_1 --pipelines -o yaml`,
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -343,7 +343,7 @@ func listEnvironmentsCommand() *cobra.Command {
 	listEnvironmentsCmd := &cobra.Command{
 		Use:     "list",
 		Short:   "Command to LIST all the environments present in GoCD [https://api.gocd.org/current/#get-all-environments]",
-		Example: `gocd-cli environment list --yaml`,
+		Example: `gocd-cli environment list -o yaml`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {

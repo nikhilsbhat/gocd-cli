@@ -134,7 +134,7 @@ func getPipelineVSMCommand() *cobra.Command {
 		Short:   "Command to GET downstream pipelines of a specified pipeline present in GoCD [https://api.gocd.org/current/#get-pipeline-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		Example: `gocd-cli pipeline vsm --pipeline animation-movies --pipeline animation-and-action-movies --down-stream --instance animation-movies=14 --yaml"`,
+		Example: `gocd-cli pipeline vsm --pipeline animation-movies --pipeline animation-and-action-movies --down-stream --instance animation-movies=14 -o yaml"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			vsms := make([]PipelineVSM, 0)
 
@@ -1006,7 +1006,7 @@ func getPipelineMapping() *cobra.Command {
 	getPipelineMappingCmd := &cobra.Command{
 		Use:     "get-mappings",
 		Short:   "Command to Identify the given pipeline is part of which config-repo/environment of GoCD",
-		Example: "gocd-cli pipeline get-mappings --pipeline helm-images --yaml",
+		Example: "gocd-cli pipeline get-mappings --pipeline helm-images -o yaml",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {

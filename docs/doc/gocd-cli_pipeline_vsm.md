@@ -9,7 +9,7 @@ gocd-cli pipeline vsm [flags]
 ### Examples
 
 ```
-gocd-cli pipeline vsm --pipeline animation-movies --pipeline animation-and-action-movies --down-stream --instance animation-movies=14 --yaml"
+gocd-cli pipeline vsm --pipeline animation-movies --pipeline animation-and-action-movies --down-stream --instance animation-movies=14 -o yaml"
 ```
 
 ### Options

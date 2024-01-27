@@ -9,7 +9,7 @@ gocd-cli configrepo preflight-check [flags]
 ### Examples
 
 ```
-gocd-cli configrepo preflight-check -f path/to/pipeline1.gocd.yaml -f path/to/pipeline2.gocd.yaml --repo-name helm-images --yaml
+gocd-cli configrepo preflight-check -f path/to/pipeline1.gocd.yaml -f path/to/pipeline2.gocd.yaml --repo-name helm-images -o yaml
 ```
 
 ### Options

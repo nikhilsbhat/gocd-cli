@@ -9,7 +9,7 @@ gocd-cli materials list [flags]
 ### Examples
 
 ```
-gocd-cli materials list --yaml (only lists materials that has name or URL)
+gocd-cli materials list -o yaml (only lists materials that has name or URL)
 ```
 
 ### Options

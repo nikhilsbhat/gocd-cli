@@ -10,8 +10,8 @@ gocd-cli environment get [flags]
 
 ```
 gocd-cli environment get gocd_environment_1
-gocd-cli environment get gocd_environment_1 --env-var ENVIRONMENT_VAR_1 --env-var ENVIRONMENT_VAR_2 --yaml
-gocd-cli environment get gocd_environment_1 --pipelines --yaml
+gocd-cli environment get gocd_environment_1 --env-var ENVIRONMENT_VAR_1 --env-var ENVIRONMENT_VAR_2 -o yaml
+gocd-cli environment get gocd_environment_1 --pipelines -o yaml
 ```
 
 ### Options

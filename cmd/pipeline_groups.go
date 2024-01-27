@@ -81,7 +81,7 @@ func getPipelineGroupCommand() *cobra.Command {
 		Short:   "Command to GET a specific pipeline group present in GoCD [https://api.gocd.org/current/#get-a-pipeline-group]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		Example: `gocd-cli pipeline-group get movies --query "pipelines.[*] | name" --yaml
+		Example: `gocd-cli pipeline-group get movies --query "pipelines.[*] | name" -o yaml
 // should return only the list of pipeline names based on the query`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			response, err := client.GetPipelineGroup(args[0])

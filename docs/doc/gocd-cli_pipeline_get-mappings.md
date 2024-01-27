@@ -9,7 +9,7 @@ gocd-cli pipeline get-mappings [flags]
 ### Examples
 
 ```
-gocd-cli pipeline get-mappings --pipeline helm-images --yaml
+gocd-cli pipeline get-mappings --pipeline helm-images -o yaml
 ```
 
 ### Options

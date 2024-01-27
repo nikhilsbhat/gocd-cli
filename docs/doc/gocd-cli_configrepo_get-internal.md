@@ -10,7 +10,7 @@ gocd-cli configrepo get-internal [flags]
 ### Examples
 
 ```
-gocd-cli configrepo get-internal --failed --detailed --yaml
+gocd-cli configrepo get-internal --failed --detailed -o yaml
 ```
 
 ### Options

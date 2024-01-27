@@ -131,7 +131,7 @@ func listMaterialsCommand() *cobra.Command {
 	getMaterialsCmd := &cobra.Command{
 		Use:     "list",
 		Short:   "Command to LIST all materials present in GoCD [https://api.gocd.org/current/#get-all-materials]",
-		Example: "gocd-cli materials list --yaml (only lists materials that has name or URL)",
+		Example: "gocd-cli materials list -o yaml (only lists materials that has name or URL)",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {

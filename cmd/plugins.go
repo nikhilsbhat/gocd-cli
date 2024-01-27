@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
@@ -96,11 +97,11 @@ func createPluginSettingsCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &setting); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &setting); err != nil {
 					return err
 				}
@@ -140,11 +141,11 @@ func updatePluginSettingsCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &setting); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &setting); err != nil {
 					return err
 				}

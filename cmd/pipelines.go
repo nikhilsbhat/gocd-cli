@@ -11,6 +11,7 @@ import (
 	"time"
 
 	goYAML "github.com/goccy/go-yaml"
+	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
@@ -22,7 +23,6 @@ import (
 )
 
 var (
-	toCSV                    string
 	rawOutput                bool
 	goCDPipelineInstance     int
 	goCDPipelineMessage      string
@@ -220,8 +220,17 @@ func getPipelineVSMCommand() *cobra.Command {
 				}
 			}
 
-			if len(toCSV) != 0 {
-				return renderVSMtoCSV(vsms, upStreamPipeline)
+			if cliCfg.table {
+				for _, pipelineVSM := range vsms {
+					goCdPipelines := pipelineVSM.DownstreamPipelines
+					if upStreamPipeline {
+						goCdPipelines = pipelineVSM.UpstreamPipelines
+					}
+
+					cliCfg.TableData = append(cliCfg.TableData, []string{pipelineVSM.Pipeline, strings.Join(goCdPipelines, " | ")})
+				}
+
+				return cliRenderer.Render(cliCfg.TableData)
 			}
 
 			return cliRenderer.Render(vsms)
@@ -236,8 +245,6 @@ func getPipelineVSMCommand() *cobra.Command {
 		"when enabled, will fetch all upstream pipelines of a specified pipeline. (NOTE: flag up-stream is still in experimental phase)")
 	getPipelineVSMCmd.PersistentFlags().StringSliceVarP(&goCDPipelineInstanceNumber, "instance", "", nil,
 		"instance of the selected pipeline for which the VSM has to be retrieved, the latest VSM number would be picked if not passed. ex: --instance pipeline1=20")
-	getPipelineVSMCmd.PersistentFlags().StringVarP(&toCSV, "to-csv", "", "",
-		"csv file, to which the output needs to be written")
 
 	getPipelineVSMCmd.MarkFlagsMutuallyExclusive("down-stream", "up-stream")
 
@@ -483,11 +490,11 @@ func createPipelineCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &pipeline); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &pipeline); err != nil {
 					return err
 				}
@@ -536,11 +543,11 @@ func updatePipelineCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &pipeline); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &pipeline); err != nil {
 					return err
 				}
@@ -726,11 +733,11 @@ func schedulePipelineCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &schedule); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &schedule); err != nil {
 					return err
 				}
@@ -1169,7 +1176,7 @@ func showPipelineCommand() *cobra.Command {
 				object := render.Object(fileData)
 
 				switch objType := object.CheckFileType(cliLogger); objType {
-				case render.FileTypeYAML:
+				case content.FileTypeYAML:
 					if err = goYAML.Unmarshal(fileData, &fileYAML); err != nil {
 						cliLogger.Errorf("deserializing yaml GoCD pipeline file errored with '%s'", err.Error())
 
@@ -1179,7 +1186,7 @@ func showPipelineCommand() *cobra.Command {
 					for _, val := range reflect.ValueOf(fileYAML.Config).MapKeys() {
 						pipelineNames = append(pipelineNames, val.String())
 					}
-				case render.FileTypeJSON:
+				case content.FileTypeJSON:
 					var fileJSON map[string]interface{}
 
 					if err = json.Unmarshal(fileData, &fileJSON); err != nil {
@@ -1344,28 +1351,19 @@ func parsePipelineConfig(pipelineName string, pipelineStreams []string) ([]strin
 	return pipelineDependencies, nil
 }
 
-func renderVSMtoCSV(pipelineVSMs []PipelineVSM, upstream bool) error {
-	csvWriter, err := cliRenderer.ToCSV(toCSV)
-	if err != nil {
-		return err
-	}
-
-	defer csvWriter.Flush()
-
-	if err = csvWriter.Write([]string{"Pipeline", "Downstream Pipelines"}); err != nil {
-		return err
-	}
-
-	for _, pipelineVSM := range pipelineVSMs {
-		goCdPipelines := pipelineVSM.DownstreamPipelines
-		if upstream {
-			goCdPipelines = pipelineVSM.UpstreamPipelines
-		}
-
-		if err = csvWriter.Write([]string{pipelineVSM.Pipeline, strings.Join(goCdPipelines, " | ")}); err != nil {
-			return err
-		}
-	}
-
-	return err
-}
+// func renderVSMtoCSV(pipelineVSMs []PipelineVSM, upstream bool) error {
+//	tableData := make([][]string, 0)
+//
+//	tableData = append(tableData, []string{"Pipeline", "Downstream Pipelines"})
+//
+//	for _, pipelineVSM := range pipelineVSMs {
+//		goCdPipelines := pipelineVSM.DownstreamPipelines
+//		if upstream {
+//			goCdPipelines = pipelineVSM.UpstreamPipelines
+//		}
+//
+//		tableData = append(tableData, []string{pipelineVSM.Pipeline, strings.Join(goCdPipelines, " | ")})
+//	}
+//
+//	return cliRenderer.Render(tableData)
+// }

@@ -16,7 +16,7 @@ const (
 	FileTypeUnknown = "unknown"
 )
 
-// IsJSON checks if the passed content of JSON.
+// IsJSON checks if the passed content of json.
 func IsJSON(content string) bool {
 	var js interface{}
 
@@ -30,12 +30,12 @@ func IsYAML(content string) bool {
 	return goYAML.Unmarshal([]byte(content), &js) == nil
 }
 
-// CheckFileType checks the file type of the content passed, it validates for YAML/JSON.
+// CheckFileType checks the file type of the content passed, it validates for YAML/json.
 func (obj Object) CheckFileType(log *logrus.Logger) string {
-	log.Debug("identifying the input file type, only YAML/JSON is allowed")
+	log.Debug("identifying the input file type, only YAML/json is allowed")
 
 	if IsJSON(string(obj)) {
-		log.Debug("input file type identified as JSON")
+		log.Debug("input file type identified as json")
 
 		return FileTypeJSON
 	}

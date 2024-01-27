@@ -25,3 +25,7 @@ func (e *UnknownObjectTypeError) Error() string {
 func (e *MaterialError) Error() string {
 	return e.Message
 }
+
+func (e *CLIError) Error() string {
+	return e.Message
+}

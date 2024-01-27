@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
-	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -79,11 +79,11 @@ func createOrUpdateBackupConfig() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &backupConfig); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &backupConfig); err != nil {
 					return err
 				}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
@@ -191,11 +192,11 @@ func createEnvironmentCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &envs); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &envs); err != nil {
 					return err
 				}
@@ -229,11 +230,11 @@ func updateEnvironmentCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &envs); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &envs); err != nil {
 					return err
 				}
@@ -274,11 +275,11 @@ func patchEnvironmentCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &envs); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &envs); err != nil {
 					return err
 				}

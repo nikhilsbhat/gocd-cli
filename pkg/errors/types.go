@@ -23,3 +23,7 @@ type ConfigRepoError struct {
 type MaterialError struct {
 	Message string
 }
+
+type CLIError struct {
+	Message string
+}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
@@ -123,11 +124,11 @@ func createAgentProfileCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &commonCfg); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &commonCfg); err != nil {
 					return err
 				}
@@ -166,11 +167,11 @@ func updateAgentProfileCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &commonCfg); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &commonCfg); err != nil {
 					return err
 				}
@@ -196,9 +197,10 @@ func updateAgentProfileCommand() *cobra.Command {
 
 func deleteAgentProfileCommand() *cobra.Command {
 	deleteElasticAgentProfileCmd := &cobra.Command{
-		Use:     "delete",
-		Short:   "Command to DELETE a specific elastic agent profile present in GoCD [https://api.gocd.org/current/#delete-an-elastic-agent-profile]",
-		Example: "gocd-cli elastic-agent-profile delete sample_kubernetes",
+		Use:   "delete",
+		Short: "Command to DELETE a specific elastic agent profile present in GoCD [https://api.gocd.org/current/#delete-an-elastic-agent-profile]",
+		Example: `gocd-cli elastic-agent-profile delete sample_kubernetes
+gocd-cli elastic-agent-profile delete sample_kubernetes -y`,
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {

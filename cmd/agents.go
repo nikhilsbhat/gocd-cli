@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
@@ -159,11 +160,11 @@ func updateAgentCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &agent); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &agent); err != nil {
 					return err
 				}
@@ -417,8 +418,8 @@ func filterAgentsResponse(response []gocd.Agent) []gocd.Agent {
 
 	if len(agentOS) != 0 {
 		response = funk.Filter(response, func(agent gocd.Agent) bool {
-			for _, os := range agentOS {
-				return funk.Contains(agent.OS, os)
+			for _, agOS := range agentOS {
+				return funk.Contains(agent.OS, agOS)
 			}
 
 			return false

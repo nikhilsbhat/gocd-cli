@@ -4,12 +4,12 @@ import (
 	"io"
 	"os"
 
-	"github.com/nikhilsbhat/gocd-cli/pkg/render"
+	"github.com/nikhilsbhat/common/content"
 	"github.com/spf13/cobra"
 )
 
-func readObject(cmd *cobra.Command) (render.Object, error) {
-	var obj render.Object
+func readObject(cmd *cobra.Command) (content.Object, error) {
+	var obj content.Object
 
 	if len(cliCfg.FromFile) != 0 {
 		cliLogger.Debug("reading configuration object from file since --from-file is enabled")
@@ -19,7 +19,7 @@ func readObject(cmd *cobra.Command) (render.Object, error) {
 			return obj, err
 		}
 
-		obj = render.Object(data)
+		obj = content.Object(data)
 	} else {
 		cliLogger.Debug("reading configuration object from stdin")
 
@@ -30,7 +30,7 @@ func readObject(cmd *cobra.Command) (render.Object, error) {
 			return obj, err
 		}
 
-		obj = render.Object(in)
+		obj = content.Object(in)
 	}
 
 	return obj, nil

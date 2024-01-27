@@ -33,14 +33,12 @@ func registerGlobalFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&cliCfg.APILogLevel, "api-log-level", "", "info",
 		"log level for GoCD API calls, this sets log level to [https://pkg.go.dev/github.com/go-resty/resty/v2#Client.SetLogger],"+
 			"log levels supported by [https://github.com/sirupsen/logrus] will work")
-	cmd.PersistentFlags().BoolVarP(&cliCfg.JSON, "json", "", false,
-		"enable this to Render output in JSON format")
-	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "yaml", "", false,
-		"enable this to Render output in YAML format")
+	cmd.PersistentFlags().StringVarP(&cliCfg.OutputFormat, "output", "o", "",
+		"the format to which the output should be rendered to, it should be one of yaml|json|table|csv, if nothing specified it sets to default")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.Yes, "yes", "y", false,
 		"when enabled, end user confirmation would be skipped")
-	cmd.PersistentFlags().BoolVarP(&cliCfg.YAML, "no-color", "", false,
-		"enable this to Render output in YAML format")
+	cmd.PersistentFlags().BoolVarP(&cliCfg.NoColor, "no-color", "", false,
+		"enable this to Render output with no color")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.skipCacheConfig, "skip-cache-config", "", false,
 		"if enabled locally save auth configs would not be used to authenticate GoCD server (path: $HOME/.gocd/auth_config.yaml)")
 	cmd.PersistentFlags().StringVarP(&cliCfg.FromFile, "from-file", "", "",

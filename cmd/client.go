@@ -1,21 +1,26 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
-	"github.com/nikhilsbhat/gocd-cli/pkg/render"
+	"github.com/nikhilsbhat/common/renderer"
+	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/utils"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
+	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )
 
 var (
-	client             gocd.GoCd
-	cliRenderer        render.Renderer
-	cliShellReadConfig *utils.ReadConfig
+	client                 gocd.GoCd
+	cliRenderer            renderer.Config
+	cliShellReadConfig     *utils.ReadConfig
+	supportedOutputFormats = []string{"yaml", "json", "csv", "table"}
 )
 
 func setCLIClient(_ *cobra.Command, _ []string) error {
@@ -79,10 +84,45 @@ func setCLIClient(_ *cobra.Command, _ []string) error {
 		writer = filePTR
 	}
 
-	cliRenderer = render.GetRenderer(writer, cliLogger, cliCfg.YAML, cliCfg.JSON)
+	if !cliCfg.validateOutputFormats() {
+		supportedOutputFormatsString := strings.Join(supportedOutputFormats, "|")
+		cliLogger.Errorf("unsupported output format '%s', the value should be one of %s",
+			cliCfg.OutputFormat, supportedOutputFormatsString)
+
+		return &errors.CLIError{
+			Message: fmt.Sprintf("unsupported output format '%s', the value should be one of %s",
+				cliCfg.OutputFormat, supportedOutputFormatsString),
+		}
+	}
+
+	cliCfg.setOutputFormats()
+
+	cliRenderer = renderer.GetRenderer(writer, cliLogger, cliCfg.NoColor, cliCfg.yaml, cliCfg.json, cliCfg.csv, cliCfg.table)
 
 	inputOptions := []utils.Options{{Name: "yes", Short: "y"}, {Name: "no", Short: "n"}}
 	cliShellReadConfig = utils.NewReadConfig("gocd-cli", "", inputOptions, cliLogger)
 
 	return nil
+}
+
+func (cfg *Config) validateOutputFormats() bool {
+	if len(cfg.OutputFormat) == 0 {
+		return true
+	}
+
+	return funk.Contains(supportedOutputFormats, strings.ToLower(cfg.OutputFormat))
+}
+
+func (cfg *Config) setOutputFormats() {
+	switch strings.ToLower(cfg.OutputFormat) {
+	case "yaml":
+		cfg.yaml = true
+	case "json":
+		cfg.json = true
+	case "csv":
+		cfg.csv = true
+	case "table":
+		cfg.table = true
+	default:
+	}
 }

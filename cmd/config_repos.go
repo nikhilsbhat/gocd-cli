@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/render"
 	"github.com/nikhilsbhat/gocd-sdk-go"
@@ -84,6 +85,15 @@ func getConfigReposCommand() *cobra.Command {
 				cliLogger.Debugf(baseQuery.Print())
 
 				return cliRenderer.Render(baseQuery.RunQuery())
+			}
+
+			if cliRenderer.Table {
+				cliCfg.TableData = append(cliCfg.TableData, []string{"ID", "Data"})
+				for _, res := range response {
+					cliCfg.TableData = append(cliCfg.TableData, []string{res.ID, fmt.Sprintf("%v", res)})
+				}
+
+				return cliRenderer.Render(cliCfg.TableData)
 			}
 
 			return cliRenderer.Render(response)
@@ -273,6 +283,13 @@ func getConfigRepoCommand() *cobra.Command {
 				return cliRenderer.Render(baseQuery.RunQuery())
 			}
 
+			if cliRenderer.Table {
+				cliCfg.TableData = append(cliCfg.TableData, []string{"ID", "Data"})
+				cliCfg.TableData = append(cliCfg.TableData, []string{response.ID, fmt.Sprintf("%v", response)})
+
+				return cliRenderer.Render(cliCfg.TableData)
+			}
+
 			return cliRenderer.Render(response)
 		},
 	}
@@ -295,12 +312,14 @@ func getCreateConfigRepoCommand() *cobra.Command {
 				return err
 			}
 
+			fmt.Println(object.String())
+
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &configRepo); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &configRepo); err != nil {
 					return err
 				}
@@ -335,11 +354,11 @@ func getUpdateConfigRepoCommand() *cobra.Command {
 			}
 
 			switch objType := object.CheckFileType(cliLogger); objType {
-			case render.FileTypeYAML:
+			case content.FileTypeYAML:
 				if err = yaml.Unmarshal([]byte(object), &configRepo); err != nil {
 					return err
 				}
-			case render.FileTypeJSON:
+			case content.FileTypeJSON:
 				if err = json.Unmarshal([]byte(object), &configRepo); err != nil {
 					return err
 				}

@@ -52,7 +52,7 @@ func getAuthStoreCommand() *cobra.Command {
 			}
 
 			authConfigDir := filepath.Join(home, goCdCacheDirName)
-			const filePermission = 0o644
+			const filePermission = 0o755
 			if err = os.Mkdir(authConfigDir, filePermission); os.IsNotExist(err) {
 				cliLogger.Errorf("creating directory '%s' errored with '%v'", authConfigDir, err)
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
-	"github.com/nikhilsbhat/gocd-cli/pkg/render"
+	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -58,7 +58,7 @@ func getPipelineGroupsCommand() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(response, jsonQuery)
+				baseQuery, err := query.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -92,7 +92,7 @@ func getPipelineGroupCommand() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(response, jsonQuery)
+				baseQuery, err := query.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}

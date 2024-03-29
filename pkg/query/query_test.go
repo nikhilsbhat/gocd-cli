@@ -1,9 +1,9 @@
-package render_test
+package query_test
 
 import (
 	"testing"
 
-	"github.com/nikhilsbhat/gocd-cli/pkg/render"
+	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/stretchr/testify/assert"
 )
@@ -74,7 +74,7 @@ func TestObject_GetQuery(t *testing.T) {
 			},
 		}
 
-		query, err := render.SetQuery(data, "[*] | plugin_id = json.config.plugin")
+		query, err := query.SetQuery(data, "[*] | plugin_id = json.config.plugin")
 		assert.NoError(t, err)
 		response := query.RunQuery()
 		assert.Equal(t, expected, response)
@@ -126,7 +126,7 @@ func TestObject_GetQuery(t *testing.T) {
 
 		expected := []interface{}{"json.config.plugin", "yaml.config.plugin"}
 
-		query, err := render.SetQuery(data, "[*] | plugin_id")
+		query, err := query.SetQuery(data, "[*] | plugin_id")
 		assert.NoError(t, err)
 		assert.Equal(t, "pluck", query.GetQueryType())
 		response := query.RunQuery()

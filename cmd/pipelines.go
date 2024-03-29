@@ -13,7 +13,7 @@ import (
 	goYAML "github.com/goccy/go-yaml"
 	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
-	"github.com/nikhilsbhat/gocd-cli/pkg/render"
+	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/nikhilsbhat/gocd-sdk-go/pkg/plugin"
 	"github.com/spf13/cobra"
@@ -105,7 +105,7 @@ func getPipelinesCommand() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(response, jsonQuery)
+				baseQuery, err := query.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -271,7 +271,7 @@ func getPipelineCommand() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(response, jsonQuery)
+				baseQuery, err := query.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -304,7 +304,7 @@ func getPipelineScheduleCommand() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(response, jsonQuery)
+				baseQuery, err := query.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -352,7 +352,7 @@ Prefer invoking this command when GoCD is not serving huge traffic`,
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(response, jsonQuery)
+				baseQuery, err := query.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -455,7 +455,7 @@ func getPipelineNotSchedulesCommand() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(pipelineSchedules, jsonQuery)
+				baseQuery, err := query.SetQuery(pipelineSchedules, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -629,7 +629,7 @@ func getPipelineStateCommand() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(response, jsonQuery)
+				baseQuery, err := query.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -667,7 +667,7 @@ func getPipelineInstanceCommand() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(response, jsonQuery)
+				baseQuery, err := query.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -979,7 +979,7 @@ func exportPipelineToConfigRepoFormatCommand() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(response, jsonQuery)
+				baseQuery, err := query.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -1066,7 +1066,7 @@ func getPipelineMapping() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(pipelineMappings, jsonQuery)
+				baseQuery, err := query.SetQuery(pipelineMappings, jsonQuery)
 				if err != nil {
 					return err
 				}

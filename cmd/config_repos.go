@@ -10,7 +10,7 @@ import (
 
 	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
-	"github.com/nikhilsbhat/gocd-cli/pkg/render"
+	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/thoas/go-funk"
@@ -77,7 +77,7 @@ func getConfigReposCommand() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(response, jsonQuery)
+				baseQuery, err := query.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -171,7 +171,7 @@ Do not use this command unless you know what you are doing with it`,
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(repos, jsonQuery)
+				baseQuery, err := query.SetQuery(repos, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -236,7 +236,7 @@ gocd-cli configrepo get-definitions sample-repo -o yaml --pipelines #should prin
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(output, jsonQuery)
+				baseQuery, err := query.SetQuery(output, jsonQuery)
 				if err != nil {
 					return err
 				}
@@ -273,7 +273,7 @@ func getConfigRepoCommand() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(response, jsonQuery)
+				baseQuery, err := query.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}

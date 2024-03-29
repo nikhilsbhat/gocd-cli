@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/nikhilsbhat/gocd-cli/pkg/render"
+	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/spf13/cobra"
 )
 
@@ -63,7 +63,7 @@ func getHealthMessagesCommand() *cobra.Command {
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				baseQuery, err := render.SetQuery(response, jsonQuery)
+				baseQuery, err := query.SetQuery(response, jsonQuery)
 				if err != nil {
 					return err
 				}

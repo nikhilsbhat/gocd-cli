@@ -202,11 +202,11 @@ func deleteClusterProfileCommand() *cobra.Command {
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()
 				if !contains {
-					cliLogger.Fatalln("user input validation failed, cannot proceed further")
+					cliLogger.Fatalln(inputValidationFailureMessage)
 				}
 
 				if option.Short == "n" {
-					cliLogger.Warn("not proceeding further since 'no' was opted")
+					cliLogger.Warn(optingOutMessage)
 
 					os.Exit(0)
 				}

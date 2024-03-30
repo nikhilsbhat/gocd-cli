@@ -366,6 +366,24 @@ func getUpdateConfigRepoCommand() *cobra.Command {
 				return &errors.UnknownObjectTypeError{Name: objType}
 			}
 
+			configRepoFetched, err := client.GetConfigRepo(configRepo.ID)
+			if err != nil {
+				return err
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "config-repo", configRepoFetched.ID)
+
+			existing, err := diffCfg.String(configRepoFetched)
+			if err != nil {
+				return err
+			}
+
+			if !cliCfg.Yes {
+				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
+					return err
+				}
+			}
+
 			response, err := client.UpdateConfigRepo(configRepo)
 			if err != nil {
 				return err
@@ -394,11 +412,11 @@ func getDeleteConfigRepoCommand() *cobra.Command {
 			if !cliCfg.Yes {
 				contains, option := cliShellReadConfig.Reader()
 				if !contains {
-					cliLogger.Fatalln("user input validation failed, cannot proceed further")
+					cliLogger.Fatalln(inputValidationFailureMessage)
 				}
 
 				if option.Short == "n" {
-					cliLogger.Warn("not proceeding further since 'no' was opted")
+					cliLogger.Warn(optingOutMessage)
 
 					os.Exit(0)
 				}

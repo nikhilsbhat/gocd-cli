@@ -2,74 +2,56 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/ghodss/yaml"
 	"github.com/nikhilsbhat/common/renderer"
+	"github.com/nikhilsbhat/gocd-cli/pkg/diff"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/utils"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/thoas/go-funk"
-	"gopkg.in/yaml.v3"
 )
 
 var (
 	client                 gocd.GoCd
 	cliRenderer            renderer.Config
 	cliShellReadConfig     *utils.ReadConfig
+	diffCfg                diff.Config
 	supportedOutputFormats = []string{"yaml", "json", "csv", "table"}
 )
 
 func setCLIClient(_ *cobra.Command, _ []string) error {
-	var caContent []byte
-
 	SetLogger(cliCfg.LogLevel)
 
-	localConfig, localConfigPath, err := checkForConfig()
-	if err != nil {
+	if localConfig, localConfigPath, err := checkForConfig(); err != nil {
 		return err
-	}
-
-	if localConfig && !cliCfg.skipCacheConfig {
-		cliLogger.Debugf("found authorisation configuration in cache, loading config from %s", localConfigPath)
-
-		yamlConfig, err := os.ReadFile(localConfigPath)
-		if err != nil {
+	} else if localConfig && !cliCfg.skipCacheConfig {
+		cliLogger.Debugf("found authorization configuration in cache, loading config from %s", localConfigPath)
+		if yamlConfig, err := os.ReadFile(localConfigPath); err != nil {
+			return err
+		} else if err := yaml.Unmarshal(yamlConfig, &cliCfg); err != nil {
 			return err
 		}
-
-		if err = yaml.Unmarshal(yamlConfig, &cliCfg); err != nil {
-			return err
-		}
-
-		cliLogger.Debug("authorisation configuration loaded from cache successfully")
+		cliLogger.Debug("authorization configuration loaded from cache successfully")
 	}
 
 	if len(cliCfg.CaPath) != 0 {
-		cliLogger.Debug("CA based auth is enabled, hence reading ca from the path")
+		cliLogger.Debug("CA based auth is enabled, hence reading CA from the path")
 
-		caAbs, err := filepath.Abs(cliCfg.CaPath)
-		if err != nil {
+		if caAbs, err := filepath.Abs(cliCfg.CaPath); err != nil {
 			return err
+		} else if caContent, err := os.ReadFile(caAbs); err != nil {
+			return err
+		} else {
+			client = gocd.NewClient(cliCfg.URL, cliCfg.Auth, cliCfg.APILogLevel, caContent)
 		}
-
-		caContent, err = os.ReadFile(caAbs)
-		if err != nil {
-			log.Fatal(err)
-		}
+	} else {
+		client = gocd.NewClient(cliCfg.URL, cliCfg.Auth, cliCfg.APILogLevel, nil)
 	}
-
-	goCDClient := gocd.NewClient(
-		cliCfg.URL,
-		cliCfg.Auth,
-		cliCfg.APILogLevel,
-		caContent,
-	)
-
-	client = goCDClient
 
 	writer := os.Stdout
 
@@ -86,17 +68,15 @@ func setCLIClient(_ *cobra.Command, _ []string) error {
 
 	if !cliCfg.validateOutputFormats() {
 		supportedOutputFormatsString := strings.Join(supportedOutputFormats, "|")
-		cliLogger.Errorf("unsupported output format '%s', the value should be one of %s",
-			cliCfg.OutputFormat, supportedOutputFormatsString)
+		errMsg := fmt.Sprintf("unsupported output format '%s', the value should be one of %s", cliCfg.OutputFormat, supportedOutputFormatsString)
+		cliLogger.Errorf(errMsg)
 
-		return &errors.CLIError{
-			Message: fmt.Sprintf("unsupported output format '%s', the value should be one of %s",
-				cliCfg.OutputFormat, supportedOutputFormatsString),
-		}
+		return &errors.CLIError{Message: errMsg}
 	}
 
+	diffCfg = diff.Config{Format: cliCfg.OutputFormat}
+	diffCfg.SetLogger(cliLogger)
 	cliCfg.setOutputFormats()
-
 	cliRenderer = renderer.GetRenderer(writer, cliLogger, cliCfg.NoColor, cliCfg.yaml, cliCfg.json, cliCfg.csv, cliCfg.table)
 
 	inputOptions := []utils.Options{{Name: "yes", Short: "y"}, {Name: "no", Short: "n"}}
@@ -124,5 +104,20 @@ func (cfg *Config) setOutputFormats() {
 	case "table":
 		cfg.table = true
 	default:
+	}
+}
+
+func (cfg *Config) GetOutputFormat() string {
+	switch {
+	case cfg.yaml:
+		return "yaml"
+	case cfg.json:
+		return "json"
+	case cfg.table:
+		return "table"
+	case cfg.csv:
+		return "csv"
+	default:
+		return ""
 	}
 }

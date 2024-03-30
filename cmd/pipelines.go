@@ -137,8 +137,8 @@ func getPipelineVSMCommand() *cobra.Command {
 		Example: `gocd-cli pipeline vsm --pipeline animation-movies --pipeline animation-and-action-movies --down-stream --instance animation-movies=14 -o yaml"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			vsms := make([]PipelineVSM, 0)
+			vsmErrors := make(map[string]string)
 
-			vsmErrors := make(map[string]string, 0)
 			for _, goCDPipeline := range goCDPipelines {
 				pipelineHistory, err := client.GetLimitedPipelineRunHistory(goCDPipeline, "10", "0")
 				if err != nil {
@@ -159,10 +159,7 @@ func getPipelineVSMCommand() *cobra.Command {
 							return err
 						}
 
-						if _, err = client.GetPipelineInstance(gocd.PipelineObject{
-							Name:    goCDPipeline,
-							Counter: pipelineCounter,
-						}); err != nil {
+						if _, err = client.GetPipelineInstance(gocd.PipelineObject{Name: goCDPipeline, Counter: pipelineCounter}); err != nil {
 							return err
 						}
 
@@ -531,7 +528,7 @@ func updatePipelineCommand() *cobra.Command {
 	updatePipelineGroupCmd := &cobra.Command{
 		Use:     "update",
 		Short:   "Command to UPDATE the pipeline config with the latest specified configuration [https://api.gocd.org/current/#edit-pipeline-config]",
-		Args:    cobra.NoArgs,
+		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline update sample-movies --from-file sample-movies.yaml --log-level debug
 // the inputs can be passed either from file using '--from-file' flag or entire content as argument to command`,
@@ -558,6 +555,24 @@ func updatePipelineCommand() *cobra.Command {
 			pipelineConfig := gocd.PipelineConfig{
 				ETAG:   goCDPipelineETAG,
 				Config: pipeline,
+			}
+
+			pipelineConfigFetched, err := client.GetPipelineConfig(args[0])
+			if err != nil {
+				return err
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "pipeline-config", args[0])
+
+			existing, err := diffCfg.String(pipelineConfigFetched)
+			if err != nil {
+				return err
+			}
+
+			if !cliCfg.Yes {
+				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
+					return err
+				}
 			}
 
 			response, err := client.UpdatePipelineConfig(pipelineConfig)

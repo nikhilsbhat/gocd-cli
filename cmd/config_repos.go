@@ -399,7 +399,7 @@ func getUpdateConfigRepoCommand() *cobra.Command {
 }
 
 func getDeleteConfigRepoCommand() *cobra.Command {
-	configUpdateStatusCommand := &cobra.Command{
+	deleteConfigRepoCommand := &cobra.Command{
 		Use:     "delete",
 		Short:   "Command to DELETE the specified config-repo [https://api.gocd.org/current/#delete-a-config-repo]",
 		Example: "gocd-cli configrepo delete helm-images",
@@ -430,7 +430,7 @@ func getDeleteConfigRepoCommand() *cobra.Command {
 		},
 	}
 
-	return configUpdateStatusCommand
+	return deleteConfigRepoCommand
 }
 
 func listConfigReposCommand() *cobra.Command {

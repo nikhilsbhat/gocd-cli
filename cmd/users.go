@@ -119,7 +119,7 @@ func userUpdateCommand() *cobra.Command {
 	updateUserCmd := &cobra.Command{
 		Use:     "update",
 		Short:   "Command to UPDATE user present in GoCD [https://api.gocd.org/current/#update-a-user]",
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var user gocd.User
@@ -139,6 +139,24 @@ func userUpdateCommand() *cobra.Command {
 				}
 			default:
 				return &errors.UnknownObjectTypeError{Name: objType}
+			}
+
+			userFetched, err := client.GetUser(user.Name)
+			if err != nil {
+				return err
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "user", user.Name)
+
+			existing, err := diffCfg.String(userFetched)
+			if err != nil {
+				return err
+			}
+
+			if !cliCfg.Yes {
+				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
+					return err
+				}
 			}
 
 			_, err = client.UpdateUser(user)

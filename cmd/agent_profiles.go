@@ -179,6 +179,24 @@ func updateAgentProfileCommand() *cobra.Command {
 				return &errors.UnknownObjectTypeError{Name: objType}
 			}
 
+			elasticAgentProfileFetched, err := client.GetElasticAgentProfile(commonCfg.ID)
+			if err != nil {
+				return err
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "elastic-agent-profile", elasticAgentProfileFetched.Name)
+
+			existing, err := diffCfg.String(elasticAgentProfileFetched)
+			if err != nil {
+				return err
+			}
+
+			if !cliCfg.Yes {
+				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
+					return err
+				}
+			}
+
 			response, err := client.UpdateElasticAgentProfile(commonCfg)
 			if err != nil {
 				return err

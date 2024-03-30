@@ -150,7 +150,7 @@ func updateAgentCommand() *cobra.Command {
 	createAgentCmd := &cobra.Command{
 		Use:     "update",
 		Short:   "Command to UPDATE an agent with all specified configuration [https://api.gocd.org/current/#update-an-agent]",
-		Args:    cobra.NoArgs,
+		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var agent gocd.Agent
@@ -170,6 +170,26 @@ func updateAgentCommand() *cobra.Command {
 				}
 			default:
 				return &errors.UnknownObjectTypeError{Name: objType}
+			}
+
+			agent.ID = args[0]
+
+			agentFetched, err := client.GetAgent(agent.ID)
+			if err != nil {
+				return err
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "agent", agentFetched.ID)
+
+			existing, err := diffCfg.String(agentFetched)
+			if err != nil {
+				return err
+			}
+
+			if !cliCfg.Yes {
+				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
+					return err
+				}
 			}
 
 			if err = client.UpdateAgent(agent); err != nil {

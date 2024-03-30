@@ -353,6 +353,24 @@ func createUpdateMailServerConfigCommand() *cobra.Command {
 				return &errors.UnknownObjectTypeError{Name: objType}
 			}
 
+			mailServerConfigFetched, err := client.GetMailServerConfig()
+			if err != nil {
+				return err
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "mail-server-config", "")
+
+			existing, err := diffCfg.String(mailServerConfigFetched)
+			if err != nil {
+				return err
+			}
+
+			if !cliCfg.Yes {
+				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
+					return err
+				}
+			}
+
 			output, err := client.CreateOrUpdateMailServerConfig(mailConfig)
 			if err != nil {
 				return err

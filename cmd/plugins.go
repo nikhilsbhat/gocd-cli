@@ -153,6 +153,24 @@ func updatePluginSettingsCommand() *cobra.Command {
 				return &errors.UnknownObjectTypeError{Name: objType}
 			}
 
+			pluginSettingsFetched, err := client.GetPluginSettings(setting.ID)
+			if err != nil {
+				return err
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "pipeline-settings", setting.ID)
+
+			existing, err := diffCfg.String(pluginSettingsFetched)
+			if err != nil {
+				return err
+			}
+
+			if !cliCfg.Yes {
+				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
+					return err
+				}
+			}
+
 			response, err := client.UpdatePluginSettings(setting)
 			if err != nil {
 				return err

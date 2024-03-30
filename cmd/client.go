@@ -74,7 +74,7 @@ func setCLIClient(_ *cobra.Command, _ []string) error {
 		return &errors.CLIError{Message: errMsg}
 	}
 
-	diffCfg = diff.Config{Format: cliCfg.OutputFormat}
+	diffCfg = diff.Config{Format: cliCfg.OutputFormat, NoColor: cliCfg.NoColor}
 	diffCfg.SetLogger(cliLogger)
 	cliCfg.setOutputFormats()
 	cliRenderer = renderer.GetRenderer(writer, cliLogger, cliCfg.NoColor, cliCfg.yaml, cliCfg.json, cliCfg.csv, cliCfg.table)

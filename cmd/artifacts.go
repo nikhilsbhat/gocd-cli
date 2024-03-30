@@ -209,6 +209,24 @@ func updateArtifactStoreCommand() *cobra.Command {
 				return &errors.UnknownObjectTypeError{Name: objType}
 			}
 
+			artifactStoreFetched, err := client.GetArtifactStore(commonCfg.Name)
+			if err != nil {
+				return err
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "artifact-store", artifactStoreFetched.Name)
+
+			existing, err := diffCfg.String(artifactStoreFetched)
+			if err != nil {
+				return err
+			}
+
+			if !cliCfg.Yes {
+				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
+					return err
+				}
+			}
+
 			response, err := client.UpdateArtifactStore(commonCfg)
 			if err != nil {
 				return err
@@ -249,6 +267,24 @@ func updateArtifactConfigCommand() *cobra.Command {
 				}
 			default:
 				return &errors.UnknownObjectTypeError{Name: objType}
+			}
+
+			artifactConfigFetched, err := client.GetArtifactConfig()
+			if err != nil {
+				return err
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "artifact-config", "")
+
+			existing, err := diffCfg.String(artifactConfigFetched)
+			if err != nil {
+				return err
+			}
+
+			if !cliCfg.Yes {
+				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
+					return err
+				}
 			}
 
 			response, err := client.UpdateArtifactConfig(artifactInfo)

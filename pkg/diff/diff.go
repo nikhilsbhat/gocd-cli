@@ -32,7 +32,7 @@ func (cfg *Config) Diff(oldData, newData string) (bool, string, error) {
 		return false, "", &errors.CLIError{Message: fmt.Sprintf("unknown format, cannot calculate diff for the format '%s'", cfg.Format)}
 	}
 
-	diffIdentified, err := diff(oldData, newData)
+	diffIdentified, err := cfg.diff(oldData, newData)
 	if err != nil {
 		return false, "", err
 	}
@@ -73,7 +73,7 @@ func (cfg *Config) SetLogger(log *logrus.Logger) {
 	cfg.log = log
 }
 
-func diff(content1, content2 string) ([]string, error) {
+func (cfg *Config) diff(content1, content2 string) ([]string, error) {
 	lines := make([]string, 0)
 	diffVal := difflib.UnifiedDiff{
 		A:        difflib.SplitLines(content1),
@@ -93,11 +93,14 @@ func diff(content1, content2 string) ([]string, error) {
 	}
 
 	lines = strings.Split(text, "\n")
-	for i, line := range lines {
-		if strings.HasPrefix(line, "-") {
-			lines[i] = color.RedString(line)
-		} else if strings.HasPrefix(line, "+") {
-			lines[i] = color.GreenString(line)
+	for index, line := range lines {
+		if !cfg.NoColor {
+			switch {
+			case strings.HasPrefix(line, "-"):
+				lines[index] = color.RedString(line)
+			case strings.HasPrefix(line, "+"):
+				lines[index] = color.GreenString(line)
+			}
 		}
 	}
 

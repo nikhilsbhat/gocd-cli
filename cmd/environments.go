@@ -242,7 +242,23 @@ func updateEnvironmentCommand() *cobra.Command {
 				return &errors.UnknownObjectTypeError{Name: objType}
 			}
 
-			fmt.Println(envs)
+			environmentFetched, err := client.GetEnvironment(envs.Name)
+			if err != nil {
+				return err
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "environment", envs.Name)
+
+			existing, err := diffCfg.String(environmentFetched)
+			if err != nil {
+				return err
+			}
+
+			if !cliCfg.Yes {
+				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
+					return err
+				}
+			}
 
 			env, err := client.UpdateEnvironment(envs)
 			if err != nil {
@@ -285,6 +301,21 @@ func patchEnvironmentCommand() *cobra.Command {
 				}
 			default:
 				return &errors.UnknownObjectTypeError{Name: objType}
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(patchMessage, "environment", envs.Name)
+
+			if !cliCfg.Yes {
+				contains, option := cliShellReadConfig.Reader()
+				if !contains {
+					cliLogger.Fatalln(inputValidationFailureMessage)
+				}
+
+				if option.Short == "n" {
+					cliLogger.Warn(optingOutMessage)
+
+					os.Exit(0)
+				}
 			}
 
 			env, err := client.PatchEnvironment(envs)

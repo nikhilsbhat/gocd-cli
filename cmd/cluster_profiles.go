@@ -173,6 +173,24 @@ func updateClusterProfileCommand() *cobra.Command {
 				return &errors.UnknownObjectTypeError{Name: objType}
 			}
 
+			clusterProfileFetched, err := client.GetClusterProfile(commonCfg.ID)
+			if err != nil {
+				return err
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "elastic-agent-profile", clusterProfileFetched.Name)
+
+			existing, err := diffCfg.String(clusterProfileFetched)
+			if err != nil {
+				return err
+			}
+
+			if !cliCfg.Yes {
+				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
+					return err
+				}
+			}
+
 			response, err := client.UpdateClusterProfile(commonCfg)
 			if err != nil {
 				return err

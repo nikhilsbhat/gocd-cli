@@ -176,7 +176,23 @@ func updatePipelineGroupCommand() *cobra.Command {
 				return &errors.UnknownObjectTypeError{Name: objType}
 			}
 
-			fmt.Println(ppGroup)
+			pipelineGroupFetched, err := client.GetPipelineGroup(ppGroup.Name)
+			if err != nil {
+				return err
+			}
+
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "pipeline-group", ppGroup.Name)
+
+			existing, err := diffCfg.String(pipelineGroupFetched)
+			if err != nil {
+				return err
+			}
+
+			if !cliCfg.Yes {
+				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
+					return err
+				}
+			}
 
 			env, err := client.UpdatePipelineGroup(ppGroup)
 			if err != nil {

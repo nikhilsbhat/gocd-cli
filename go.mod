@@ -6,7 +6,7 @@ require (
 	github.com/fatih/color v1.16.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/goccy/go-yaml v1.11.3
-	github.com/nikhilsbhat/common v0.0.5-0.20240331064442-d5f43095b010
+	github.com/nikhilsbhat/common v0.0.5
 	github.com/nikhilsbhat/gocd-sdk-go v0.1.9
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/sirupsen/logrus v1.9.3

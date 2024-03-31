@@ -153,10 +153,8 @@ func userUpdateCommand() *cobra.Command {
 				return err
 			}
 
-			if !cliCfg.Yes {
-				if err = CheckDiffAndAllow(existing, object.String()); err != nil {
-					return err
-				}
+			if err = cliCfg.CheckDiffAndAllow(existing, object.String()); err != nil {
+				return err
 			}
 
 			_, err = client.UpdateUser(user)

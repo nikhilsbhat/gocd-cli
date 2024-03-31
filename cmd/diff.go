@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func CheckDiffAndAllow(oldData, newData string) error {
+func (cfg *Config) CheckDiffAndAllow(oldData, newData string) error {
 	hasDiff, diff, err := diffCfg.Diff(oldData, newData)
 	if err != nil {
 		return err
@@ -17,16 +17,19 @@ func CheckDiffAndAllow(oldData, newData string) error {
 	}
 
 	fmt.Printf("%s\n", diff)
+	fmt.Printf("%s\n\n", "Above changes would be deployed")
 
-	contains, option := cliShellReadConfig.Reader()
-	if !contains {
-		cliLogger.Fatalln(inputValidationFailureMessage)
-	}
+	if !cfg.Yes {
+		contains, option := cliShellReadConfig.Reader()
+		if !contains {
+			cliLogger.Fatalln(inputValidationFailureMessage)
+		}
 
-	if option.Short == "n" {
-		cliLogger.Warn(optingOutMessage)
+		if option.Short == "n" {
+			cliLogger.Warn(optingOutMessage)
 
-		os.Exit(0)
+			os.Exit(0)
+		}
 	}
 
 	return nil

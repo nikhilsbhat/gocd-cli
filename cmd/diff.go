@@ -6,7 +6,7 @@ import (
 )
 
 func (cfg *Config) CheckDiffAndAllow(oldData, newData string) error {
-	hasDiff, diff, err := diffCfg.Diff(oldData, newData)
+	hasDiff, diffIdentified, err := diffCfg.Diff(oldData, newData)
 	if err != nil {
 		return err
 	}
@@ -16,7 +16,7 @@ func (cfg *Config) CheckDiffAndAllow(oldData, newData string) error {
 		os.Exit(0)
 	}
 
-	fmt.Printf("%s\n", diff)
+	fmt.Printf("%s\n", diffIdentified)
 	fmt.Printf("%s\n\n", "Above changes would be deployed")
 
 	if !cfg.Yes {

@@ -46,8 +46,8 @@ github.com/mattn/go-runewidth v0.0.9 h1:Lm995f3rfxdpd6TSmuVCHVb/QhupuXlYr8sCI/Qd
 github.com/mattn/go-runewidth v0.0.9/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
 github.com/neilotoole/jsoncolor v0.7.1 h1:/MoU7KPLcto+ykcy592Y8eX9WFQhoi3IBEbwrP89dgs=
 github.com/neilotoole/jsoncolor v0.7.1/go.mod h1:KZ9hUYN5xMrvyhqlFQ3QTmu11OcoqFgSnWAcYkN6abg=
-github.com/nikhilsbhat/common v0.0.5-0.20240330150338-6dad4cae0c57 h1:6BYXfUsKO7xwzfA5a2xtY14i90xqiHLCJDV0epRHJU8=
-github.com/nikhilsbhat/common v0.0.5-0.20240330150338-6dad4cae0c57/go.mod h1:ldoLjRsIaskDbouPaQ0ujVKbW8su3mI1MPQIaD24twQ=
+github.com/nikhilsbhat/common v0.0.5-0.20240331064442-d5f43095b010 h1:TuR/lpOOwNt/uqJp/uhxT+K4MNZkHrbo0NMZSSKyX5c=
+github.com/nikhilsbhat/common v0.0.5-0.20240331064442-d5f43095b010/go.mod h1:ldoLjRsIaskDbouPaQ0ujVKbW8su3mI1MPQIaD24twQ=
 github.com/nikhilsbhat/gocd-sdk-go v0.1.9 h1:QG16EwKhxocn0Imza6S+/lE8S0MOw54UDebfJotQx2s=
 github.com/nikhilsbhat/gocd-sdk-go v0.1.9/go.mod h1:FFVOLXPhn55evuuyfiRJ23R8I5Ks2n31/DXLBQmaNsw=
 github.com/nwidger/jsoncolor v0.3.2 h1:rVJJlwAWDJShnbTYOQ5RM7yTA20INyKXlJ/fg4JMhHQ=

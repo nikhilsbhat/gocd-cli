@@ -187,7 +187,7 @@ func updateArtifactStoreCommand() *cobra.Command {
 	updateArtifactsStoreCmd := &cobra.Command{
 		Use:     "update-store",
 		Short:   "Command to UPDATE an artifact store with all specified configurations in GoCD [https://api.gocd.org/current/#update-an-artifact-store]",
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var commonCfg gocd.CommonConfig

@@ -151,7 +151,7 @@ func updateClusterProfileCommand() *cobra.Command {
 	updateClusterProfileCmd := &cobra.Command{
 		Use:     "update",
 		Short:   "Command to UPDATE a cluster profile with all specified configurations in GoCD [https://api.gocd.org/current/#update-a-cluster-profile]",
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var commonCfg gocd.CommonConfig
@@ -178,7 +178,7 @@ func updateClusterProfileCommand() *cobra.Command {
 				return err
 			}
 
-			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "elastic-agent-profile", clusterProfileFetched.Name)
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "cluster-profile", clusterProfileFetched.ID)
 
 			existing, err := diffCfg.String(clusterProfileFetched)
 			if err != nil {
@@ -194,7 +194,7 @@ func updateClusterProfileCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(fmt.Sprintf("cluster profile %s updated successfully", commonCfg.Name)); err != nil {
+			if err = cliRenderer.Render(fmt.Sprintf("cluster profile %s updated successfully", commonCfg.ID)); err != nil {
 				return err
 			}
 

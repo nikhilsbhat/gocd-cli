@@ -157,7 +157,7 @@ func updateAgentProfileCommand() *cobra.Command {
 		Use:     "update",
 		Short:   "Command to UPDATE a elastic agent profile with all specified configurations in GoCD [https://api.gocd.org/current/#update-an-elastic-agent-profile]",
 		Example: "gocd-cli elastic-agent-profile update sample_ec2 --from-file sample-ec2.yaml --log-level debug",
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var commonCfg gocd.CommonConfig
@@ -184,7 +184,7 @@ func updateAgentProfileCommand() *cobra.Command {
 				return err
 			}
 
-			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "elastic-agent-profile", elasticAgentProfileFetched.Name)
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "elastic-agent-profile", elasticAgentProfileFetched.ID)
 
 			existing, err := diffCfg.String(elasticAgentProfileFetched)
 			if err != nil {
@@ -200,7 +200,7 @@ func updateAgentProfileCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(fmt.Sprintf("elastic agent profile %s updated successfully", commonCfg.Name)); err != nil {
+			if err = cliRenderer.Render(fmt.Sprintf("elastic agent profile %s updated successfully", commonCfg.ID)); err != nil {
 				return err
 			}
 

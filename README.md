@@ -10,12 +10,12 @@ command-line interface for `GoCD` that helps in interacting with [GoCD](https://
 
 ## Introduction
 
-GoCD has user interface from where all the work that this CLI does can be operated, but this cli targets admins who manage GoCD.
-By providing cli equivalent support of the UI.
+While GoCD offers a user interface for performing various tasks, this CLI is designed for administrators responsible for managing GoCD.
+It aims to provide CLI-based functionality equivalent to the UI.
 
-This interacts with `GoCD` server's api to encrypt, decrypt secrets get list of pipelines, create config-repos and many more.
+This tool communicates with the `GoCD` server's API to perform tasks such as encrypting and decrypting secrets, retrieving lists of pipelines, creating configuration repositories, and more.
 
-This cli uses GoCD golang [sdk](https://github.com/nikhilsbhat/gocd-sdk-go). If you find bug with CLI, probably that bug would at the SDK.
+This CLI utilizes the GoCD Golang [SDK](https://github.com/nikhilsbhat/gocd-sdk-go). If you encounter a bug with the CLI, it likely originates from the SDK.
 
 ## Requirements
 
@@ -24,7 +24,7 @@ This cli uses GoCD golang [sdk](https://github.com/nikhilsbhat/gocd-sdk-go). If 
 
 ## Authorization
 
-The authorization configuration used for GoCD can be cached locally so that it can be used for future operations.
+The authorization configuration for GoCD can be locally cached for future use, streamlining subsequent operations.
 
 The command `auth-config` will do the work.
 
@@ -40,6 +40,12 @@ gocd-cli who-am-i
 # Once we have authorization configurations cached, we do not need to pass the credentials every time we invoke the cli.
 gocd-cli environment list
 ```
+
+## Update
+
+The `gocd-cli` will display any pending updates in a diff format, similar to how it is commonly done in other CLI tools such as Terraform.
+
+![update](assets/gocd-cli-update-feature.gif)
 
 ## Documentation
 
@@ -61,5 +67,5 @@ docker pull ghcr.io/nikhilsbhat/gocd-cli:<github-release-tag>
 
 ### Note
 
-* The command `gocd-cli pipeline validate-syntax` would use GoCD's plugin binary to validate the pipeline syntax.
-* Since the plugins are jars, it is expected to have Java installed, on the machine from which the command would be executed.
+* The `gocd-cli pipeline validate-syntax` command utilizes GoCD's plugin binary to validate the syntax of the pipeline.
+* As the plugins are in JAR format, Java installation is required on the machine where the command will be executed.

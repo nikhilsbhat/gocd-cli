@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -36,6 +35,8 @@ var (
 	goCDPipelineUnPause      bool
 	numberOfDays             time.Duration
 	configRepoNames          []string
+	goCDPipelinesPath        string
+	goCDPipelinesPatterns    []string
 )
 
 var defaultGoCDPipelinePatterns = []string{"*.gocd.yaml", "*.gocd.json", "*.gocd.groovy"}
@@ -1100,11 +1101,7 @@ func getPipelineMapping() *cobra.Command {
 }
 
 func findPipelineFilesCommand() *cobra.Command {
-	var (
-		goCDPipelinesPath     string
-		goCDPipelinesPatterns []string
-		absPath               bool
-	)
+	var absPath bool
 
 	findPipelineCmd := &cobra.Command{
 		Use:     "find",
@@ -1117,32 +1114,35 @@ func findPipelineFilesCommand() *cobra.Command {
 			cliLogger.Debug("Below is a list of files that may be identified as GoCD's pipeline files. " +
 				"A single file may contain multiple pipeline configurations. Use the command 'gocd-cli pipeline show' to see the pipelines in a given file.")
 
-			return filepath.Walk(goCDPipelinesPath, func(path string, info os.FileInfo, err error) error {
-				if err != nil {
-					return err
+			pipelinePathPatterns := make([]string, 0)
+			pipelinePathPatterns = append(pipelinePathPatterns, goCDPipelinesPath)
+			pipelinePathPatterns = append(pipelinePathPatterns, goCDPipelinesPatterns...)
+
+			pipelineFiles, err := client.GetPipelineFiles(pipelinePathPatterns...)
+			if err != nil {
+				cliLogger.Fatalf("finding gocd pipelines under '%s', with patterns '%s' errored with: '%s'",
+					goCDPipelinesPath, strings.Join(goCDPipelinesPatterns, ","), err)
+			}
+
+			if detailed {
+				return cliRenderer.Render(pipelineFiles)
+			}
+
+			for _, pipelineFile := range pipelineFiles {
+				if absPath {
+					fmt.Printf("%s\n", pipelineFile.Path)
+
+					continue
 				}
-				for _, goCDPipelinesPattern := range goCDPipelinesPatterns {
-					match, err := filepath.Match(goCDPipelinesPattern, info.Name())
-					if err != nil {
-						cliLogger.Errorf("matching GoCD pipeline file errored with '%s'", err)
-					}
+				fmt.Printf("%s\n", pipelineFile.Name)
+			}
 
-					if match {
-						if !absPath {
-							fmt.Printf("%s\n", info.Name())
-
-							continue
-						}
-
-						fmt.Printf("%s\n", path)
-					}
-				}
-
-				return nil
-			})
+			return nil
 		},
 	}
 
+	findPipelineCmd.PersistentFlags().BoolVarP(&detailed, "detailed", "", false,
+		"when enabled prints the detailed pipelines information")
 	findPipelineCmd.PersistentFlags().StringVarP(&goCDPipelinesPath, "path", "f", "",
 		"path to search for all GoCD pipeline files")
 	findPipelineCmd.PersistentFlags().StringSliceVarP(&goCDPipelinesPatterns, "pattern", "", defaultGoCDPipelinePatterns,
@@ -1158,7 +1158,7 @@ func findPipelineFilesCommand() *cobra.Command {
 }
 
 func showPipelineCommand() *cobra.Command {
-	var detailed bool
+	var ignore []string
 
 	showPipelinePipelineCmd := &cobra.Command{
 		Use:     "show",
@@ -1170,7 +1170,32 @@ func showPipelineCommand() *cobra.Command {
 			detailedPipelineNames := make(map[string][]string, 0)
 			pipelineNames := make([]string, 0)
 
-			for _, goCDPipeline := range goCDPipelines {
+			pipelinePathPatterns := make([]string, 0)
+			goCDPipelineFiles := make([]string, 0)
+
+			if len(goCDPipelines) != 0 {
+				pipelinePathPatterns = append(pipelinePathPatterns, goCDPipelines...)
+			} else {
+				pipelinePathPatterns = append(pipelinePathPatterns, goCDPipelinesPath)
+			}
+
+			pipelinePathPatterns = append(pipelinePathPatterns, goCDPipelinesPatterns...)
+
+			pipelineFiles, err := client.GetPipelineFiles(pipelinePathPatterns...)
+			if err != nil {
+				cliLogger.Fatalf("finding gocd pipelines under '%s', with patterns '%s' errored with: '%s'",
+					goCDPipelinesPath, strings.Join(goCDPipelinesPatterns, ","), err)
+			}
+
+			funk.ForEach(pipelineFiles, func(pipelineFile gocd.PipelineFiles) {
+				if funk.Contains(ignore, pipelineFile.Path) || funk.Contains(ignore, pipelineFile.Name) {
+					cliLogger.Infof("ignoring pipeline '%s' since it is part of ignore list", pipelineFile.Name)
+				} else {
+					goCDPipelineFiles = append(goCDPipelineFiles, pipelineFile.Path)
+				}
+			})
+
+			for _, goCDPipeline := range goCDPipelineFiles {
 				cliLogger.Debugf("analysing GoCD pipeline file '%s'", goCDPipeline)
 
 				fileData, err := os.ReadFile(goCDPipeline)
@@ -1210,7 +1235,7 @@ func showPipelineCommand() *cobra.Command {
 
 					pipelineNames = append(pipelineNames, fileJSON["name"].(string))
 				default:
-					cliLogger.Errorf("the command `pipeline show` does not support reading pipeline config file that was passed")
+					cliLogger.Errorf("the command `pipeline show` does not support reading pipeline config of file '%s'", goCDPipeline)
 
 					return &errors.UnknownObjectTypeError{Name: objType}
 				}
@@ -1226,14 +1251,16 @@ func showPipelineCommand() *cobra.Command {
 		},
 	}
 
+	showPipelinePipelineCmd.PersistentFlags().StringVarP(&goCDPipelinesPath, "path", "", "",
+		"path to search for all GoCD pipeline files")
+	showPipelinePipelineCmd.PersistentFlags().StringSliceVarP(&goCDPipelinesPatterns, "pattern", "", defaultGoCDPipelinePatterns,
+		"list of patterns to match while searching for all GoCD pipeline files")
 	showPipelinePipelineCmd.PersistentFlags().StringSliceVarP(&goCDPipelines, "pipelines", "f", nil,
 		"path to GoCD pipeline config file to identify pipeline names")
+	showPipelinePipelineCmd.PersistentFlags().StringSliceVarP(&ignore, "ignore", "i", nil,
+		"ignore the pipeline from 'pipeline show' command")
 	showPipelinePipelineCmd.PersistentFlags().BoolVarP(&detailed, "detailed", "", false,
 		"when enabled prints the information in detail")
-
-	if err := showPipelinePipelineCmd.MarkPersistentFlagRequired("pipelines"); err != nil {
-		cliLogger.Fatalf("%v", err)
-	}
 
 	return showPipelinePipelineCmd
 }

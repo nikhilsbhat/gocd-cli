@@ -24,6 +24,7 @@ type configRepoPreflight struct {
 }
 
 var (
+	detailed                bool
 	pipelines, environments bool
 	configRepoPreflightObj  configRepoPreflight
 	queryEnabledMessage     = "since --query is passed, applying query '%v' to the output"
@@ -107,7 +108,6 @@ func getConfigReposCommand() *cobra.Command {
 
 func getFailedConfigReposCommand() *cobra.Command {
 	var (
-		detailed         bool
 		failedConfigRepo bool
 		getLastModified  bool
 	)
@@ -186,7 +186,7 @@ Do not use this command unless you know what you are doing with it`,
 	}
 
 	configGetCommand.PersistentFlags().BoolVarP(&detailed, "detailed", "", false,
-		"when enabled prints the config-repo information in detailed")
+		"when enabled prints the detailed config-repo information")
 	configGetCommand.PersistentFlags().BoolVarP(&failedConfigRepo, "failed", "", false,
 		"when enabled, fetches only the failed config repositories")
 	configGetCommand.PersistentFlags().BoolVarP(&getLastModified, "last-modified", "", false,

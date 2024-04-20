@@ -16,6 +16,7 @@ gocd-cli pipeline find --path /path/to/pipelines --pattern *.gocd.yaml --pattern
 
 ```
   -a, --absolute-path     when enabled prints absolute path of the pipelines
+      --detailed          when enabled prints the detailed pipelines information
   -h, --help              help for find
   -f, --path string       path to search for all GoCD pipeline files
       --pattern strings   list of patterns to match while searching for all GoCD pipeline files (default [*.gocd.yaml,*.gocd.json,*.gocd.groovy])

@@ -1258,9 +1258,11 @@ func showPipelineCommand() *cobra.Command {
 	showPipelinePipelineCmd.PersistentFlags().StringSliceVarP(&goCDPipelines, "pipelines", "f", nil,
 		"path to GoCD pipeline config file to identify pipeline names")
 	showPipelinePipelineCmd.PersistentFlags().StringSliceVarP(&ignore, "ignore", "i", nil,
-		"ignore the pipeline from 'pipeline show' command")
+		"ignore the pipelines from 'pipeline show' command")
 	showPipelinePipelineCmd.PersistentFlags().BoolVarP(&detailed, "detailed", "", false,
 		"when enabled prints the information in detail")
+
+	showPipelinePipelineCmd.MarkFlagsMutuallyExclusive("pipelines", "path")
 
 	return showPipelinePipelineCmd
 }

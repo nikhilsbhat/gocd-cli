@@ -16,7 +16,7 @@ gocd-cli configrepo get-internal --failed --detailed -o yaml
 ### Options
 
 ```
-      --detailed        when enabled prints the config-repo information in detailed
+      --detailed        when enabled prints the detailed config-repo information
       --failed          when enabled, fetches only the failed config repositories
   -h, --help            help for get-internal
       --last-modified   list config repo with last modified in number of days

@@ -12,6 +12,7 @@ import (
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
@@ -511,7 +512,7 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var pipelineFiles []gocd.PipelineFiles
+			var pipelineFilesData []gocd.PipelineFiles
 			var pathAndPattern []string
 
 			if len(configRepoPreflightObj.pipelineFiles) != 0 {
@@ -522,7 +523,7 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 
 						return err
 					}
-					pipelineFiles = append(pipelineFiles, file...)
+					pipelineFilesData = append(pipelineFilesData, file...)
 				}
 			} else {
 				if len(configRepoPreflightObj.pipelineExtRegex) == 0 {
@@ -538,10 +539,19 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 					return err
 				}
 
-				pipelineFiles = append(pipelineFiles, file...)
+				pipelineFilesData = append(pipelineFilesData, file...)
 			}
 
-			pipelineMap := client.SetPipelineFiles(pipelineFiles)
+			if cliLogger.Level == logrus.DebugLevel {
+				pipelineFiles := make([]string, 0)
+				funk.ForEach(pipelineFilesData, func(pipelineFileData gocd.PipelineFiles) {
+					pipelineFiles = append(pipelineFiles, pipelineFileData.Path)
+				})
+
+				fmt.Printf("Following pipeline files would be used for running preflight check:\n%s\n", strings.Join(pipelineFiles, "\n"))
+			}
+
+			pipelineMap := client.SetPipelineFiles(pipelineFilesData)
 
 			response, err := client.ConfigRepoPreflightCheck(pipelineMap, goCdPluginObj.getPluginID(), goCDConfigRepoName)
 			if err != nil {

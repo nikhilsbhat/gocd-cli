@@ -60,8 +60,16 @@ func registerEncryptionFlags(cmd *cobra.Command) {
 func registerConfigRepoDefinitionsFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVarP(&pipelines, "pipelines", "", false,
 		"set this flag to get only the pipelines from the config-repo")
+	cmd.PersistentFlags().BoolVarP(&pipelineGroup, "pipeline-group", "", false,
+		"set this flag to get only the pipelines groups from the config-repo")
 	cmd.PersistentFlags().BoolVarP(&environments, "environments", "", false,
 		"set this flag to get only the environments from the config-repo")
+	cmd.PersistentFlags().BoolVarP(&all, "all", "", false,
+		"when enabled gets config-repo definitions of all config repos present in GoCD")
+	cmd.PersistentFlags().BoolVarP(&detailed, "detailed", "", false,
+		"when enabled prints the information in detail")
+	cmd.PersistentFlags().StringSliceVarP(&goCDConfigReposName, "repo-name", "", nil,
+		"name of the configuration repository from which the definitions are to be retrieved")
 }
 
 func registerConfigRepoPreflightFlags(cmd *cobra.Command) {

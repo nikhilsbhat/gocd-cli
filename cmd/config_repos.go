@@ -25,10 +25,11 @@ type configRepoPreflight struct {
 }
 
 var (
-	detailed                bool
-	pipelines, environments bool
-	configRepoPreflightObj  configRepoPreflight
-	queryEnabledMessage     = "since --query is passed, applying query '%v' to the output"
+	all, detailed, pipelines, pipelineGroup, environments bool
+	goCDConfigRepoName                                    string
+	goCDConfigReposName                                   []string
+	configRepoPreflightObj                                configRepoPreflight
+	queryEnabledMessage                                   = "since --query is passed, applying query '%v' to the output"
 )
 
 func registerConfigRepoCommand() *cobra.Command {
@@ -115,6 +116,7 @@ func getFailedConfigReposCommand() *cobra.Command {
 
 	type configRepoLastModified struct {
 		LastModified float64 `json:"lastModified,omitempty" yaml:"lastModified,omitempty"`
+		ModifiedDate string  `json:"modificationDate,omitempty" yaml:"modificationDate,omitempty"`
 		Name         string  `json:"name,omitempty" yaml:"name,omitempty"`
 		URL          string  `json:"url,omitempty" yaml:"url,omitempty"`
 	}
@@ -158,6 +160,7 @@ Do not use this command unless you know what you are doing with it`,
 						modifiedDate := modificationTime.(string)
 						configRepo = append(configRepo, configRepoLastModified{
 							LastModified: lastUpdatedCommit(modifiedDate),
+							ModifiedDate: parseTime(modifiedDate).String(),
 							Name:         cfgRepo.ID,
 							URL:          cfgRepo.Material.Attributes.URL,
 						})
@@ -200,38 +203,100 @@ Do not use this command unless you know what you are doing with it`,
 }
 
 func getConfigReposDefinitionsCommand() *cobra.Command {
+	type ConfigRepoDefinitions struct {
+		Name               string `json:"configRepoName,omitempty" yaml:"configRepoName,omitempty"`
+		PipelineCount      int    `json:"pipelineCount,omitempty" yaml:"pipelineCount,omitempty"`
+		PipelineGroupCount int    `json:"pipelineGroupCount,omitempty" yaml:"pipelineGroupCount,omitempty"`
+		EnvironmentCount   int    `json:"environmentCount,omitempty" yaml:"environmentCount,omitempty"`
+		Environments       string `json:"environments,omitempty" yaml:"environments,omitempty"`
+		PipelineGroups     string `json:"pipelineGroups,omitempty" yaml:"pipelineGroups,omitempty"`
+		Pipelines          string `json:"pipelines,omitempty" yaml:"pipelines,omitempty"`
+	}
+
 	getConfigReposDefinitionsCmd := &cobra.Command{
 		Use:   "get-definitions",
 		Short: "Command to GET config-repo definitions present in GoCD [https://api.gocd.org/current/#definitions-defined-in-config-repo]",
-		Example: `gocd-cli configrepo get-definitions sample-repo -o yaml
-gocd-cli configrepo get-definitions sample-repo -o yaml --pipelines #should print only pipeline names`,
-		Args:    cobra.RangeArgs(1, 1),
+		Example: `gocd-cli configrepo get-definitions --repo-name sample-repo -o yaml
+gocd-cli configrepo get-definitions --all -o yaml #should fetch definitions of all config repositories present in GoCD
+gocd-cli configrepo get-definitions --repo-name sample-repo -o yaml --pipelines #should print only pipeline names`,
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			response, err := client.GetConfigRepoDefinitions(args[0])
-			if err != nil {
-				return err
+			if !all && len(goCDConfigReposName) == 0 {
+				cliLogger.Fatalf("no config repo name passed, either set --all or pass name using --repo-name")
+			}
+
+			if all {
+				response, err := client.GetConfigRepos()
+				if err != nil {
+					return err
+				}
+
+				for _, configRepo := range response {
+					goCDConfigReposName = append(goCDConfigReposName, configRepo.ID)
+				}
+			}
+
+			configReposResponse := make(map[string]gocd.ConfigRepo, 0)
+
+			for _, configRepo := range goCDConfigReposName {
+				response, err := client.GetConfigRepoDefinitions(configRepo)
+				if err != nil {
+					cliLogger.Errorf("fetching config repo definitions for '%s' errored with: '%s'", configRepo, err.Error())
+
+					continue
+				}
+
+				configReposResponse[configRepo] = response
 			}
 
 			var output interface{}
-			output = response
+			output = configReposResponse
+			configRepoFilteredResponse := make([]ConfigRepoDefinitions, 0)
 
-			envsNPipelines := make([]string, 0)
+			if !detailed {
+				for configRepoName, configRepoResponse := range configReposResponse {
+					var (
+						configRepoEnvironment    []string
+						configRepoPipelines      []string
+						configRepoPipelineGroups []string
+					)
 
-			if environments {
-				for _, env := range response.Environments {
-					envsNPipelines = append(envsNPipelines, env.Name)
-				}
-				output = envsNPipelines
-			}
+					configRepo := ConfigRepoDefinitions{Name: configRepoName}
 
-			if pipelines {
-				for _, group := range response.Groups {
-					for _, pipeline := range group.Pipelines {
-						envsNPipelines = append(envsNPipelines, pipeline.Name)
+					for _, env := range configRepoResponse.Environments {
+						configRepoEnvironment = append(configRepoEnvironment, env.Name)
 					}
+
+					for _, group := range configRepoResponse.Groups {
+						for _, pipeline := range group.Pipelines {
+							configRepoPipelines = append(configRepoPipelines, pipeline.Name)
+						}
+						configRepoPipelineGroups = append(configRepoPipelineGroups, group.Name)
+					}
+
+					switch {
+					case environments:
+						configRepo.Environments = strings.Join(configRepoEnvironment, "\n")
+					case pipelines:
+						configRepo.Pipelines = strings.Join(configRepoPipelines, "\n")
+					case pipelineGroup:
+						configRepo.PipelineGroups = strings.Join(configRepoPipelineGroups, "\n")
+					default:
+						configRepo.Environments = strings.Join(configRepoEnvironment, "\n")
+						configRepo.Pipelines = strings.Join(configRepoPipelines, "\n")
+						configRepo.PipelineGroups = strings.Join(configRepoPipelineGroups, "\n")
+						configRepo.PipelineCount = len(configRepoPipelines)
+						configRepo.PipelineGroupCount = len(configRepoPipelineGroups)
+						if len(configRepoEnvironment) != 0 {
+							configRepo.EnvironmentCount = len(configRepoEnvironment)
+						}
+					}
+
+					configRepoFilteredResponse = append(configRepoFilteredResponse, configRepo)
 				}
-				output = envsNPipelines
+
+				output = configRepoFilteredResponse
 			}
 
 			if len(jsonQuery) != 0 {
@@ -254,6 +319,8 @@ gocd-cli configrepo get-definitions sample-repo -o yaml --pipelines #should prin
 	registerConfigRepoDefinitionsFlags(getConfigReposDefinitionsCmd)
 
 	getConfigReposDefinitionsCmd.SetUsageTemplate(getUsageTemplate())
+
+	getConfigReposDefinitionsCmd.MarkFlagsMutuallyExclusive("all", "repo-name")
 
 	return getConfigReposDefinitionsCmd
 }
@@ -503,8 +570,6 @@ func getConfigRepoTriggerUpdateCommand() *cobra.Command {
 }
 
 func getConfigRepoPreflightCheckCommand() *cobra.Command {
-	var goCDConfigRepoName string
-
 	configTriggerUpdateCommand := &cobra.Command{
 		Use:     "preflight-check",
 		Short:   "Command to PREFLIGHT check the config repo configurations [https://api.gocd.org/current/#preflight-check-of-config-repo-configurations]",
@@ -597,16 +662,25 @@ func lastUpdatedCommit(date string) float64 {
 		log.Fatalln(err)
 	}
 
-	tm, err := time.ParseInLocation(time.RFC3339, date, loc)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	parsedTime := tm.In(loc)
+	parsedTime := parseTime(date)
 
 	timeNow := time.Now().In(loc)
 
 	diff := timeNow.Sub(parsedTime).Hours() / hoursInADay
 
 	return diff
+}
+
+func parseTime(date string) time.Time {
+	loc, err := time.LoadLocation("Asia/Kolkata")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	tm, err := time.ParseInLocation(time.RFC3339, date, loc)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return tm.In(loc)
 }

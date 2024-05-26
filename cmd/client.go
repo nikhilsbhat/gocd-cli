@@ -53,6 +53,12 @@ func setCLIClient(_ *cobra.Command, _ []string) error {
 		client = gocd.NewClient(cliCfg.URL, cliCfg.Auth, cliCfg.APILogLevel, nil)
 	}
 
+	client.SetRetryWaitTime(cliCfg.APIRetryInterval)
+
+	if cliCfg.APIRetryCount != 0 {
+		client.SetRetryCount(cliCfg.APIRetryCount)
+	}
+
 	writer := os.Stdout
 
 	if len(cliCfg.ToFile) != 0 {

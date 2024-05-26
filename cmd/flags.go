@@ -12,9 +12,10 @@ var (
 )
 
 const (
-	defaultRetryCount    = 30
-	defaultDelay         = 5 * time.Second
-	defaultInstanceCount = 0
+	defaultBackupRetryCount = 30
+	defaultDelay            = 5 * time.Second
+	defaultInstanceCount    = 0
+	defaultRetryCount       = 5
 )
 
 func registerGlobalFlags(cmd *cobra.Command) {
@@ -33,6 +34,10 @@ func registerGlobalFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&cliCfg.APILogLevel, "api-log-level", "", "info",
 		"log level for GoCD API calls, this sets log level to [https://pkg.go.dev/github.com/go-resty/resty/v2#Client.SetLogger],"+
 			"log levels supported by [https://github.com/sirupsen/logrus] will work")
+	cmd.PersistentFlags().IntVarP(&cliCfg.APIRetryCount, "api-retry-count", "", 0,
+		"number to times to retry when api calls fails, the value passed here would be set to GoCD sdk client")
+	cmd.PersistentFlags().IntVarP(&cliCfg.APIRetryInterval, "api-retry-interval", "", defaultRetryCount,
+		"time interval to wait before making subsequent API calls following API call failures (in seconds)")
 	cmd.PersistentFlags().StringVarP(&cliCfg.OutputFormat, "output", "o", "",
 		"the format to which the output should be rendered to, it should be one of yaml|json|table|csv, if nothing specified it sets to default")
 	cmd.PersistentFlags().BoolVarP(&cliCfg.Yes, "yes", "y", false,
@@ -95,7 +100,7 @@ func commonPluginFlags(cmd *cobra.Command) {
 }
 
 func registerBackupFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().IntVarP(&backupRetry, "retry", "", defaultRetryCount,
+	cmd.PersistentFlags().IntVarP(&backupRetry, "retry", "", defaultBackupRetryCount,
 		"number of times to retry to get backup stats when backup status is not ready")
 	cmd.PersistentFlags().DurationVarP(&delay, "delay", "", defaultDelay,
 		"time delay between each retries that would be made to get backup stats")

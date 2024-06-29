@@ -162,24 +162,28 @@ func Operator(query string) string {
 		return "eq"
 	case "notequal", "nq", "neq", "!=":
 		return "neq"
-	case "gt", "greaterthan", ">":
+	case "gt", "greater-than", ">":
 		return "gt"
-	case "gte", "greaterthanorequal", ">=":
+	case "gte", "greater-than-or-equal", ">=":
 		return "gte"
-	case "lt", "lesserthan", "<":
+	case "lt", "lesser-than", "<":
 		return "lt"
-	case "lte", "lesserthanorequal", "<=":
+	case "lte", "lesser-than-or-equal", "<=":
 		return "lte"
-	case "startswith", "sw":
+	case "starts-with", "sw":
 		return "startsWith"
-	case "endswith", "ew":
+	case "ends-with", "ew":
 		return "endsWith"
 	case "contains":
 		return "contains"
-	case "strictcontains", "sc":
+	case "strict-contains", "sc":
 		return "strictContains"
 	case "notin", "ni":
 		return "notIn"
+	case "exists", "ex":
+		return "in"
+	case "not-exists", "nex":
+		return "in"
 	default:
 		return ""
 	}

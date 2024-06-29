@@ -60,6 +60,7 @@ func getGoCDCliCommands() *cobra.Command {
 	command.commands = append(command.commands, registerWhoAmICommand())
 	command.commands = append(command.commands, registerServerConfigCommand())
 	command.commands = append(command.commands, registerIHaveCommand())
+	command.commands = append(command.commands, registerRolesCommand())
 
 	return command.prepareCommands()
 }

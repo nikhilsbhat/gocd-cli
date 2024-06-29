@@ -34,7 +34,7 @@ local.check: local.fmt ## Loads all the dependencies to vendor directory
 	@go mod tidy
 
 local.build: local.check ## Generates the artifact with the help of 'go build'
-	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} goreleaser build --clean
+	@go build -o $(APP_NAME)_v$(VERSION) -ldflags="-s -w"
 
 local.push: local.build ## Pushes built artifact to the specified location
 

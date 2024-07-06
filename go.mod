@@ -5,7 +5,7 @@ go 1.21.1
 require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/goccy/go-yaml v1.11.3
-	github.com/nikhilsbhat/common v0.0.6-0.20240629071102-ce3763ff95d9
+	github.com/nikhilsbhat/common v0.0.6-0.20240705174411-75b5dafa56bb
 	github.com/nikhilsbhat/gocd-sdk-go v0.1.10-0.20240626163650-84504e160fd0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0

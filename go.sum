@@ -50,8 +50,8 @@ github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWE
 github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/mattn/go-runewidth v0.0.9 h1:Lm995f3rfxdpd6TSmuVCHVb/QhupuXlYr8sCI/QdE+0=
 github.com/mattn/go-runewidth v0.0.9/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
-github.com/nikhilsbhat/common v0.0.6-0.20240629071102-ce3763ff95d9 h1:FfF8eaujismJqRlp5VkwIFcztgQ57LRJmj6rcokSAgI=
-github.com/nikhilsbhat/common v0.0.6-0.20240629071102-ce3763ff95d9/go.mod h1:dIZoaOR7IwwGpkLYfgbsKxZd3uPm+Cy28xyUh2KeQcA=
+github.com/nikhilsbhat/common v0.0.6-0.20240705174411-75b5dafa56bb h1:oCfYzBco2Y/JPi0RUZCSlIe9zRLoYdn4+0vbRufWEwo=
+github.com/nikhilsbhat/common v0.0.6-0.20240705174411-75b5dafa56bb/go.mod h1:r0o1FyQVOLivFKfKUA4qVS34T70V7GdfmVpgFOdiZO0=
 github.com/nikhilsbhat/gocd-sdk-go v0.1.10-0.20240626163650-84504e160fd0 h1:O4meP53j7xgZRFW2ZduymEV0ip83Sox5XYSmyeZrtYQ=
 github.com/nikhilsbhat/gocd-sdk-go v0.1.10-0.20240626163650-84504e160fd0/go.mod h1:FFVOLXPhn55evuuyfiRJ23R8I5Ks2n31/DXLBQmaNsw=
 github.com/olekukonko/tablewriter v0.0.5 h1:P2Ga83D34wi1o9J6Wh1mRuqd4mF/x/lgBS7N7AbDhec=

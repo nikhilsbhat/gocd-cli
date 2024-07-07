@@ -53,8 +53,21 @@ Updated documentation on all available commands and flags can be found [here](ht
 
 ## Installation
 
-* Recommend installing released versions. Release binaries are available on the [releases](https://github.com/nikhilsbhat/gocd-cli/releases) page and docker from [here](https://hub.docker.com/repository/docker/basnik/gocd-cli).
-* Can always build it locally by running `go build` against cloned repo.
+* Recommend installing released versions. Release binaries are available on the [releases](https://github.com/nikhilsbhat/gocd-cli/releases) page.
+
+#### Homebrew
+
+Install `gocd-cli` on `macOS`
+
+```shell
+brew tap nikshilsbhat/stable git@github.com:nikhilsbhat/homebrew-stable.git
+# for latest version
+brew install nikshilsbhat/stable/gocd-cli
+# for specific version
+brew install nikshilsbhat/stable/gocd-cli@0.2.5
+```
+
+Check [repo](https://github.com/nikhilsbhat/homebrew-stable) for all available versions of the formula.
 
 #### Docker
 
@@ -65,7 +78,19 @@ docker pull ghcr.io/nikhilsbhat/gocd-cli:latest
 docker pull ghcr.io/nikhilsbhat/gocd-cli:<github-release-tag>
 ```
 
+#### Build from Source
+
+1. Clone the repository:
+    ```sh
+    git clone https://github.com/nikhilsbhat/gocd-cli.git
+    cd gocd-cli
+    ```
+2. Build the project:
+    ```sh
+    make local.build
+    ```
+
 ### Note
 
-* The `gocd-cli pipeline validate-syntax` command utilizes GoCD's plugin binary to validate the syntax of the pipeline.
-* As the plugins are in JAR format, Java installation is required on the machine where the command will be executed.
+* The `gocd-cli pipeline validate-syntax` command uses the GoCD plugin binary to validate the pipeline's syntax.
+* Since the plugins are in JAR format, Java must be installed on the machine where the command will be executed.

@@ -52,6 +52,50 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
 
+brews:
+  - name: gocd-cli
+    homepage: https://github.com/nikhilsbhat/gocd-cli
+    url_template: "https://github.com/nikhilsbhat/gocd-cli/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    description: "A command-line tool for interacting with GoCD"
+    license: "MIT"
+    directory: Formula
+    commit_msg_template: "Add brew formula for {{ .ProjectName }} latest"
+    download_strategy: CurlDownloadStrategy
+    commit_author:
+      name: nikhilsbhat
+      email: nikhilsbhat93@gmail.com
+    repository:
+      owner: nikhilsbhat
+      name: homebrew-stable
+      branch: main
+      pull_request:
+        enabled: true
+        base:
+          owner: nikhilsbhat
+          name: homebrew-stable
+          branch: main
+  - name: '{{ .ProjectName }}@{{ .Version }}'
+    homepage: https://github.com/nikhilsbhat/gocd-cli
+    url_template: "https://github.com/nikhilsbhat/gocd-cli/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    description: "A command-line tool for interacting with GoCD"
+    license: "MIT"
+    directory: Formula
+    commit_msg_template: "Add brew formula for {{ .ProjectName }} version {{ .Tag }}"
+    download_strategy: CurlDownloadStrategy
+    commit_author:
+      name: nikhilsbhat
+      email: nikhilsbhat93@gmail.com
+    repository:
+      owner: nikhilsbhat
+      name: homebrew-stable
+      branch: main
+      pull_request:
+        enabled: true
+        base:
+          owner: nikhilsbhat
+          name: homebrew-stable
+          branch: main
+
 snapshot:
   name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Runtime.Goos }}_{{ .Runtime.Goarch }}"
 

@@ -18,7 +18,7 @@ func registerMaintenanceCommand() *cobra.Command {
 		Short: "Command to operate on maintenance modes in GoCD [https://api.gocd.org/current/#maintenance-mode]",
 		Long: `Command leverages GoCD environments apis' [https://api.gocd.org/current/#maintenance-mode] to 
 ENABLE/DISABLE/GET maintenance mode information from GoCD`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -44,7 +44,7 @@ func getMaintenanceCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli maintenance get`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetMaintenanceModeInfo()
 			if err != nil {
 				return err
@@ -78,7 +78,7 @@ func enableOrDisableMaintenanceCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli maintenance --enable/--disable`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			var action string
 			if goCDEnableMaintenance {
 				action = "enabling"

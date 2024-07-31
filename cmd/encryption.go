@@ -18,7 +18,7 @@ func registerEncryptionCommand() *cobra.Command {
 		Short: "Command to encrypt/decrypt plain text value [https://api.gocd.org/current/#encryption]",
 		Long: `Command leverages GoCD api [https://api.gocd.org/current/#encryption] during value encryption and 
 AES decryption while decrypting encrypted value [https://github.com/nikhilsbhat/gocd-sdk-go/blob/master/encryption.go#L49]`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -41,7 +41,7 @@ func getEncryptCommand() *cobra.Command {
 		Example: "gocd-cli encryption encrypt password-to-encrypt",
 		Args:    cobra.MinimumNArgs(1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			if len(args) > 1 {
 				return &errors.MoreArgError{Message: "encrypted/plain"}
 			}
@@ -68,7 +68,7 @@ func getDecryptCommand() *cobra.Command {
 gocd-cli encryption decrypt AES:ldwjekwdjwjwekjkjwefwrfh --cipher-key-path path/to/key`,
 		Args:    cobra.MinimumNArgs(1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			if len(args) > 1 {
 				return &errors.MoreArgError{Message: "encrypted/plain"}
 			}

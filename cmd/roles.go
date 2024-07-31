@@ -20,7 +20,7 @@ func registerRolesCommand() *cobra.Command {
 		Short: "Command to operate on roles present in GoCD [https://api.gocd.org/current/#roles]",
 		Long: `Command leverages GoCD environments apis' [https://api.gocd.org/current/#roles] to 
 GET/CREATE/UPDATE/DELETE and list GoCD roles`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -50,7 +50,7 @@ func getRolesCommand() *cobra.Command {
 		Example: "gocd-cli roles get-all",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			var rolesConfig gocd.RolesConfig
 			switch len(roleType) {
 			case 0:
@@ -101,7 +101,7 @@ func getRoleCommand() *cobra.Command {
 		Example: "gocd-cli role get sample-config",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetRole(args[0])
 			if err != nil {
 				return err
@@ -129,12 +129,13 @@ func getRoleCommand() *cobra.Command {
 
 func createRoleCommand() *cobra.Command {
 	createRoleCmd := &cobra.Command{
-		Use:     "create",
-		Short:   "Command to CREATE a role with all specified configurations in GoCD [https://api.gocd.org/current/#create-a-gocd-role, https://api.gocd.org/current/#create-a-plugin-role]",
+		Use: "create",
+		Short: "Command to CREATE a role with all specified configurations in GoCD " +
+			"[https://api.gocd.org/current/#create-a-gocd-role, https://api.gocd.org/current/#create-a-plugin-role]",
 		Example: "gocd-cli role create sample-config --from-file sample-config.yaml --log-level debug",
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var roleCfg gocd.Role
 			object, err := readObject(cmd)
 			if err != nil {
@@ -177,7 +178,7 @@ func updateRoleCommand() *cobra.Command {
 		Example: "gocd-cli role update sample-config --from-file sample-config.yaml --log-level debug",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var roleCfg gocd.Role
 			object, err := readObject(cmd)
 			if err != nil {
@@ -237,7 +238,7 @@ func deleteRoleCommand() *cobra.Command {
 gocd-cli role delete sample-config -y`,
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			roleName := args[0]
 			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete role '%s' [y/n]", roleName)
 
@@ -271,7 +272,7 @@ func listRolesCommand() *cobra.Command {
 		Short:   "Command to LIST all roles present in GoCD [https://api.gocd.org/current/#get-all-roles]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetRoles()
 			if err != nil {
 				return err

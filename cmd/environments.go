@@ -26,7 +26,7 @@ func registerEnvironmentsCommand() *cobra.Command {
 		Short: "Command to operate on environments present in GoCD [https://api.gocd.org/current/#environment-config]",
 		Long: `Command leverages GoCD environments apis' [https://api.gocd.org/current/#environment-config] to 
 GET/CREATE/UPDATE/PATCH/DELETE and list GoCD environments`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -57,7 +57,7 @@ gocd-cli environment get-all --env-var ENVIRONMENT_VAR_1 --env-var ENVIRONMENT_V
 gocd-cli environment get-all --pipelines -o yaml`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetEnvironments()
 			if err != nil {
 				return err
@@ -123,7 +123,7 @@ gocd-cli environment get gocd_environment_1 --env-var ENVIRONMENT_VAR_1 --env-va
 gocd-cli environment get gocd_environment_1 --pipelines -o yaml`,
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetEnvironment(args[0])
 			if err != nil {
 				return err
@@ -184,7 +184,7 @@ func createEnvironmentCommand() *cobra.Command {
 		Example: `gocd-cli environment create gocd_environment_1 --from-file gocd_environment_1.yaml`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var envs gocd.Environment
 			object, err := readObject(cmd)
 			if err != nil {
@@ -222,7 +222,7 @@ func updateEnvironmentCommand() *cobra.Command {
 		Example: `gocd-cli environment update gocd_environment_1 --from-file gocd_environment_1.yaml`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var envs gocd.Environment
 			object, err := readObject(cmd)
 			if err != nil {
@@ -279,9 +279,9 @@ func patchEnvironmentCommand() *cobra.Command {
 		Use:     "patch",
 		Short:   "Command to PATCH the environment with the latest specified configuration [https://api.gocd.org/current/#patch-an-environment]",
 		Example: `gocd-cli environment patch gocd_environment_1 --from-file gocd_environment_1.yaml`,
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var envs gocd.Environment
 			object, err := readObject(cmd)
 			if err != nil {
@@ -339,7 +339,7 @@ func deleteEnvironmentCommand() *cobra.Command {
 		Example: `gocd-cli environment delete gocd_environment_1`,
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			environmentName := args[0]
 
 			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete gocd environment '%s' [y/n]", environmentName)
@@ -375,7 +375,7 @@ func listEnvironmentsCommand() *cobra.Command {
 		Example: `gocd-cli environment list -o yaml`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetEnvironments()
 			if err != nil {
 				return err

@@ -26,7 +26,7 @@ func registerMaterialsCommand() *cobra.Command {
 		Long: `Command leverages GoCD materials apis' [https://api.gocd.org/current/#get-all-materials] to 
 GET/LIST and get USAGE of material present in GoCD (make sure you have appropriate plugin is installed before using this)`,
 		Example: "gocd-cli materials [sub-command] [arg] [--flags]",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -54,7 +54,7 @@ gocd-cli materials get --failed
 gocd-cli materials get --names`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetMaterials()
 			if err != nil {
 				return err
@@ -134,7 +134,7 @@ func listMaterialsCommand() *cobra.Command {
 		Example: "gocd-cli materials list -o yaml (only lists materials that has name or URL)",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetMaterials()
 			if err != nil {
 				return err
@@ -168,7 +168,7 @@ func getMaterialUsageCommand() *cobra.Command {
 		Example: "gocd-cli materials usage https://github.com/nikhilsbhat/helm-drift.git --fetch-id",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			materialID = args[0]
 
 			if fetchID {
@@ -211,7 +211,7 @@ func triggerMaterialUpdateCommand() *cobra.Command {
 		Example: "gocd-cli materials trigger-update https://github.com/nikhilsbhat/helm-drift.git --fetch-id",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			materialID = args[0]
 
 			if fetchID {

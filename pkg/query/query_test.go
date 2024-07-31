@@ -6,8 +6,10 @@ import (
 	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
+//nolint:testifylint
 func TestObject_GetQuery(t *testing.T) {
 	t.Run("should be able to identify query as where and execute the query successfully", func(t *testing.T) {
 		data := []gocd.ConfigRepo{
@@ -74,10 +76,13 @@ func TestObject_GetQuery(t *testing.T) {
 			},
 		}
 
-		query, err := query.SetQuery(data, "[*] | plugin_id = json.config.plugin")
-		assert.NoError(t, err)
-		response := query.RunQuery()
-		assert.Equal(t, expected, response)
+		querySet, err := query.SetQuery(data, "[*] | plugin_id = json.config.plugin")
+
+		require.NoError(t, err)
+
+		response := querySet.RunQuery()
+
+		require.Equal(t, expected, response)
 	})
 
 	t.Run("should be able to identify query as find executes the query successfully", func(t *testing.T) {
@@ -126,10 +131,10 @@ func TestObject_GetQuery(t *testing.T) {
 
 		expected := []interface{}{"json.config.plugin", "yaml.config.plugin"}
 
-		query, err := query.SetQuery(data, "[*] | plugin_id")
+		querySet, err := query.SetQuery(data, "[*] | plugin_id")
 		assert.NoError(t, err)
-		assert.Equal(t, "pluck", query.GetQueryType())
-		response := query.RunQuery()
+		assert.Equal(t, "pluck", querySet.GetQueryType())
+		response := querySet.RunQuery()
 		assert.Equal(t, expected, response)
 	})
 }

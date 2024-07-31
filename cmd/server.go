@@ -11,7 +11,7 @@ func registerServerCommand() *cobra.Command {
 		Short: "Command to operate on GoCD server health status",
 		Long: `Command leverages GoCD health apis' [https://api.gocd.org/current/#server-health-messages, https://api.gocd.org/current/#server-health] to 
 GET GoCD server's health and health messages'`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -34,7 +34,7 @@ func getHealthCommand() *cobra.Command {
 		Short:   "Command to monitor if the GoCD server is up and running [https://api.gocd.org/current/#check-server-health]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetServerHealth()
 			if err != nil {
 				return err
@@ -54,7 +54,7 @@ func getHealthMessagesCommand() *cobra.Command {
 			"its normal routine [https://api.gocd.org/current/#get-server-health-messages]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetServerHealthMessages()
 			if err != nil {
 				return err

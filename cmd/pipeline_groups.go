@@ -20,7 +20,7 @@ func registerPipelineGroupsCommand() *cobra.Command {
 		Short: "Command to operate on pipeline groups present in GoCD [https://api.gocd.org/current/#pipeline-group-config]",
 		Long: `Command leverages GoCD pipeline group config apis' [https://api.gocd.org/current/#pipeline-group-config] to 
 GET/CREATE/UPDATE/DELETE and list GoCD pipeline groups`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -49,7 +49,7 @@ func getPipelineGroupsCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline-group get-all --query "[*] | name eq sample-group"
 // should return only one pipeline group 'sample-group', this is as good as running 'gocd-cli pipeline-group get movies'`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetPipelineGroups()
 			if err != nil {
 				return err
@@ -83,7 +83,7 @@ func getPipelineGroupCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline-group get movies --query "pipelines.[*] | name" -o yaml
 // should return only the list of pipeline names based on the query`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetPipelineGroup(args[0])
 			if err != nil {
 				return err
@@ -117,7 +117,7 @@ func createPipelineGroupCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline-group create movies --from-file pipeline-group-movies.yaml --log-level debug
 // the inputs can be passed either from file using '--from-file' flag or entire content as argument to command`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var ppGroup gocd.PipelineGroup
 			object, err := readObject(cmd)
 			if err != nil {
@@ -156,7 +156,7 @@ func updatePipelineGroupCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline-group update movies --from-file pipeline-group-movies.yaml --log-level debug
 // the inputs can be passed either from file using '--from-file' flag or entire content as argument to command`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var ppGroup gocd.PipelineGroup
 			object, err := readObject(cmd)
 			if err != nil {
@@ -215,7 +215,7 @@ func deletePipelineGroupCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline-group delete movies`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			pipelineGroupName := args[0]
 			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete pipeline-group '%s' [y/n]", pipelineGroupName)
 
@@ -250,7 +250,7 @@ func listPipelineGroupsCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline-group list`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetPipelineGroups()
 			if err != nil {
 				return err

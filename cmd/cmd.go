@@ -7,11 +7,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cmd *cobra.Command
+var goCDCommand *cobra.Command
 
 //nolint:gochecknoinits
 func init() {
-	cmd = SetGoCDCliCommands()
+	goCDCommand = SetGoCDCliCommands()
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
@@ -25,9 +25,9 @@ func Main() {
 
 // execute will actually execute the cli by taking the arguments passed to cli.
 func execute(args []string) error {
-	cmd.SetArgs(args)
+	goCDCommand.SetArgs(args)
 
-	if _, err := cmd.ExecuteC(); err != nil {
+	if _, err := goCDCommand.ExecuteC(); err != nil {
 		return err
 	}
 

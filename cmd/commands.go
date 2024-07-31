@@ -83,7 +83,7 @@ func getRootCommand() *cobra.Command {
 		Short:   "Command line interface for GoCD",
 		Long:    `Command line interface for GoCD that helps in interacting with GoCD CI/CD server`,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}

@@ -18,7 +18,7 @@ func registerUsersCommand() *cobra.Command {
 		Short: "Command to operate on users in GoCD [https://api.gocd.org/current/#users]",
 		Long: `Command leverages GoCD users apis' [https://api.gocd.org/current/#users] to 
 GET/CREATE/UPDATE/DELETE/BULK-DELETE/BULK-UPDATE the users in GoCD server.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -45,7 +45,7 @@ func usersGetCommand() *cobra.Command {
 		Short:   "Command to GET all users present in GoCD [https://api.gocd.org/current/#get-all-users]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetUsers()
 			if err != nil {
 				return err
@@ -64,7 +64,7 @@ func userGetCommand() *cobra.Command {
 		Short:   "Command to GET user present in GoCD [https://api.gocd.org/current/#get-one-user]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetUser(args[0])
 			if err != nil {
 				return err
@@ -83,7 +83,7 @@ func userCreateCommand() *cobra.Command {
 		Short:   "Command to CREATE user in GoCD [https://api.gocd.org/current/#create-a-user]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var user gocd.User
 			object, err := readObject(cmd)
 			if err != nil {
@@ -121,7 +121,7 @@ func userUpdateCommand() *cobra.Command {
 		Short:   "Command to UPDATE user present in GoCD [https://api.gocd.org/current/#update-a-user]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var user gocd.User
 			object, err := readObject(cmd)
 			if err != nil {
@@ -175,7 +175,7 @@ func userDeleteCommand() *cobra.Command {
 		Short:   "Command to DELETE user present in GoCD [https://api.gocd.org/current/#delete-a-user]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			userName := args[0]
 			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete user '%s' [y/n]", userName)
 
@@ -207,9 +207,9 @@ func bulkDeleteUsersCommand() *cobra.Command {
 	bulkDeleteUserCmd := &cobra.Command{
 		Use:     "delete-bulk",
 		Short:   "Command to BULK-DELETE users present in GoCD [https://api.gocd.org/current/#bulk-delete-users]",
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var user map[string]interface{}
 			object, err := readObject(cmd)
 			if err != nil {

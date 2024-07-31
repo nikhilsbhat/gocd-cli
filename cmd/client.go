@@ -27,28 +27,40 @@ var (
 func setCLIClient(_ *cobra.Command, _ []string) error {
 	SetLogger(cliCfg.LogLevel)
 
-	if localConfig, localConfigPath, err := checkForConfig(); err != nil {
+	localConfig, localConfigPath, err := checkForConfig()
+	if err != nil {
 		return err
-	} else if localConfig && !cliCfg.skipCacheConfig {
+	}
+
+	if localConfig && !cliCfg.skipCacheConfig {
 		cliLogger.Debugf("found authorization configuration in cache, loading config from %s", localConfigPath)
-		if yamlConfig, err := os.ReadFile(localConfigPath); err != nil {
-			return err
-		} else if err := yaml.Unmarshal(yamlConfig, &cliCfg); err != nil {
+
+		yamlConfig, err := os.ReadFile(localConfigPath)
+		if err != nil {
 			return err
 		}
+
+		if err := yaml.Unmarshal(yamlConfig, &cliCfg); err != nil {
+			return err
+		}
+
 		cliLogger.Debug("authorization configuration loaded from cache successfully")
 	}
 
 	if len(cliCfg.CaPath) != 0 {
 		cliLogger.Debug("CA based auth is enabled, hence reading CA from the path")
 
-		if caAbs, err := filepath.Abs(cliCfg.CaPath); err != nil {
+		caAbs, err := filepath.Abs(cliCfg.CaPath)
+		if err != nil {
 			return err
-		} else if caContent, err := os.ReadFile(caAbs); err != nil {
-			return err
-		} else {
-			client = gocd.NewClient(cliCfg.URL, cliCfg.Auth, cliCfg.APILogLevel, caContent)
 		}
+
+		caContent, err := os.ReadFile(caAbs)
+		if err != nil {
+			return err
+		}
+
+		client = gocd.NewClient(cliCfg.URL, cliCfg.Auth, cliCfg.APILogLevel, caContent)
 	} else {
 		client = gocd.NewClient(cliCfg.URL, cliCfg.Auth, cliCfg.APILogLevel, nil)
 	}

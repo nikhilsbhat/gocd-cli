@@ -14,7 +14,7 @@ func registerJobsCommand() *cobra.Command {
 		Long: `Command leverages GoCD job apis'
 [https://api.gocd.org/current/#scheduled-jobs] to
 SCHEDULE/RUN/RUN-FAILED jobs of specific pipeline present GoCD`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -39,7 +39,7 @@ func getScheduledJobsCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli job scheduled"`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetScheduledJobs()
 			if err != nil {
 				return err
@@ -59,7 +59,7 @@ func getRunFailedJobsCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli job run --pipeline myPipeline --pipeline-counter 2 --stage myStage --stage-counter 3`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.RunFailedJobs(stageConfig)
 			if err != nil {
 				return err
@@ -81,7 +81,7 @@ func getRunJobsCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli job run --pipeline myPipeline --pipeline-counter 2 --stage myStage --stage-counter 3 --job job1 --job job2`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.RunJobs(stageConfig)
 			if err != nil {
 				return err

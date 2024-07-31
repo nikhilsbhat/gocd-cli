@@ -17,7 +17,6 @@ import (
 	"github.com/nikhilsbhat/gocd-sdk-go/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/thoas/go-funk"
-	"github.com/tidwall/gjson"
 	"gopkg.in/yaml.v3"
 )
 
@@ -54,7 +53,7 @@ func registerPipelinesCommand() *cobra.Command {
 		Long: `Command leverages GoCD pipeline apis'
 [https://api.gocd.org/current/#pipeline-instances, https://api.gocd.org/current/#pipeline-config, https://api.gocd.org/current/#pipelines] to 
 GET/PAUSE/UNPAUSE/UNLOCK/SCHEDULE and comment on a GoCD pipeline`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -97,7 +96,7 @@ func getPipelinesCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline get-all --query "[*] | name eq sample-group"`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetPipelines()
 			if err != nil {
 				return err
@@ -136,7 +135,7 @@ func getPipelineVSMCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline vsm --pipeline animation-movies --pipeline animation-and-action-movies --down-stream --instance animation-movies=14 -o yaml"`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			vsms := make([]PipelineVSM, 0)
 			vsmErrors := make(map[string]string)
 
@@ -260,7 +259,7 @@ func getPipelineCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline get sample-pipeline --query "[*] | name eq sample-group"`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetPipelineConfig(args[0])
 			if err != nil {
 				return err
@@ -293,7 +292,7 @@ func getPipelineScheduleCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline last-schedule sample-pipeline`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetPipelineSchedules(args[0], "0", "1")
 			if err != nil {
 				return err
@@ -341,7 +340,7 @@ Prefer invoking this command when GoCD is not serving huge traffic`,
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline history sample-pipeline`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetPipelineRunHistory(args[0], "10", delay)
 			if err != nil {
 				return err
@@ -376,7 +375,7 @@ func getPipelineNotSchedulesCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline not-scheduled --time 10`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			goCDPipelineNames := make([]string, 0)
 
 			if len(configRepoNames) != 0 {
@@ -480,8 +479,8 @@ func createPipelineCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline create sample-pipeline --from-file sample-pipeline.yaml --log-level debug
 // the inputs can be passed either from file using '--from-file' flag or entire content as argument to command`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			var pipeline map[string]interface{}
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			var pipelineConfig gocd.PipelineConfig
 			object, err := readObject(cmd)
 			if err != nil {
 				return err
@@ -489,34 +488,30 @@ func createPipelineCommand() *cobra.Command {
 
 			switch objType := object.CheckFileType(cliLogger); objType {
 			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &pipeline); err != nil {
+				if err = yaml.Unmarshal([]byte(object), &pipelineConfig); err != nil {
 					return err
 				}
 			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &pipeline); err != nil {
+				if err = json.Unmarshal([]byte(object), &pipelineConfig); err != nil {
 					return err
 				}
 			default:
 				return &errors.UnknownObjectTypeError{Name: objType}
 			}
 
-			pipelineConfig := gocd.PipelineConfig{
-				Config: pipeline,
-			}
-
 			if goCDPausePipelineAtStart {
-				pipelineConfig.PausePipeline = true
+				pipelineConfig.CreateOptions.PausePipeline = true
 			}
 
 			if len(goCDPipelineMessage) != 0 {
-				pipelineConfig.PauseReason = goCDPipelineMessage
+				pipelineConfig.CreateOptions.PauseReason = goCDPipelineMessage
 			}
 
 			if _, err = client.CreatePipeline(pipelineConfig); err != nil {
 				return err
 			}
 
-			return cliRenderer.Render(fmt.Sprintf("pipeline %s created successfully", pipeline["name"]))
+			return cliRenderer.Render(fmt.Sprintf("pipeline %s created successfully", pipelineConfig.Name))
 		},
 	}
 
@@ -529,12 +524,13 @@ func updatePipelineCommand() *cobra.Command {
 	updatePipelineGroupCmd := &cobra.Command{
 		Use:     "update",
 		Short:   "Command to UPDATE the pipeline config with the latest specified configuration [https://api.gocd.org/current/#edit-pipeline-config]",
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		Example: `gocd-cli pipeline update sample-movies --from-file sample-movies.yaml --log-level debug
+		Example: `gocd-cli pipeline update --from-file sample-movies.yaml --log-level debug
 // the inputs can be passed either from file using '--from-file' flag or entire content as argument to command`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			var pipeline map[string]interface{}
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			var pipelineConfig gocd.PipelineConfig
+
 			object, err := readObject(cmd)
 			if err != nil {
 				return err
@@ -542,28 +538,23 @@ func updatePipelineCommand() *cobra.Command {
 
 			switch objType := object.CheckFileType(cliLogger); objType {
 			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &pipeline); err != nil {
+				if err = yaml.Unmarshal([]byte(object), &pipelineConfig); err != nil {
 					return err
 				}
 			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &pipeline); err != nil {
+				if err = json.Unmarshal([]byte(object), &pipelineConfig); err != nil {
 					return err
 				}
 			default:
 				return &errors.UnknownObjectTypeError{Name: objType}
 			}
 
-			pipelineConfig := gocd.PipelineConfig{
-				ETAG:   goCDPipelineETAG,
-				Config: pipeline,
-			}
-
-			pipelineConfigFetched, err := client.GetPipelineConfig(args[0])
+			pipelineConfigFetched, err := client.GetPipelineConfig(pipelineConfig.Name)
 			if err != nil {
 				return err
 			}
 
-			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "pipeline-config", args[0])
+			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "pipeline-config", pipelineConfig.Name)
 
 			existing, err := diffCfg.String(pipelineConfigFetched)
 			if err != nil {
@@ -579,7 +570,7 @@ func updatePipelineCommand() *cobra.Command {
 				return err
 			}
 
-			if err = cliRenderer.Render(fmt.Sprintf("pipeline %s updated successfully", pipeline["name"])); err != nil {
+			if err = cliRenderer.Render(fmt.Sprintf("pipeline %s updated successfully", pipelineConfig.Name)); err != nil {
 				return err
 			}
 
@@ -599,7 +590,7 @@ func deletePipelineCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline delete movies`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			pipelineName := args[0]
 			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete pipeline '%s' [y/n]", pipelineName)
 
@@ -634,7 +625,7 @@ func getPipelineStateCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline status sample-pipeline`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetPipelineState(args[0])
 			if err != nil {
 				return err
@@ -667,7 +658,7 @@ func getPipelineInstanceCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline instance sample-pipeline --instance 10`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			pipelineObject := gocd.PipelineObject{
 				Name:    args[0],
 				Counter: goCDPipelineInstance,
@@ -708,7 +699,7 @@ func pauseUnpausePipelineCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline action sample-pipeline --pause/--un-pause`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			var action string
 			if goCDPipelinePause {
 				action = "pausing"
@@ -779,7 +770,7 @@ func commentPipelineCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline comment --message "message to be commented"`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			pipelineObject := gocd.PipelineObject{
 				Name:    args[0],
 				Counter: goCDPipelineInstance,
@@ -806,7 +797,7 @@ func pipelineExtractTemplateCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline template --name sample-pipeline --template-name sample-template`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.ExtractTemplatePipeline(args[0], goCDPipelineTemplateName)
 			if err != nil {
 				return err
@@ -828,7 +819,7 @@ func listPipelinesCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline list`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			var goCdPipelines []string
 
 			if len(goCDEnvironments) != 0 && len(goCDPipelineGroups) != 0 {
@@ -906,7 +897,7 @@ func validatePipelinesCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline validate-syntax --pipeline pipeline1 --pipeline pipeline2`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			pluginCfg := plugin.NewPluginConfig(
 				pipelineValidateObj.pluginVersion,
 				pipelineValidateObj.pluginLocalPath,
@@ -960,7 +951,7 @@ func exportPipelineToConfigRepoFormatCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline change-config-repo-format pipeline1 --plugin-id yaml.config.plugin`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.ExportPipelineToConfigRepoFormat(args[0], goCdPluginObj.getPluginID())
 			if err != nil {
 				return err
@@ -1023,7 +1014,7 @@ func getPipelineMapping() *cobra.Command {
 		Example: "gocd-cli pipeline get-mappings --pipeline helm-images -o yaml",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			pipelineMappings := make([]map[string]string, 0)
 
 			cliLogger.Debugf("fetching all GoCD environment information to identify which environment the selected pipeline is part of ")
@@ -1035,10 +1026,10 @@ func getPipelineMapping() *cobra.Command {
 
 			cliLogger.Debugf("all GoCD environment information was fetched successfully")
 
-			pipelineErrors := make(map[string]string, 0)
+			pipelineErrors := make(map[string]string)
 
 			for _, goCDPipeline := range goCDPipelines {
-				var goCDConfigRepoName, goCDEnvironmentName, originGoCD string
+				var configRepoName, goCDEnvironmentName, originGoCD string
 
 				cliLogger.Debugf("fetching pipeline config to identify which config repo this pipeline is part of")
 				pipelineConfig, err := client.GetPipelineConfig(goCDPipeline)
@@ -1050,7 +1041,7 @@ func getPipelineMapping() *cobra.Command {
 
 				originGoCD = "true"
 				if pipelineConfig.Origin.Type != "gocd" {
-					goCDConfigRepoName = pipelineConfig.Origin.ID
+					configRepoName = pipelineConfig.Origin.ID
 					originGoCD = "false"
 				}
 
@@ -1064,7 +1055,8 @@ func getPipelineMapping() *cobra.Command {
 
 				pipelineMappings = append(pipelineMappings, map[string]string{
 					"pipeline":    goCDPipeline,
-					"config_repo": goCDConfigRepoName,
+					"group":       pipelineConfig.Group,
+					"config_repo": configRepoName,
 					"environment": goCDEnvironmentName,
 					"origin_gocd": originGoCD,
 				})
@@ -1109,16 +1101,12 @@ func findPipelineFilesCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline find --path /path/to/pipelines --pattern *.gocd.yaml --pattern *.gocd.json`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			cliLogger.Debugf("searching GoCD pipelines under '%s'", goCDPipelinesPath)
 			cliLogger.Debug("Below is a list of files that may be identified as GoCD's pipeline files. " +
 				"A single file may contain multiple pipeline configurations. Use the command 'gocd-cli pipeline show' to see the pipelines in a given file.")
 
-			pipelinePathPatterns := make([]string, 0)
-			pipelinePathPatterns = append(pipelinePathPatterns, goCDPipelinesPath)
-			pipelinePathPatterns = append(pipelinePathPatterns, goCDPipelinesPatterns...)
-
-			pipelineFiles, err := client.GetPipelineFiles(pipelinePathPatterns...)
+			pipelineFiles, err := client.GetPipelineFiles(goCDPipelinesPath, nil, goCDPipelinesPatterns...)
 			if err != nil {
 				cliLogger.Fatalf("finding gocd pipelines under '%s', with patterns '%s' errored with: '%s'",
 					goCDPipelinesPath, strings.Join(goCDPipelinesPatterns, ","), err)
@@ -1166,37 +1154,22 @@ func showPipelineCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		Example: `gocd-cli show --pipeline /path/to/sample.gocd.yaml`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			detailedPipelineNames := make(map[string][]string, 0)
+		RunE: func(_ *cobra.Command, _ []string) error {
+			detailedPipelineNames := make(map[string][]string)
 			pipelineNames := make([]string, 0)
 
-			pipelinePathPatterns := make([]string, 0)
-			goCDPipelineFiles := make([]string, 0)
-
-			if len(goCDPipelines) != 0 {
-				pipelinePathPatterns = append(pipelinePathPatterns, goCDPipelines...)
-			} else {
-				pipelinePathPatterns = append(pipelinePathPatterns, goCDPipelinesPath)
-			}
-
-			pipelinePathPatterns = append(pipelinePathPatterns, goCDPipelinesPatterns...)
-
-			pipelineFiles, err := client.GetPipelineFiles(pipelinePathPatterns...)
+			pipelineFiles, err := client.GetPipelineFiles(goCDPipelinesPath, goCDPipelines, goCDPipelinesPatterns...)
 			if err != nil {
 				cliLogger.Fatalf("finding gocd pipelines under '%s', with patterns '%s' errored with: '%s'",
 					goCDPipelinesPath, strings.Join(goCDPipelinesPatterns, ","), err)
 			}
 
-			funk.ForEach(pipelineFiles, func(pipelineFile gocd.PipelineFiles) {
-				if funk.Contains(ignore, pipelineFile.Path) || funk.Contains(ignore, pipelineFile.Name) {
-					cliLogger.Infof("ignoring pipeline '%s' since it is part of ignore list", pipelineFile.Name)
-				} else {
-					goCDPipelineFiles = append(goCDPipelineFiles, pipelineFile.Path)
-				}
-			})
+			pipelinePathPatterns := filterIgnoredPipelines(pipelineFiles, ignore)
 
-			for _, goCDPipeline := range goCDPipelineFiles {
+			for _, goCDPipeline := range pipelinePathPatterns {
 				cliLogger.Debugf("analysing GoCD pipeline file '%s'", goCDPipeline)
+
+				pipelinesIdentified := make([]string, 0)
 
 				fileData, err := os.ReadFile(goCDPipeline)
 				if err != nil {
@@ -1222,7 +1195,7 @@ func showPipelineCommand() *cobra.Command {
 					}
 
 					for _, val := range reflect.ValueOf(fileYAML.Config).MapKeys() {
-						pipelineNames = append(pipelineNames, val.String())
+						pipelinesIdentified = append(pipelinesIdentified, val.String())
 					}
 				case content.FileTypeJSON:
 					var fileJSON map[string]interface{}
@@ -1233,14 +1206,20 @@ func showPipelineCommand() *cobra.Command {
 						return err
 					}
 
-					pipelineNames = append(pipelineNames, fileJSON["name"].(string))
+					pipelinesIdentified = append(pipelinesIdentified, fileJSON["name"].(string))
 				default:
 					cliLogger.Errorf("the command `pipeline show` does not support reading pipeline config of file '%s'", goCDPipeline)
 
 					return &errors.UnknownObjectTypeError{Name: objType}
 				}
 
-				detailedPipelineNames[goCDPipeline] = pipelineNames
+				if len(pipelinesIdentified) == 0 {
+					continue
+				}
+
+				pipelineNames = append(pipelineNames, pipelinesIdentified...)
+
+				detailedPipelineNames[goCDPipeline] = pipelinesIdentified
 			}
 
 			if detailed {
@@ -1265,6 +1244,22 @@ func showPipelineCommand() *cobra.Command {
 	showPipelinePipelineCmd.MarkFlagsMutuallyExclusive("pipelines", "path")
 
 	return showPipelinePipelineCmd
+}
+
+func filterIgnoredPipelines(pipelineFiles []gocd.PipelineFiles, ignore []string) []string {
+	goCDPipelineFiles := make([]string, 0)
+
+	for _, pipelineFile := range pipelineFiles {
+		if funk.Contains(ignore, pipelineFile.Path) || funk.Contains(ignore, pipelineFile.Name) {
+			cliLogger.Infof("ignoring pipeline '%s' since it is part of ignore list", pipelineFile.Name)
+
+			continue
+		}
+
+		goCDPipelineFiles = append(goCDPipelineFiles, pipelineFile.Path)
+	}
+
+	return goCDPipelineFiles
 }
 
 func findDownStreamPipelines(pipelineName string, resp gocd.VSM) []string {
@@ -1328,69 +1323,71 @@ func parsePipelineConfig(pipelineName string, pipelineStreams []string) ([]strin
 	var pipelineDependencies []string
 
 	for _, pipelineStream := range pipelineStreams {
-		if pipelineStream != pipelineName {
-			pipelineConfig, err := client.GetPipelineConfig(pipelineStream)
-			if err != nil {
-				return nil, err
-			}
+		if pipelineStream == pipelineName {
+			continue
+		}
 
-			cliLogger.Debugf("config of pipeline '%s' was fetched successfully", pipelineStream)
-			cliLogger.Debugf("parsing pipeline '%s' to check the VSM mappings", pipelineStream)
+		pipelineConfig, err := client.GetPipelineConfig(pipelineStream)
+		if err != nil {
+			return nil, err
+		}
 
-			bytes, err := json.Marshal(pipelineConfig.Config)
-			if err != nil {
-				return nil, err
-			}
+		cliLogger.Debugf("config of pipeline '%s' was fetched successfully", pipelineStream)
+		cliLogger.Debugf("parsing pipeline '%s' to check the VSM mappings", pipelineStream)
 
-			pipelineCfg := string(bytes)
+		if containsDependency(pipelineConfig, pipelineName) {
+			pipelineDependencies = append(pipelineDependencies, pipelineStream)
+			cliLogger.Debugf("pipeline '%s' is mapped as dependency for '%s'", pipelineStream, pipelineName)
+		}
+	}
 
-			if gjson.Valid(pipelineCfg) {
-				for _, material := range gjson.Get(pipelineCfg, "materials").Array() {
-					if funk.Contains(gjson.Get(material.String(), "attributes.name").String(), pipelineName) {
-						pipelineDependencies = append(pipelineDependencies, pipelineStream)
-					}
+	return GetUniqEntries(pipelineDependencies), nil
+}
 
-					if funk.Contains(gjson.Get(material.String(), "attributes.url").String(), pipelineName) {
-						pipelineDependencies = append(pipelineDependencies, pipelineStream)
-					}
+func containsDependency(pipelineConfig gocd.PipelineConfig, pipelineName string) bool {
+	if containsMaterialDependency(pipelineConfig.Materials, pipelineName) ||
+		containsParameterDependency(pipelineConfig.Parameters, pipelineName) ||
+		containsTaskDependency(pipelineConfig.Stages, pipelineName) {
+		return true
+	}
 
-					if funk.Contains(gjson.Get(material.String(), "attributes.pipeline").String(), pipelineName) {
-						pipelineDependencies = append(pipelineDependencies, pipelineStream)
-					}
+	return false
+}
+
+func containsMaterialDependency(materials []gocd.Material, pipelineName string) bool {
+	for _, material := range materials {
+		if funk.Contains(material.Attributes.URL, pipelineName) ||
+			funk.Contains(material.Attributes.Name, pipelineName) ||
+			funk.Contains(material.Attributes.Pipeline, pipelineName) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func containsParameterDependency(parameters []gocd.PipelineEnvironmentVariables, pipelineName string) bool {
+	for _, parameter := range parameters {
+		if funk.Contains(parameter.Name, pipelineName) || funk.Contains(parameter.Value, pipelineName) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func containsTaskDependency(stages []gocd.PipelineStageConfig, pipelineName string) bool {
+	for _, stage := range stages {
+		for _, job := range stage.Jobs {
+			for _, task := range job.Tasks {
+				if task.Type == "fetch" && funk.Contains(task.Attributes.Pipeline, pipelineName) {
+					return true
 				}
-
-				for _, material := range gjson.Get(pipelineCfg, "parameters").Array() {
-					if funk.Contains(gjson.Get(material.String(), "name").String(), pipelineName) {
-						pipelineDependencies = append(pipelineDependencies, pipelineStream)
-					}
-
-					if funk.Contains(gjson.Get(material.String(), "value").String(), pipelineName) {
-						pipelineDependencies = append(pipelineDependencies, pipelineStream)
-					}
-				}
-
-				for _, stage := range gjson.Get(pipelineCfg, "stages").Array() {
-					for _, job := range gjson.Get(stage.String(), "jobs").Array() {
-						for _, tasks := range gjson.Get(job.String(), "tasks").Array() {
-							if gjson.Get(tasks.String(), "type").String() == "fetch" {
-								if funk.Contains(gjson.Get(tasks.String(), "attributes.pipeline").String(), pipelineName) {
-									cliLogger.Debugf("pipeline '%s' is mapped as dependency for '%s'", pipelineStream, pipelineName)
-
-									pipelineDependencies = append(pipelineDependencies, pipelineStream)
-								}
-							}
-						}
-					}
-				}
-
-				cliLogger.Debugf("pipeline '%s' parsed successfully", pipelineConfig.Config["name"])
 			}
 		}
 	}
 
-	pipelineDependencies = GetUniqEntries(pipelineDependencies)
-
-	return pipelineDependencies, nil
+	return false
 }
 
 // func renderVSMtoCSV(pipelineVSMs []PipelineVSM, upstream bool) error {

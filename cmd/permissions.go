@@ -13,7 +13,7 @@ func registerIHaveCommand() *cobra.Command {
 		Long:    `Command leverages GoCD permissions api [https://api.gocd.org/current/#permissions] to show all permission that current user has in GoCD`,
 		PreRunE: setCLIClient,
 		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			query := map[string]string{"type": entity}
 
 			response, err := client.GetPermissions(query)

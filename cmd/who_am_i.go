@@ -15,7 +15,7 @@ func registerWhoAmICommand() *cobra.Command {
 		Long:    `Command leverages GoCD current user api [https://api.gocd.org/current/#current-user] to GET current user from GoCD`,
 		PreRunE: setCLIClient,
 		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetCurrentUser()
 			if err != nil {
 				return err

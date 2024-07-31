@@ -27,7 +27,7 @@ func registerAgentCommand() *cobra.Command {
 		Short: "Command to operate on agents present in GoCD [https://api.gocd.org/current/#agents]",
 		Long: `Command leverages GoCD agents apis' [https://api.gocd.org/current/#agents] to 
 GET/UPDATE/DELETE GoCD agent also kill task and job run history from an agent`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -55,7 +55,7 @@ func getAgentsCommand() *cobra.Command {
 		Short:   "Command to GET all the agents present in GoCD [https://api.gocd.org/current/#get-all-agents]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetAgents()
 			if err != nil {
 				return err
@@ -93,7 +93,7 @@ func getAgentCommand() *cobra.Command {
 gocd-cli agents get --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			var response gocd.Agent
 
 			if len(agentID) != 0 {
@@ -152,7 +152,7 @@ func updateAgentCommand() *cobra.Command {
 		Short:   "Command to UPDATE an agent with all specified configuration [https://api.gocd.org/current/#update-an-agent]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var agent gocd.Agent
 			object, err := readObject(cmd)
 			if err != nil {
@@ -207,7 +207,7 @@ func deleteAgentCommand() *cobra.Command {
 gocd-cli agents delete --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			if len(agentName) != 0 {
 				agentsResponse, err := client.GetAgents()
 				if err != nil {
@@ -263,7 +263,7 @@ func listAgentsCommand() *cobra.Command {
 		Short:   "Command to LIST all the agents present in GoCD [https://api.gocd.org/current/#get-all-agents]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetAgents()
 			if err != nil {
 				return err
@@ -299,7 +299,7 @@ func getJobRunHistoryCommand() *cobra.Command {
 gocd-cli agents job-history --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			if len(agentName) != 0 {
 				agentsResponse, err := client.GetAgents()
 				if err != nil {
@@ -342,7 +342,7 @@ func killTaskCommand() *cobra.Command {
 		Example: `gocd-cli agents kill-task --name my-gocd-agent
 gocd-cli agents kill-task --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			if len(agentName) != 0 {
 				agentsResponse, err := client.GetAgents()
 				if err != nil {
@@ -367,7 +367,7 @@ gocd-cli agents kill-task --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 				return err
 			}
 
-			return cliRenderer.Render(fmt.Sprintf("task running oon agent with ID %s killed successfully", args[0]))
+			return cliRenderer.Render(fmt.Sprintf("task running on agent with ID %s killed successfully", agentName))
 		},
 	}
 
@@ -404,8 +404,8 @@ func filterAgentsResponse(response []gocd.Agent) []gocd.Agent {
 
 	if len(agentOS) != 0 {
 		response = funk.Filter(response, func(agent gocd.Agent) bool {
-			for _, os := range agentOS {
-				return funk.Contains(agent.OS, os)
+			for _, goCDAgentOS := range agentOS {
+				return funk.Contains(agent.OS, goCDAgentOS)
 			}
 
 			return false

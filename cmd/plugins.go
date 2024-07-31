@@ -28,7 +28,7 @@ func registerPluginsCommand() *cobra.Command {
 		Short: "Command to operate on plugins present in GoCD",
 		Long: `Command leverages GoCD config repo apis' [https://api.gocd.org/current/#plugin-settings, https://api.gocd.org/current/#plugin-info] to 
 GET/CREATE/UPDATE plugins settings or information`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -55,7 +55,7 @@ func getPluginSettingsCommand() *cobra.Command {
 		Short:   "Command to GET settings of a specific plugin present in GoCD [https://api.gocd.org/current/#get-plugin-settings]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetPluginSettings(args[0])
 			if err != nil {
 				return err
@@ -89,7 +89,7 @@ func createPluginSettingsCommand() *cobra.Command {
 		Short:   "Command to CREATE settings of a specified plugin present in GoCD [https://api.gocd.org/current/#create-plugin-settings]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var setting gocd.PluginSettings
 			object, err := readObject(cmd)
 			if err != nil {
@@ -133,7 +133,7 @@ func updatePluginSettingsCommand() *cobra.Command {
 		Short:   "Command to UPDATE settings of a specified plugin present in GoCD [https://api.gocd.org/current/#update-plugin-settings]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var setting gocd.PluginSettings
 			object, err := readObject(cmd)
 			if err != nil {
@@ -193,7 +193,7 @@ func getPluginsInfoCommand() *cobra.Command {
 		Short:   "Command to GET information of all plugins present in GoCD [https://api.gocd.org/current/#get-all-plugin-info]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetPluginsInfo()
 			if err != nil {
 				return err
@@ -222,12 +222,12 @@ func getPluginsInfoCommand() *cobra.Command {
 }
 
 func getPluginInfoCommand() *cobra.Command {
-	getPluginInofCmd := &cobra.Command{
+	getPluginInfoCmd := &cobra.Command{
 		Use:     "get-info",
 		Short:   "Command to GET information of a specific plugin present in GoCD [https://api.gocd.org/current/#get-plugin-info]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetPluginInfo(args[0])
 			if err != nil {
 				return err
@@ -250,9 +250,9 @@ func getPluginInfoCommand() *cobra.Command {
 		},
 	}
 
-	getPluginInofCmd.SetUsageTemplate(getUsageTemplate())
+	getPluginInfoCmd.SetUsageTemplate(getUsageTemplate())
 
-	return getPluginInofCmd
+	return getPluginInfoCmd
 }
 
 func listPluginsCommand() *cobra.Command {
@@ -261,7 +261,7 @@ func listPluginsCommand() *cobra.Command {
 		Short:   "Command to LIST all plugins present in GoCD",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetPluginsInfo()
 			if err != nil {
 				return err

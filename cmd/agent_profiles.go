@@ -21,7 +21,7 @@ func registerAgentProfilesCommand() *cobra.Command {
 		Short: "Command to operate on elastic-agent-profile in GoCD [https://api.gocd.org/current/#elastic-agent-profiles]",
 		Long: `Command leverages GoCD elastic-agent-profile apis' [https://api.gocd.org/current/#elastic-agent-profiles] to 
 GET/CREATE/UPDATE/DELETE elastic agent profiles in GoCD (make sure you have appropriate plugin is installed before using this)`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -50,7 +50,7 @@ func getAgentProfilesCommand() *cobra.Command {
 		Example: "gocd-cli elastic-agent-profile get-all",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetElasticAgentProfiles()
 			if err != nil {
 				return err
@@ -83,7 +83,7 @@ func getAgentProfileCommand() *cobra.Command {
 		Example: "gocd-cli elastic-agent-profile get sample_kubernetes",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetElasticAgentProfile(args[0])
 			if err != nil {
 				return err
@@ -114,9 +114,9 @@ func createAgentProfileCommand() *cobra.Command {
 		Use:     "create",
 		Short:   "Command to CREATE a elastic agent profile with all specified configurations in GoCD [https://api.gocd.org/current/#create-an-elastic-agent-profile]",
 		Example: "gocd-cli elastic-agent-profile create sample_ec2 --from-file sample-ec2.yaml --log-level debug",
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var commonCfg gocd.CommonConfig
 			object, err := readObject(cmd)
 			if err != nil {
@@ -159,7 +159,7 @@ func updateAgentProfileCommand() *cobra.Command {
 		Example: "gocd-cli elastic-agent-profile update sample_ec2 --from-file sample-ec2.yaml --log-level debug",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var commonCfg gocd.CommonConfig
 			object, err := readObject(cmd)
 			if err != nil {
@@ -219,7 +219,7 @@ func deleteAgentProfileCommand() *cobra.Command {
 gocd-cli elastic-agent-profile delete sample_kubernetes -y`,
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			profileName := args[0]
 			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete elastic-agent-profile '%s' [y/n]", profileName)
 
@@ -253,7 +253,7 @@ func listAgentProfilesCommand() *cobra.Command {
 		Short:   "Command to LIST all elastic agent profiles present in GoCD [https://api.gocd.org/current/#get-all-elastic-agent-profiles]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetElasticAgentProfiles()
 			if err != nil {
 				return err
@@ -279,7 +279,7 @@ func getAgentProfilesUsageCommand() *cobra.Command {
 		Example: "gocd-cli elastic-agent-profile usage sample_ec2",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetElasticAgentProfileUsage(args[0])
 			if err != nil {
 				return err

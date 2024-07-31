@@ -23,7 +23,7 @@ https://api.gocd.org/current/#update-job-timeout-config,
 https://api.gocd.org/current/#create-or-update-siteurls-config
 
 to operate on GoCD server's configuration`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -49,7 +49,7 @@ func registerArtifactManagementCommand() *cobra.Command {
 https://api.gocd.org/current/#get-artifacts-config,
 https://api.gocd.org/current/#update-artifacts-config
 to operate on artifacts in GoCD`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -74,7 +74,7 @@ https://api.gocd.org/current/#update-artifacts-config,
 https://api.gocd.org/current/#create-or-update-mailserver-config
 
 to operate on GoCD's site-url configuration`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -99,7 +99,7 @@ https://api.gocd.org/current/#get-jobtimeout-config,
 https://api.gocd.org/current/#update-job-timeout-config
 
 to operate on GoCD's default job timeout configuration`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -125,7 +125,7 @@ https://api.gocd.org/current/#create-or-update-mailserver-config,
 https://api.gocd.org/current/#delete-mailserver-config
 
 to operate on GoCD server's mail-server configuration'`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -148,7 +148,7 @@ func getSiteURLSCommand() *cobra.Command {
 		Short:   "Command to get site urls configured in GoCD server [https://api.gocd.org/current/#get-siteurls-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetSiteURL()
 			if err != nil {
 				return err
@@ -169,7 +169,7 @@ func createUpdateSiteURLSCommand() *cobra.Command {
 		Short:   "Command to create/update site urls configured in GoCD server [https://api.gocd.org/current/#create-or-update-siteurls-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			siteURLConfig := gocd.SiteURLConfig{
 				SiteURL:       siteURL,
 				SecureSiteURL: secureSiteURL,
@@ -202,7 +202,7 @@ func artifactConfigGetCommand() *cobra.Command {
 		Short:   "Command to get artifact configurations from GoCD server [https://api.gocd.org/current/#get-artifacts-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetArtifactConfig()
 			if err != nil {
 				return err
@@ -225,7 +225,7 @@ func artifactConfigUpdateCommand() *cobra.Command {
 		Short:   "Command to UPDATE the artifact configuration in GoCd [https://api.gocd.org/current/#update-artifacts-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetArtifactConfig()
 			if err != nil {
 				return err
@@ -268,7 +268,7 @@ func getJobTimeoutCommand() *cobra.Command {
 		Short:   "Command to get default job timeout GoCD server [https://api.gocd.org/current/#get-jobtimeout-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetDefaultJobTimeout()
 			if err != nil {
 				return fmt.Errorf("fetching default job timeout errored with: %w", err)
@@ -289,7 +289,7 @@ func updateJobTimeoutCommand() *cobra.Command {
 		Short:   "Command to update default job timeout in GoCD server [https://api.gocd.org/current/#update-job-timeout-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			if err := client.UpdateDefaultJobTimeout(jobTimeout); err != nil {
 				return fmt.Errorf("updating default job timeout errored with: %w", err)
 			}
@@ -314,7 +314,7 @@ func getMailServerConfigCommand() *cobra.Command {
 		Short:   "Command to get mail server configuration in GoCD server [https://api.gocd.org/current/#get-mailserver-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetMailServerConfig()
 			if err != nil {
 				return err
@@ -333,7 +333,7 @@ func createUpdateMailServerConfigCommand() *cobra.Command {
 		Short:   "Command to create/update mail server config in GoCD server [https://api.gocd.org/current/#create-or-update-mailserver-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var mailConfig gocd.MailServerConfig
 			object, err := readObject(cmd)
 			if err != nil {
@@ -387,7 +387,7 @@ func deleteMailServerConfigCommand() *cobra.Command {
 		Short:   "Command to delete mail server configuration in GoCD server [https://api.gocd.org/current/#delete-mailserver-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			cliShellReadConfig.ShellMessage = "do you want to delete GoCD's mail server config [y/n]"
 
 			if !cliCfg.Yes {

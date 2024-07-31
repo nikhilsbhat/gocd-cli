@@ -20,7 +20,7 @@ func registerClusterProfilesCommand() *cobra.Command {
 		Short: "Command to operate on cluster-profile present in GoCD [https://api.gocd.org/current/#cluster-profiles]",
 		Long: `Command leverages GoCD cluster-profile apis' [https://api.gocd.org/current/#cluster-profiles] to 
 GET/CREATE/UPDATE/DELETE cluster profiles present in GoCD`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -47,7 +47,7 @@ func getClusterProfilesCommand() *cobra.Command {
 		Short:   "Command to GET all the cluster profiles present in GoCD [https://api.gocd.org/current/#get-all-cluster-profiles]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetClusterProfiles()
 			if err != nil {
 				return err
@@ -79,7 +79,7 @@ func getClusterProfileCommand() *cobra.Command {
 		Short:   "Command to GET a specific cluster profile present in GoCD [https://api.gocd.org/current/#get-a-cluster-profile]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetClusterProfile(args[0])
 			if err != nil {
 				return err
@@ -109,9 +109,9 @@ func createClusterProfileCommand() *cobra.Command {
 	createClusterProfileCmd := &cobra.Command{
 		Use:     "create",
 		Short:   "Command to CREATE a cluster profile with all specified configurations in GoCD [https://api.gocd.org/current/#create-a-cluster-profile]",
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var commonCfg gocd.CommonConfig
 			object, err := readObject(cmd)
 			if err != nil {
@@ -153,7 +153,7 @@ func updateClusterProfileCommand() *cobra.Command {
 		Short:   "Command to UPDATE a cluster profile with all specified configurations in GoCD [https://api.gocd.org/current/#update-a-cluster-profile]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var commonCfg gocd.CommonConfig
 			object, err := readObject(cmd)
 			if err != nil {
@@ -211,7 +211,7 @@ func deleteClusterProfileCommand() *cobra.Command {
 		Short:   "Command to DELETE a specific cluster profile present in GoCD [https://api.gocd.org/current/#delete-a-cluster-profile]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			clusterProfile := args[0]
 			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete cluster profile '%s' [y/n]", clusterProfile)
 
@@ -245,7 +245,7 @@ func listClusterProfilesCommand() *cobra.Command {
 		Short:   "Command to LIST all cluster profiles present in GoCD [https://api.gocd.org/current/#get-all-cluster-profiles]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetClusterProfiles()
 			if err != nil {
 				return err

@@ -38,7 +38,7 @@ func registerConfigRepoCommand() *cobra.Command {
 		Short: "Command to operate on configrepo present in GoCD [https://api.gocd.org/current/#config-repo]",
 		Long: `Command leverages GoCD config repo apis' [https://api.gocd.org/current/#config-repo] to 
 GET/CREATE/UPDATE/DELETE and trigger update on the same`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -71,7 +71,7 @@ func getConfigReposCommand() *cobra.Command {
 		Example: "gocd-cli configrepo get-all",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetConfigRepos()
 			if err != nil {
 				return err
@@ -128,7 +128,7 @@ Do not use this command unless you know what you are doing with it`,
 		Example: "gocd-cli configrepo get-internal --failed --detailed -o yaml",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetConfigReposInternal()
 			if err != nil {
 				return err
@@ -221,7 +221,7 @@ gocd-cli configrepo get-definitions --all -o yaml #should fetch definitions of a
 gocd-cli configrepo get-definitions --repo-name sample-repo -o yaml --pipelines #should print only pipeline names`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			if !all && len(goCDConfigReposName) == 0 {
 				cliLogger.Fatalf("no config repo name passed, either set --all or pass name using --repo-name")
 			}
@@ -237,7 +237,7 @@ gocd-cli configrepo get-definitions --repo-name sample-repo -o yaml --pipelines 
 				}
 			}
 
-			configReposResponse := make(map[string]gocd.ConfigRepo, 0)
+			configReposResponse := make(map[string]gocd.ConfigRepo)
 
 			for _, configRepo := range goCDConfigReposName {
 				response, err := client.GetConfigRepoDefinitions(configRepo)
@@ -332,7 +332,7 @@ func getConfigRepoCommand() *cobra.Command {
 		Example: "gocd-cli configrepo get helm-images",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetConfigRepo(args[0])
 			if err != nil {
 				return err
@@ -373,7 +373,7 @@ func getCreateConfigRepoCommand() *cobra.Command {
 		Short:   "Command to CREATE the config-repo with specified configuration [https://api.gocd.org/current/#create-a-config-repo]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var configRepo gocd.ConfigRepo
 			object, err := readObject(cmd)
 			if err != nil {
@@ -414,7 +414,7 @@ func getUpdateConfigRepoCommand() *cobra.Command {
 		Short:   "Command to UPDATE the config-repo present in GoCD [https://api.gocd.org/current/#update-config-repo]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var configRepo gocd.ConfigRepo
 			object, err := readObject(cmd)
 			if err != nil {
@@ -471,7 +471,7 @@ func getDeleteConfigRepoCommand() *cobra.Command {
 		Example: "gocd-cli configrepo delete helm-images",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			configRepoName := args[0]
 			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete config repo '%s' [y/n]", configRepoName)
 
@@ -506,7 +506,7 @@ func listConfigReposCommand() *cobra.Command {
 		Example: "gocd-cli configrepo list",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetConfigRepos()
 			if err != nil {
 				return err
@@ -532,7 +532,7 @@ func getConfigRepoStatusCommand() *cobra.Command {
 		Example: "gocd-cli configrepo status helm-images",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.ConfigRepoStatus(args[0])
 			if err != nil {
 				return err
@@ -554,7 +554,7 @@ func getConfigRepoTriggerUpdateCommand() *cobra.Command {
 		Example: "gocd-cli configrepo trigger-update helm-images",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.ConfigRepoTriggerUpdate(args[0])
 			if err != nil {
 				return err
@@ -570,34 +570,30 @@ func getConfigRepoTriggerUpdateCommand() *cobra.Command {
 }
 
 func getConfigRepoPreflightCheckCommand() *cobra.Command {
-	configTriggerUpdateCommand := &cobra.Command{
+	configPreflightCheckCommand := &cobra.Command{
 		Use:     "preflight-check",
 		Short:   "Command to PREFLIGHT check the config repo configurations [https://api.gocd.org/current/#preflight-check-of-config-repo-configurations]",
 		Example: `gocd-cli configrepo preflight-check -f path/to/pipeline1.gocd.yaml -f path/to/pipeline2.gocd.yaml --repo-name helm-images -o yaml`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			var pipelineFilesData []gocd.PipelineFiles
-			var pathAndPattern []string
+			pattern := configRepoPreflightObj.pipelineExtRegex
 
 			if len(configRepoPreflightObj.pipelineFiles) != 0 {
-				for _, pipelineFile := range configRepoPreflightObj.pipelineFiles {
-					file, err := client.GetPipelineFiles(pipelineFile)
-					if err != nil {
-						cliLogger.Errorf("fetching pipeline %s errored with: %v", pipelineFile, err)
+				file, err := client.GetPipelineFiles("", configRepoPreflightObj.pipelineFiles, pattern)
+				if err != nil {
+					cliLogger.Errorf("fetching pipeline files '%s' errored with: %v", strings.Join(configRepoPreflightObj.pipelineFiles, "\n"), err)
 
-						return err
-					}
-					pipelineFilesData = append(pipelineFilesData, file...)
+					return err
 				}
+				pipelineFilesData = append(pipelineFilesData, file...)
 			} else {
 				if len(configRepoPreflightObj.pipelineExtRegex) == 0 {
 					return &errors.ConfigRepoError{Message: "pipeline file regex not passed, make sure to set --regex if --pipeline-dir is set"}
 				}
 
-				pathAndPattern = append(pathAndPattern, configRepoPreflightObj.pipelineDir)
-				pathAndPattern = append(pathAndPattern, configRepoPreflightObj.pipelineExtRegex)
-				file, err := client.GetPipelineFiles(pathAndPattern[0], pathAndPattern[1])
+				file, err := client.GetPipelineFiles(configRepoPreflightObj.pipelineDir, nil, pattern)
 				if err != nil {
 					cliLogger.Errorf("fetching pipeline using regex errored with: %v", err)
 
@@ -629,13 +625,15 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 		},
 	}
 
-	configTriggerUpdateCommand.SetUsageTemplate(getUsageTemplate())
-	registerConfigRepoPreflightFlags(configTriggerUpdateCommand)
+	configPreflightCheckCommand.SetUsageTemplate(getUsageTemplate())
+	registerConfigRepoPreflightFlags(configPreflightCheckCommand)
 
-	configTriggerUpdateCommand.PersistentFlags().StringVarP(&goCDConfigRepoName, "repo-name", "", "",
+	configPreflightCheckCommand.PersistentFlags().StringVarP(&goCDConfigRepoName, "repo-name", "", "",
 		"name of the config repo present in GoCD against which the pipeline has to be validated")
 
-	return configTriggerUpdateCommand
+	configPreflightCheckCommand.MarkFlagsMutuallyExclusive("pipeline-file", "pipeline-dir")
+
+	return configPreflightCheckCommand
 }
 
 func (cfg *goCdPlugin) getPluginID() string {

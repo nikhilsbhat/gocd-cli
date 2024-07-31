@@ -20,7 +20,7 @@ func registerArtifactCommand() *cobra.Command {
 		Short: "Command to operate on artifacts store/config present in GoCD",
 		Long: `Command leverages GoCD agents apis' [https://api.gocd.org/current/#artifacts-config, https://api.gocd.org/current/#artifact-store] to 
 GET/CREATE/UPDATE/DELETE GoCD artifact`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -51,7 +51,7 @@ func getArtifactStoreCommand() *cobra.Command {
 		Short:   "Command to GET an specific artifact store in GoCD [https://api.gocd.org/current/#get-an-artifact-store]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetArtifactStore(args[0])
 			if err != nil {
 				return err
@@ -83,7 +83,7 @@ func getArtifactStoresCommand() *cobra.Command {
 		Short:   "Command to GET all the artifact stores present in GoCD [https://api.gocd.org/current/#get-all-artifact-stores]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetArtifactStores()
 			if err != nil {
 				return err
@@ -115,7 +115,7 @@ func getArtifactConfigCommand() *cobra.Command {
 		Short:   "Command to GET a configured artifact configuration GoCD [https://api.gocd.org/current/#get-artifacts-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetArtifactConfig()
 			if err != nil {
 				return err
@@ -145,9 +145,9 @@ func createArtifactStoreCommand() *cobra.Command {
 	getArtifactsStoreCmd := &cobra.Command{
 		Use:     "create-store",
 		Short:   "Command to CREATE an artifact store with all specified configurations in GoCD [https://api.gocd.org/current/#create-an-artifact-store]",
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var commonCfg gocd.CommonConfig
 			object, err := readObject(cmd)
 			if err != nil {
@@ -189,7 +189,7 @@ func updateArtifactStoreCommand() *cobra.Command {
 		Short:   "Command to UPDATE an artifact store with all specified configurations in GoCD [https://api.gocd.org/current/#update-an-artifact-store]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var commonCfg gocd.CommonConfig
 			object, err := readObject(cmd)
 			if err != nil {
@@ -247,7 +247,7 @@ func updateArtifactConfigCommand() *cobra.Command {
 		Short:   "Command to UPDATE artifact config specified configurations in GoCD [https://api.gocd.org/current/#update-artifacts-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var artifactInfo gocd.ArtifactInfo
 			object, err := readObject(cmd)
 			if err != nil {
@@ -305,7 +305,7 @@ func deleteArtifactStoreCommand() *cobra.Command {
 		Short:   "Command to DELETE a specific artifact store present in GoCD [https://api.gocd.org/current/#delete-an-artifact-store]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			storeName := args[0]
 			cliShellReadConfig.ShellMessage = fmt.Sprintf("do you want to delete store '%s' [y/n]", storeName)
 
@@ -339,7 +339,7 @@ func listArtifactsStoreCommand() *cobra.Command {
 		Short:   "Command to LIST all artifact stores present in GoCD [https://api.gocd.org/current/#get-all-artifact-stores]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetArtifactStores()
 			if err != nil {
 				return err

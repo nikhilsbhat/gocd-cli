@@ -19,7 +19,7 @@ func registerAuthConfigCommand() *cobra.Command {
 		Short: "Command to store/remove the authorization configuration to be used by the cli",
 		Long: `Using the auth config commands, one can cache the authorization configuration onto a file so it can be used by further calls made using this utility.
 Also, the cached authentication configurations can be erased using the same`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -42,7 +42,7 @@ func getAuthStoreCommand() *cobra.Command {
 		Short:   "Command to cache the GoCD authorization configuration to be used by the cli",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			cliLogger.Debug("saving authorisation config to cache, so that it can be reused next")
 			home, err := os.UserHomeDir()
 			if err != nil {
@@ -98,7 +98,7 @@ func getAuthEraseCommand() *cobra.Command {
 		Short:   "Command to remove the cached GoCD authorization configuration that is used by the cli.",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			home, err := os.UserHomeDir()
 			if err != nil {
 				cliLogger.Errorf("fetching user's home directory errored with '%v'", err)

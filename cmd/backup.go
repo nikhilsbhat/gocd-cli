@@ -24,7 +24,7 @@ func registerBackupCommand() *cobra.Command {
 		Short: "Command to operate on backup in GoCD [https://api.gocd.org/current/#backups]",
 		Long: `Command leverages GoCD backup apis' [https://api.gocd.org/current/#backups] to 
 GET/CREATE/UPDATE/DELETE/SCHEDULE the backup in GoCD server.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -52,7 +52,7 @@ func getBackupConfig() *cobra.Command {
 		Short:   "Command to GET backup config configured in GoCD [https://api.gocd.org/current/#get-backup-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetBackupConfig()
 			if err != nil {
 				return err
@@ -71,7 +71,7 @@ func createOrUpdateBackupConfig() *cobra.Command {
 		Short:   "Command to CREATE/UPDATE backup config configured in GoCD [https://api.gocd.org/current/#create-or-update-backup-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			var backupConfig gocd.BackupConfig
 			object, err := readObject(cmd)
 			if err != nil {
@@ -110,7 +110,7 @@ func deleteBackupConfig() *cobra.Command {
 		Short:   "Command to DELETE backup config configured in GoCD [https://api.gocd.org/current/#delete-backup-config]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			cliShellReadConfig.ShellMessage = "do you want to delete GoCD's backup configuration [y/n]"
 
 			if !cliCfg.Yes {
@@ -145,7 +145,7 @@ func getBackupStats() *cobra.Command {
 		Short:   "Command to GET stats of the specific backup taken in GoCD [https://api.gocd.org/current/#get-backup]",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			response, err := client.GetBackup(args[0])
 			if err != nil {
 				return err
@@ -164,7 +164,7 @@ func scheduleBackup() *cobra.Command {
 		Short:   "Command to SCHEDULE backups in GoCD [https://api.gocd.org/current/#schedule-backup]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.ScheduleBackup()
 			if err != nil {
 				return err

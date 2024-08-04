@@ -185,3 +185,8 @@ func registerJobsNStageFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringSliceVarP(&stageConfig.Jobs, "job", "", nil,
 		"list of jobs that should be triggered")
 }
+
+func registerDanglingFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVarP(&dangling, "dangling", "d", false,
+		"when set, retrieves only the unreferenced resources.")
+}

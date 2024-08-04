@@ -11,6 +11,7 @@ import (
 	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
+	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )
 
@@ -55,6 +56,12 @@ func getPipelineGroupsCommand() *cobra.Command {
 				return err
 			}
 
+			if dangling {
+				response = funk.Filter(response, func(group gocd.PipelineGroup) bool {
+					return len(group.Pipelines) == 0
+				}).([]gocd.PipelineGroup)
+			}
+
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
@@ -71,6 +78,8 @@ func getPipelineGroupsCommand() *cobra.Command {
 			return cliRenderer.Render(response)
 		},
 	}
+
+	registerDanglingFlags(getPipelineGroupsCmd)
 
 	return getPipelineGroupsCmd
 }
@@ -256,6 +265,12 @@ func listPipelineGroupsCommand() *cobra.Command {
 				return err
 			}
 
+			if dangling {
+				response = funk.Filter(response, func(group gocd.PipelineGroup) bool {
+					return len(group.Pipelines) == 0
+				}).([]gocd.PipelineGroup)
+			}
+
 			var pipelineGroups []string
 
 			for _, environment := range response {
@@ -265,6 +280,8 @@ func listPipelineGroupsCommand() *cobra.Command {
 			return cliRenderer.Render(strings.Join(pipelineGroups, "\n"))
 		},
 	}
+
+	registerDanglingFlags(listPipelineCmd)
 
 	return listPipelineCmd
 }

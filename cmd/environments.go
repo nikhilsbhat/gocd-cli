@@ -16,6 +16,7 @@ import (
 )
 
 var (
+	dangling             bool
 	fetchPipeline        bool
 	environmentVariables []string
 )
@@ -89,6 +90,12 @@ gocd-cli environment get-all --pipelines -o yaml`,
 				return cliRenderer.Render(envVars)
 			}
 
+			if dangling {
+				response = funk.Filter(response, func(environment gocd.Environment) bool {
+					return len(environment.Pipelines) == 0
+				}).([]gocd.Environment)
+			}
+
 			if len(jsonQuery) != 0 {
 				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
@@ -110,6 +117,8 @@ gocd-cli environment get-all --pipelines -o yaml`,
 		"when set fetches the pipeline alone")
 	getEnvironmentsCmd.PersistentFlags().StringSliceVarP(&environmentVariables, "env-var", "", nil,
 		"list of environment variables to fetch from the GoCD environment")
+
+	registerDanglingFlags(getEnvironmentsCmd)
 
 	return getEnvironmentsCmd
 }
@@ -381,6 +390,12 @@ func listEnvironmentsCommand() *cobra.Command {
 				return err
 			}
 
+			if dangling {
+				response = funk.Filter(response, func(environment gocd.Environment) bool {
+					return len(environment.Pipelines) == 0
+				}).([]gocd.Environment)
+			}
+
 			var goCdEnvironments []string
 
 			for _, environment := range response {
@@ -390,6 +405,8 @@ func listEnvironmentsCommand() *cobra.Command {
 			return cliRenderer.Render(strings.Join(goCdEnvironments, "\n"))
 		},
 	}
+
+	registerDanglingFlags(listEnvironmentsCmd)
 
 	return listEnvironmentsCmd
 }

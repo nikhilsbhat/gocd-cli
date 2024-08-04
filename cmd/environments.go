@@ -36,6 +36,7 @@ GET/CREATE/UPDATE/PATCH/DELETE and list GoCD environments`,
 
 	environmentCommand.AddCommand(getEnvironmentsCommand())
 	environmentCommand.AddCommand(getEnvironmentCommand())
+	environmentCommand.AddCommand(getEnvironmentMapping())
 	environmentCommand.AddCommand(createEnvironmentCommand())
 	environmentCommand.AddCommand(updateEnvironmentCommand())
 	environmentCommand.AddCommand(patchEnvironmentCommand())
@@ -184,6 +185,50 @@ gocd-cli environment get gocd_environment_1 --pipelines -o yaml`,
 		"list of environment variables to fetch from the GoCD environment")
 
 	return getEnvironmentCmd
+}
+
+func getEnvironmentMapping() *cobra.Command {
+	getEnvironmentMappingCmd := &cobra.Command{
+		Use:     "get-mappings",
+		Short:   "Command to Identify the given environment is part of which config-repo of GoCD",
+		Example: "gocd-cli environment get-mappings --environment production -o yaml",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			environmentNames, err := client.GetEnvironmentsMerged(goCDEnvironments)
+			if err != nil {
+				return err
+			}
+
+			cliLogger.Debugf("GoCD environment mapping information was fetched successfully")
+
+			environmentMappings := make([]map[string]string, 0)
+
+			for _, environmentName := range environmentNames {
+				environmentMappings = append(environmentMappings, getOriginType(map[string]string{"name": environmentName.Name}, environmentName.Origins))
+			}
+
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := query.SetQuery(environmentMappings, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
+			}
+
+			return cliRenderer.Render(environmentMappings)
+		},
+	}
+
+	getEnvironmentMappingCmd.PersistentFlags().StringSliceVarP(&goCDEnvironments, "environment", "", nil,
+		"name of the environment for which mappings to be fetched")
+
+	return getEnvironmentMappingCmd
 }
 
 func createEnvironmentCommand() *cobra.Command {
@@ -409,4 +454,16 @@ func listEnvironmentsCommand() *cobra.Command {
 	registerDanglingFlags(listEnvironmentsCmd)
 
 	return listEnvironmentsCmd
+}
+
+func getOriginType(mappings map[string]string, origins []gocd.EnvironmentOrigin) map[string]string {
+	switch len(origins) {
+	case 2:
+		mappings["origin_type"] = origins[1].Type
+		mappings["origin"] = origins[1].ID
+	case 1:
+		mappings["origin_type"] = origins[0].Type
+	}
+
+	return mappings
 }

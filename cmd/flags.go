@@ -27,6 +27,8 @@ func registerGlobalFlags(cmd *cobra.Command) {
 		"password to authenticate with GoCD server")
 	cmd.PersistentFlags().StringVarP(&cliCfg.Auth.BearerToken, "auth-token", "t", "",
 		"token to authenticate with GoCD server, should not be co-used with basic auth (username/password)")
+	cmd.PersistentFlags().StringVarP(&cliCfg.Profile, "profile", "", "default",
+		"set the profile when managing multiple GoCD, ex: default, central etc")
 	cmd.PersistentFlags().StringVarP(&cliCfg.CaPath, "ca-file-path", "", "",
 		"path to file containing CA cert used to authenticate GoCD server, if you have one")
 	cmd.PersistentFlags().StringVarP(&cliCfg.LogLevel, "log-level", "l", "info",

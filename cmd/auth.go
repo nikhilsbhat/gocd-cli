@@ -1,16 +1,18 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/goccy/go-yaml"
+	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 const (
 	goCdCacheDirName       = ".gocd"
-	goCdAuthConfigFileName = "auth_config.yaml"
+	goCdAuthConfigFileName = "auth_config.%s.yaml"
 )
 
 func registerAuthConfigCommand() *cobra.Command {
@@ -19,6 +21,11 @@ func registerAuthConfigCommand() *cobra.Command {
 		Short: "Command to store/remove the authorization configuration to be used by the cli",
 		Long: `Using the auth config commands, one can cache the authorization configuration onto a file so it can be used by further calls made using this utility.
 Also, the cached authentication configurations can be erased using the same`,
+		Example: `gocd-cli auth-config store --server-url http://localhost:8153/go --username user --password password
+gocd-cli auth-config store --server-url http://localhost:8153/go --username user --password password --profile central
+gocd-cli auth-config remove --profile central
+gocd-cli auth-config show --profile central
+`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
@@ -27,6 +34,7 @@ Also, the cached authentication configurations can be erased using the same`,
 	registerAuthConfigCmd.SetUsageTemplate(getUsageTemplate())
 
 	registerAuthConfigCmd.AddCommand(getAuthStoreCommand())
+	registerAuthConfigCmd.AddCommand(getAuthShowCommand())
 	registerAuthConfigCmd.AddCommand(getAuthEraseCommand())
 
 	for _, command := range registerAuthConfigCmd.Commands() {
@@ -59,7 +67,7 @@ func getAuthStoreCommand() *cobra.Command {
 				return err
 			}
 
-			authFile := filepath.Join(authConfigDir, goCdAuthConfigFileName)
+			authFile := filepath.Join(authConfigDir, setConfigWithProfile())
 			authConfigFile, err := os.Create(authFile)
 			if err != nil {
 				cliLogger.Errorf("creating authfile '%s' errored with '%v'", authFile, err)
@@ -106,7 +114,7 @@ func getAuthEraseCommand() *cobra.Command {
 				return err
 			}
 
-			authConfigFile := filepath.Join(home, goCdCacheDirName, goCdAuthConfigFileName)
+			authConfigFile := filepath.Join(home, goCdCacheDirName, setConfigWithProfile())
 
 			cliLogger.Infof("authorisation config saved in '%s' would be cleaned", authConfigFile)
 
@@ -125,6 +133,42 @@ func getAuthEraseCommand() *cobra.Command {
 	return authEraseCmd
 }
 
+func getAuthShowCommand() *cobra.Command {
+	authEraseCmd := &cobra.Command{
+		Use:     "show",
+		Short:   "Command to show the cached GoCD authorization configuration that is used by the cli.",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				cliLogger.Errorf("fetching user's home directory errored with '%v'", err)
+
+				return err
+			}
+
+			authConfigFile := filepath.Join(home, goCdCacheDirName, setConfigWithProfile())
+
+			cliLogger.Infof("authorisation config saved in '%s' would be cleaned", authConfigFile)
+
+			if _, err = os.Stat(authConfigFile); os.IsNotExist(err) {
+				return &errors.CLIError{Message: fmt.Sprintf("no auth config for profile '%s' found", cliCfg.Profile)}
+			}
+
+			authConfigData, err := os.ReadFile(authConfigFile)
+			if err != nil {
+				cliLogger.Errorf("reading authorisation config file '%s' errored with '%v'", authConfigFile, err)
+
+				return err
+			}
+
+			return cliRenderer.Render(string(authConfigData))
+		},
+	}
+
+	return authEraseCmd
+}
+
 func checkForConfig() (bool, string, error) {
 	cliLogger.Debug("searching for authorisation configuration in cache")
 
@@ -133,13 +177,17 @@ func checkForConfig() (bool, string, error) {
 		return false, "", err
 	}
 
-	configPath := filepath.Join(home, goCdCacheDirName, goCdAuthConfigFileName)
+	configPath := filepath.Join(home, goCdCacheDirName, setConfigWithProfile())
 
 	if _, err = os.Stat(configPath); os.IsNotExist(err) {
-		cliLogger.Debug("no authorisation configuration found in cache")
+		cliLogger.Warnf("no authorisation configuration with profile '%s' found in cache", cliCfg.Profile)
 
 		return false, "", nil
 	}
 
 	return true, configPath, nil
+}
+
+func setConfigWithProfile() string {
+	return fmt.Sprintf(goCdAuthConfigFileName, cliCfg.Profile)
 }

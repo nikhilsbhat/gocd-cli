@@ -457,11 +457,14 @@ func listEnvironmentsCommand() *cobra.Command {
 }
 
 func getOriginType(mappings map[string]string, origins []gocd.EnvironmentOrigin) map[string]string {
+	originTypeConfigRepo := 2
+	originTypeGoCD := 1
+
 	switch len(origins) {
-	case 2:
+	case originTypeConfigRepo:
 		mappings["origin_type"] = origins[1].Type
 		mappings["origin"] = origins[1].ID
-	case 1:
+	case originTypeGoCD:
 		mappings["origin_type"] = origins[0].Type
 	}
 

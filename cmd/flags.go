@@ -192,3 +192,8 @@ func registerDanglingFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVarP(&dangling, "dangling", "d", false,
 		"when set, retrieves only the unreferenced resources.")
 }
+
+func registerElasticProfilesFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringSliceVarP(&elasticProfiles, "elastic-profile", "", nil,
+		"elastic profile names to be operated on")
+}

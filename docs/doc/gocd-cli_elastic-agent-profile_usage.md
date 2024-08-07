@@ -15,8 +15,9 @@ gocd-cli elastic-agent-profile usage sample_ec2
 ### Options
 
 ```
-  -h, --help   help for usage
-      --raw    enable this to see the raw output
+      --elastic-profile strings   elastic profile names to be operated on
+  -h, --help                      help for usage
+      --raw                       enable this to see the raw output
 ```
 
 ### Options inherited from parent commands

@@ -15,6 +15,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var elasticProfiles []string
+
 func registerAgentProfilesCommand() *cobra.Command {
 	registerAgentProfilesCmd := &cobra.Command{
 		Use:   "elastic-agent-profile",
@@ -277,21 +279,27 @@ func getAgentProfilesUsageCommand() *cobra.Command {
 		Use:     "usage",
 		Short:   "Command to GET an information about pipelines using elastic agent profiles",
 		Example: "gocd-cli elastic-agent-profile usage sample_ec2",
-		Args:    cobra.RangeArgs(1, 1),
+		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(_ *cobra.Command, args []string) error {
-			response, err := client.GetElasticAgentProfileUsage(args[0])
-			if err != nil {
-				return err
+		RunE: func(_ *cobra.Command, _ []string) error {
+			usageResponse := make([]gocd.ElasticProfileUsage, 0)
+
+			for _, elasticProfile := range elasticProfiles {
+				response, err := client.GetElasticAgentProfileUsage(elasticProfile)
+				if err != nil {
+					return err
+				}
+
+				usageResponse = append(usageResponse, response...)
 			}
 
 			if rawOutput {
-				return cliRenderer.Render(response)
+				return cliRenderer.Render(usageResponse)
 			}
 
 			var elasticAgentProfilesUsage []string
 
-			for _, usage := range response {
+			for _, usage := range usageResponse {
 				if !funk.Contains(elasticAgentProfilesUsage, usage.PipelineName) {
 					elasticAgentProfilesUsage = append(elasticAgentProfilesUsage, usage.PipelineName)
 				}
@@ -301,6 +309,7 @@ func getAgentProfilesUsageCommand() *cobra.Command {
 		},
 	}
 
+	registerElasticProfilesFlags(getAgentProfilesUsageCmd)
 	registerRawFlags(getAgentProfilesUsageCmd)
 
 	return getAgentProfilesUsageCmd

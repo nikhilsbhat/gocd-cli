@@ -29,8 +29,13 @@ The authorization configuration for GoCD can be locally cached for future use, s
 The command `auth-config` will do the work.
 
 ```shell
-# Running the below command should cache configurations under $HOME/.gocd/auth_config.yaml.
+# Running the below command should cache configurations under $HOME/.gocd/auth_config.default.yaml.
+# Here 'default' is the profile of GoCD. And profile would help in handling multiple GoCD server with same CLI.
+# If no profile is set, it defaults to 'default'. The profile can be set using flag '--profile'.
 gocd-cli auth-config store --server-url <gocd-url> --username <username> --password <password>
+
+# Running below command by setting --profile would save cache under $HOME/.gocd/auth_config.central.yaml.
+gocd-cli auth-config store --server-url <gocd-url> --username <username> --password <password> --profile central
 
 # User creds cached can be validated using below command.
 gocd-cli who-am-i

@@ -21,7 +21,7 @@ var (
 	cliRenderer            renderer.Config
 	cliShellReadConfig     *utils.ReadConfig
 	diffCfg                *diff.Config
-	supportedOutputFormats = []string{"yaml", "json", "csv", "table"}
+	supportedOutputFormats = []string{"yaml", "y", "json", "j", "csv", "c", "table", "t"}
 )
 
 func setCLIClient(_ *cobra.Command, _ []string) error {
@@ -113,13 +113,13 @@ func (cfg *Config) validateOutputFormats() bool {
 
 func (cfg *Config) setOutputFormats() {
 	switch strings.ToLower(cfg.OutputFormat) {
-	case "yaml":
+	case "yaml", "y":
 		cfg.yaml = true
-	case "json":
+	case "json", "j":
 		cfg.json = true
-	case "csv":
+	case "csv", "c":
 		cfg.csv = true
-	case "table":
+	case "table", "t":
 		cfg.table = true
 	default:
 	}

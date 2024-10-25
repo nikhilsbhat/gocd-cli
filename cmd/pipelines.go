@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"os"
 	"reflect"
@@ -9,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
+	"github.com/ghodss/yaml"
 	goYAML "github.com/goccy/go-yaml"
 	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
@@ -17,7 +20,6 @@ import (
 	"github.com/nikhilsbhat/gocd-sdk-go/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/thoas/go-funk"
-	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -81,6 +83,7 @@ GET/PAUSE/UNPAUSE/UNLOCK/SCHEDULE and comment on a GoCD pipeline`,
 	pipelineCommand.AddCommand(getPipelineMapping())
 	pipelineCommand.AddCommand(findPipelineFilesCommand())
 	pipelineCommand.AddCommand(showPipelineCommand())
+	pipelineCommand.AddCommand(getPipelineReportCommand())
 
 	for _, command := range pipelineCommand.Commands() {
 		command.SilenceUsage = true
@@ -1246,6 +1249,109 @@ func showPipelineCommand() *cobra.Command {
 	return showPipelinePipelineCmd
 }
 
+func getPipelineReportCommand() *cobra.Command {
+	var (
+		analyseReport, failed, succeeded bool
+		projects                         []gocd.Project
+	)
+
+	getPipelineReportCmd := &cobra.Command{
+		Use:   "report",
+		Short: "Command to GET pipeline report from GoCD [https://sample.gocd.org/go/cctray.xml]",
+		Long: `Command leverages GoCD api [https://sample.gocd.org/go/cctray.xml] to get the latest pipeline reports
+available in the GoCD server`,
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		Example: `gocd-cli pipeline report`,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			if analyseReport {
+				var projectsConf gocd.Projects
+
+				if len(cliCfg.FromFile) == 0 {
+					return &errors.CLIError{Message: "when '--analyse' set make sure to pass the file using '--from-file'"}
+				}
+
+				cliLogger.Infof("--analyse is set, reading file '%s' for generating report", cliCfg.FromFile)
+
+				response, err := os.ReadFile(cliCfg.FromFile)
+				if err != nil {
+					return err
+				}
+
+				if err = xml.Unmarshal(response, &projectsConf); err != nil {
+					return &errors.CLIError{Message: err.Error()}
+				}
+
+				projects = projectsConf.Project
+			} else {
+				cliLogger.Debug("fetching the cctray.xml from GoCD server for generating report")
+
+				response, err := client.GetCCTray()
+				if err != nil {
+					return err
+				}
+
+				projects = response
+			}
+
+			projects = filterPipelineFromReport(projects, failed, succeeded)
+
+			enrichData := func(projects []gocd.Project) []gocd.Project {
+				newProjects := make([]gocd.Project, 0)
+				for _, project := range projects {
+					project.LastTriggeredInDays = fmt.Sprintf("%f", lastUpdated(project.LastBuildTime))
+					newProjects = append(newProjects, project)
+				}
+
+				return newProjects
+			}
+
+			projects = enrichData(projects)
+
+			if len(jsonQuery) != 0 {
+				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+				baseQuery, err := query.SetQuery(projects, jsonQuery)
+				if err != nil {
+					return err
+				}
+
+				cliLogger.Debugf(baseQuery.Print())
+
+				return cliRenderer.Render(baseQuery.RunQuery())
+			}
+
+			if cliRenderer.Table {
+				cliCfg.TableData = append(cliCfg.TableData, []string{"Pipeline", "Running", "Last Run", "Last Triggered", "State"})
+				for _, res := range projects {
+					cliCfg.TableData = append(cliCfg.TableData, []string{
+						res.Name,
+						pipelineRunning(res.Activity),
+						parseTime(res.LastBuildTime).String(),
+						res.LastTriggeredInDays,
+						colorCodeState(res.LastBuildStatus),
+					})
+				}
+
+				return cliRenderer.Render(cliCfg.TableData)
+			}
+
+			return cliRenderer.Render(projects)
+		},
+	}
+
+	getPipelineReportCmd.PersistentFlags().BoolVarP(&analyseReport, "analyse", "", false,
+		"if enabled, analyse the report passed over making an API call")
+	getPipelineReportCmd.PersistentFlags().BoolVarP(&failed, "failed", "", false,
+		"if enabled, fetches only the pipelines with 'Failure' status")
+	getPipelineReportCmd.PersistentFlags().BoolVarP(&succeeded, "succeeded", "", false,
+		"if enabled, fetches only the pipelines with 'Success' status")
+
+	getPipelineReportCmd.MarkFlagsMutuallyExclusive("failed", "succeeded")
+
+	return getPipelineReportCmd
+}
+
 func filterIgnoredPipelines(pipelineFiles []gocd.PipelineFiles, ignore []string) []string {
 	goCDPipelineFiles := make([]string, 0)
 
@@ -1388,6 +1494,41 @@ func containsTaskDependency(stages []gocd.PipelineStageConfig, pipelineName stri
 	}
 
 	return false
+}
+
+func colorCodeState(value string) string {
+	switch value {
+	case "Success":
+		return color.GreenString(value)
+	case "Failure":
+		return color.RedString(value)
+	default:
+		return color.YellowString("Unknown")
+	}
+}
+
+func pipelineRunning(value string) string {
+	if value == "Building" {
+		return "Yes"
+	}
+
+	return "No"
+}
+
+func filterPipelineFromReport(projects []gocd.Project, failed, succeeded bool) []gocd.Project {
+	projects = funk.Filter(projects, func(project gocd.Project) bool {
+		if failed {
+			return project.LastBuildStatus == "Failure"
+		}
+
+		if succeeded {
+			return project.LastBuildStatus == "Success"
+		}
+
+		return true
+	}).([]gocd.Project)
+
+	return projects
 }
 
 // func renderVSMtoCSV(pipelineVSMs []PipelineVSM, upstream bool) error {

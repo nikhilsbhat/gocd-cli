@@ -149,7 +149,7 @@ func getAuthShowCommand() *cobra.Command {
 
 			authConfigFile := filepath.Join(home, goCdCacheDirName, setConfigWithProfile())
 
-			cliLogger.Infof("authorisation config saved in '%s' would be cleaned", authConfigFile)
+			cliLogger.Infof("authorisation config saved in '%s' would be fetched", authConfigFile)
 
 			if _, err = os.Stat(authConfigFile); os.IsNotExist(err) {
 				return &errors.CLIError{Message: fmt.Sprintf("no auth config for profile '%s' found", cliCfg.Profile)}

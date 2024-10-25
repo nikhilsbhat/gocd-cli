@@ -159,7 +159,7 @@ Do not use this command unless you know what you are doing with it`,
 					if modificationTime != nil {
 						modifiedDate := modificationTime.(string)
 						configRepo = append(configRepo, configRepoLastModified{
-							LastModified: lastUpdatedCommit(modifiedDate),
+							LastModified: lastUpdated(modifiedDate),
 							ModifiedDate: parseTime(modifiedDate).String(),
 							Name:         cfgRepo.ID,
 							URL:          cfgRepo.Material.Attributes.URL,
@@ -652,7 +652,7 @@ func (cfg *goCdPlugin) getPluginID() string {
 	return cfg.pluginID
 }
 
-func lastUpdatedCommit(date string) float64 {
+func lastUpdated(date string) float64 {
 	const hoursInADay = 24
 
 	loc, err := time.LoadLocation("Asia/Kolkata")

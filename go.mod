@@ -7,7 +7,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/goccy/go-yaml v1.11.3
 	github.com/nikhilsbhat/common v0.0.6-0.20240713050418-5c265122cc54
-	github.com/nikhilsbhat/gocd-sdk-go v0.2.1-0.20241025034725-e177473a7c4d
+	github.com/nikhilsbhat/gocd-sdk-go v0.2.1-0.20241025055823-3f4c289096c5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.9.0

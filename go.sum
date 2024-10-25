@@ -52,8 +52,8 @@ github.com/mattn/go-runewidth v0.0.9 h1:Lm995f3rfxdpd6TSmuVCHVb/QhupuXlYr8sCI/Qd
 github.com/mattn/go-runewidth v0.0.9/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
 github.com/nikhilsbhat/common v0.0.6-0.20240713050418-5c265122cc54 h1:VqoOFquTIbWr/Th5kY5U6J94Su0uJOXe4z/utk6CzZc=
 github.com/nikhilsbhat/common v0.0.6-0.20240713050418-5c265122cc54/go.mod h1:U9Qo7NOx6jU2qjXlO2ry3xX6IvPtv+BDJVoiZ/uudmk=
-github.com/nikhilsbhat/gocd-sdk-go v0.2.1-0.20241025034725-e177473a7c4d h1:VK7ZEmQujAEwGo/0F0bXQRq6x9hQcDVpDlUE1r0GGvc=
-github.com/nikhilsbhat/gocd-sdk-go v0.2.1-0.20241025034725-e177473a7c4d/go.mod h1:zNtdbp/2Rf5JgC6Bn5aTi4yDC/qL1a6VrKrkPKklJdE=
+github.com/nikhilsbhat/gocd-sdk-go v0.2.1-0.20241025055823-3f4c289096c5 h1:s7YZjnqXQHX6RM+WkW78N9nyd2OYYNaSCG5xMDxjWCM=
+github.com/nikhilsbhat/gocd-sdk-go v0.2.1-0.20241025055823-3f4c289096c5/go.mod h1:zNtdbp/2Rf5JgC6Bn5aTi4yDC/qL1a6VrKrkPKklJdE=
 github.com/olekukonko/tablewriter v0.0.5 h1:P2Ga83D34wi1o9J6Wh1mRuqd4mF/x/lgBS7N7AbDhec=
 github.com/olekukonko/tablewriter v0.0.5/go.mod h1:hPp6KlRPjbx+hW8ykQs1w3UBbZlj6HuIJcUGPhkA7kY=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

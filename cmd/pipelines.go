@@ -1299,7 +1299,7 @@ available in the GoCD server`,
 			enrichData := func(projects []gocd.Project) []gocd.Project {
 				newProjects := make([]gocd.Project, 0)
 				for _, project := range projects {
-					project.LastTriggeredInDays = fmt.Sprintf("%f", lastUpdated(project.LastBuildTime))
+					project.LastTriggeredInDays = lastUpdated(project.LastBuildTime)
 					newProjects = append(newProjects, project)
 				}
 
@@ -1328,7 +1328,7 @@ available in the GoCD server`,
 						res.Name,
 						pipelineRunning(res.Activity),
 						parseTime(res.LastBuildTime).String(),
-						res.LastTriggeredInDays,
+						fmt.Sprintf("%f", res.LastTriggeredInDays),
 						colorCodeState(res.LastBuildStatus),
 					})
 				}

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
@@ -31,6 +33,7 @@ GET/CREATE/UPDATE/DELETE/BULK-DELETE/BULK-UPDATE the users in GoCD server.`,
 	usersCommand.AddCommand(userUpdateCommand())
 	usersCommand.AddCommand(userDeleteCommand())
 	usersCommand.AddCommand(bulkDeleteUsersCommand())
+	usersCommand.AddCommand(listUsersCommand())
 
 	for _, command := range usersCommand.Commands() {
 		command.SilenceUsage = true
@@ -46,12 +49,24 @@ func usersGetCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetUsers()
-			if err != nil {
-				return err
+			for {
+				response, err := client.GetUsers()
+				if err != nil {
+					return err
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -65,12 +80,24 @@ func userGetCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, args []string) error {
-			response, err := client.GetUser(args[0])
-			if err != nil {
-				return err
+			for {
+				response, err := client.GetUser(args[0])
+				if err != nil {
+					return err
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -238,4 +265,43 @@ func bulkDeleteUsersCommand() *cobra.Command {
 	}
 
 	return bulkDeleteUserCmd
+}
+
+func listUsersCommand() *cobra.Command {
+	listPluginsCmd := &cobra.Command{
+		Use:     "list",
+		Short:   "Command to LIST all users present in GoCD",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			for {
+				response, err := client.GetUsers()
+				if err != nil {
+					return err
+				}
+
+				var usersList []string
+
+				for _, user := range response {
+					usersList = append(usersList, user.Name)
+				}
+
+				if err = cliRenderer.Render(strings.Join(usersList, "\n")); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
+			}
+
+			return nil
+		},
+	}
+
+	listPluginsCmd.SetUsageTemplate(getUsageTemplate())
+
+	return listPluginsCmd
 }

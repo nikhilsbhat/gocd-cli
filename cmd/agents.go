@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"time"
 
 	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
@@ -94,50 +95,62 @@ gocd-cli agents get --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			var response gocd.Agent
+			for {
+				var response gocd.Agent
 
-			if len(agentID) != 0 {
-				agentResponse, err := client.GetAgent(agentID)
-				if err != nil {
-					return err
+				if len(agentID) != 0 {
+					agentResponse, err := client.GetAgent(agentID)
+					if err != nil {
+						return err
+					}
+					response = agentResponse
 				}
-				response = agentResponse
-			}
 
-			if len(agentName) != 0 {
-				agentsResponse, err := client.GetAgents()
-				if err != nil {
-					return err
-				}
-				for _, agentResponse := range agentsResponse {
-					if agentResponse.Name == agentName {
-						response = agentResponse
+				if len(agentName) != 0 {
+					agentsResponse, err := client.GetAgents()
+					if err != nil {
+						return err
+					}
+					for _, agentResponse := range agentsResponse {
+						if agentResponse.Name == agentName {
+							response = agentResponse
 
-						break
+							break
+						}
+					}
+
+					if reflect.DeepEqual(response, gocd.Agent{}) {
+						cliLogger.Infof("agent with name '%s' does not exists in GoCD", agentName)
+
+						return nil
 					}
 				}
 
-				if reflect.DeepEqual(response, gocd.Agent{}) {
-					cliLogger.Infof("agent with name '%s' does not exists in GoCD", agentName)
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-					return nil
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
 				}
-			}
 
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
-				if err != nil {
+				if err := cliRenderer.Render(response); err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				if !cliCfg.Watch {
+					break
+				}
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -264,25 +277,37 @@ func listAgentsCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetAgents()
-			if err != nil {
-				return err
-			}
-
-			response = filterAgentsResponse(response)
-
-			agents := make([]map[string]string, 0)
-
-			for _, agentResponse := range response {
-				agent := map[string]string{
-					"id":   agentResponse.ID,
-					"name": agentResponse.Name,
+			for {
+				response, err := client.GetAgents()
+				if err != nil {
+					return err
 				}
 
-				agents = append(agents, agent)
+				response = filterAgentsResponse(response)
+
+				agents := make([]map[string]string, 0)
+
+				for _, agentResponse := range response {
+					agent := map[string]string{
+						"id":   agentResponse.ID,
+						"name": agentResponse.Name,
+					}
+
+					agents = append(agents, agent)
+				}
+
+				if err = cliRenderer.Render(agents); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(agents)
+			return nil
 		},
 	}
 

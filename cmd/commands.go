@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 )
@@ -11,24 +13,26 @@ type cliCommands struct {
 
 // Config holds the information of the cli config.
 type Config struct {
-	URL              string     `yaml:"url,omitempty"`
-	CaPath           string     `yaml:"ca_path,omitempty"`
-	Auth             gocd.Auth  `yaml:"auth,omitempty"`
-	Profile          string     `yaml:"-"`
-	Yes              bool       `yaml:"-"`
-	OutputFormat     string     `yaml:"-"`
-	NoColor          bool       `yaml:"-"`
-	LogLevel         string     `yaml:"-"`
-	APILogLevel      string     `yaml:"-"`
-	FromFile         string     `yaml:"-"`
-	ToFile           string     `yaml:"-"`
-	TableData        [][]string `yaml:"-"`
-	APIRetryCount    int        `yaml:"-"`
-	APIRetryInterval int        `yaml:"-"`
-	json             bool       `yaml:"-"`
-	yaml             bool       `yaml:"-"`
-	csv              bool       `yaml:"-"`
-	table            bool       `yaml:"-"`
+	URL              string        `yaml:"url,omitempty"`
+	CaPath           string        `yaml:"ca_path,omitempty"`
+	Auth             gocd.Auth     `yaml:"auth,omitempty"`
+	Yes              bool          `yaml:"-"`
+	NoColor          bool          `yaml:"-"`
+	Watch            bool          `yaml:"-"`
+	Profile          string        `yaml:"-"`
+	OutputFormat     string        `yaml:"-"`
+	LogLevel         string        `yaml:"-"`
+	APILogLevel      string        `yaml:"-"`
+	FromFile         string        `yaml:"-"`
+	ToFile           string        `yaml:"-"`
+	TableData        [][]string    `yaml:"-"`
+	APIRetryCount    int           `yaml:"-"`
+	APIRetryInterval int           `yaml:"-"`
+	WatchInterval    time.Duration `yaml:"-"`
+	json             bool          `yaml:"-"`
+	yaml             bool          `yaml:"-"`
+	csv              bool          `yaml:"-"`
+	table            bool          `yaml:"-"`
 	skipCacheConfig  bool
 }
 

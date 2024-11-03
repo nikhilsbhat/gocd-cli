@@ -100,25 +100,37 @@ func getPipelinesCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline get-all --query "[*] | name eq sample-group"`,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetPipelines()
-			if err != nil {
-				return err
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
+			for {
+				response, err := client.GetPipelines()
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -263,25 +275,37 @@ func getPipelineCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline get sample-pipeline --query "[*] | name eq sample-group"`,
 		RunE: func(_ *cobra.Command, args []string) error {
-			response, err := client.GetPipelineConfig(args[0])
-			if err != nil {
-				return err
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
+			for {
+				response, err := client.GetPipelineConfig(args[0])
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -629,25 +653,37 @@ func getPipelineStateCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline status sample-pipeline`,
 		RunE: func(_ *cobra.Command, args []string) error {
-			response, err := client.GetPipelineState(args[0])
-			if err != nil {
-				return err
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
+			for {
+				response, err := client.GetPipelineState(args[0])
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -823,55 +859,67 @@ func listPipelinesCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline list`,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			var goCdPipelines []string
+			for {
+				var goCdPipelines []string
 
-			if len(goCDEnvironments) != 0 && len(goCDPipelineGroups) != 0 {
-				cliLogger.Fatalf("pipelines cannot be filtered by 'environment' and 'pipeline-group' simultaneously")
-			}
+				if len(goCDEnvironments) != 0 && len(goCDPipelineGroups) != 0 {
+					cliLogger.Fatalf("pipelines cannot be filtered by 'environment' and 'pipeline-group' simultaneously")
+				}
 
-			if len(goCDEnvironments) != 0 {
-				for _, goCDEnvironment := range goCDEnvironments {
-					environment, err := client.GetEnvironment(goCDEnvironment)
-					if err != nil {
-						cliLogger.Errorf("fetching environment '%s' errored with '%s'", goCDEnvironment, err)
-					}
+				if len(goCDEnvironments) != 0 {
+					for _, goCDEnvironment := range goCDEnvironments {
+						environment, err := client.GetEnvironment(goCDEnvironment)
+						if err != nil {
+							cliLogger.Errorf("fetching environment '%s' errored with '%s'", goCDEnvironment, err)
+						}
 
-					for _, pipeline := range environment.Pipelines {
-						goCdPipelines = append(goCdPipelines, pipeline.Name)
+						for _, pipeline := range environment.Pipelines {
+							goCdPipelines = append(goCdPipelines, pipeline.Name)
+						}
 					}
 				}
-			}
 
-			if len(goCDPipelineGroups) != 0 {
-				for _, goCDPipelineGroup := range goCDPipelineGroups {
-					pipelineGroups, err := client.GetPipelineGroup(goCDPipelineGroup)
-					if err != nil {
-						cliLogger.Errorf("fetching pipeline group '%s' errored with '%s'", goCDPipelineGroup, err)
-					}
+				if len(goCDPipelineGroups) != 0 {
+					for _, goCDPipelineGroup := range goCDPipelineGroups {
+						pipelineGroups, err := client.GetPipelineGroup(goCDPipelineGroup)
+						if err != nil {
+							cliLogger.Errorf("fetching pipeline group '%s' errored with '%s'", goCDPipelineGroup, err)
+						}
 
-					for _, pipeline := range pipelineGroups.Pipelines {
-						goCdPipelines = append(goCdPipelines, pipeline.Name)
+						for _, pipeline := range pipelineGroups.Pipelines {
+							goCdPipelines = append(goCdPipelines, pipeline.Name)
+						}
 					}
 				}
-			}
 
-			if len(goCDPipelineGroups) == 0 && len(goCDEnvironments) == 0 {
-				response, err := client.GetPipelines()
-				if err != nil {
+				if len(goCDPipelineGroups) == 0 && len(goCDEnvironments) == 0 {
+					response, err := client.GetPipelines()
+					if err != nil {
+						return err
+					}
+
+					for _, pipeline := range response.Pipeline {
+						pipelineName, err := gocd.GetPipelineName(pipeline.Href)
+						if err != nil {
+							cliLogger.Errorf("fetching pipeline name from pipline url erored with:, %v", err)
+						} else {
+							goCdPipelines = append(goCdPipelines, pipelineName)
+						}
+					}
+				}
+
+				if err := cliRenderer.Render(strings.Join(goCdPipelines, "\n")); err != nil {
 					return err
 				}
 
-				for _, pipeline := range response.Pipeline {
-					pipelineName, err := gocd.GetPipelineName(pipeline.Href)
-					if err != nil {
-						cliLogger.Errorf("fetching pipeline name from pipline url erored with:, %v", err)
-					} else {
-						goCdPipelines = append(goCdPipelines, pipelineName)
-					}
+				if !cliCfg.Watch {
+					break
 				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(strings.Join(goCdPipelines, "\n"))
+			return nil
 		},
 	}
 
@@ -1018,74 +1066,86 @@ func getPipelineMapping() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			pipelineMappings := make([]map[string]string, 0)
+			for {
+				pipelineMappings := make([]map[string]string, 0)
 
-			cliLogger.Debugf("fetching all GoCD environment information to identify which environment the selected pipeline is part of ")
+				cliLogger.Debugf("fetching all GoCD environment information to identify which environment the selected pipeline is part of ")
 
-			environmentNames, err := client.GetEnvironments()
-			if err != nil {
-				return err
-			}
-
-			cliLogger.Debugf("all GoCD environment information was fetched successfully")
-
-			pipelineErrors := make(map[string]string)
-
-			for _, goCDPipeline := range goCDPipelines {
-				var configRepoName, goCDEnvironmentName, originGoCD string
-
-				cliLogger.Debugf("fetching pipeline config to identify which config repo this pipeline is part of")
-				pipelineConfig, err := client.GetPipelineConfig(goCDPipeline)
-				if err != nil {
-					pipelineErrors[goCDPipeline] = err.Error()
-				}
-
-				cliLogger.Debugf("pipeline config was retrieved successfully")
-
-				originGoCD = "true"
-				if pipelineConfig.Origin.Type != "gocd" {
-					configRepoName = pipelineConfig.Origin.ID
-					originGoCD = "false"
-				}
-
-				for _, environmentName := range environmentNames {
-					for _, pipeline := range environmentName.Pipelines {
-						if pipeline.Name == goCDPipeline {
-							goCDEnvironmentName = environmentName.Name
-						}
-					}
-				}
-
-				pipelineMappings = append(pipelineMappings, map[string]string{
-					"pipeline":    goCDPipeline,
-					"group":       pipelineConfig.Group,
-					"config_repo": configRepoName,
-					"environment": goCDEnvironmentName,
-					"origin_gocd": originGoCD,
-				})
-			}
-
-			if len(pipelineErrors) != 0 {
-				cliLogger.Errorf("fetching mappings of following pipelines errored")
-				for pipeline, pipelineError := range pipelineErrors {
-					cliLogger.Errorf("pipeline '%s': '%s'", pipeline, pipelineError)
-				}
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(pipelineMappings, jsonQuery)
+				environmentNames, err := client.GetEnvironments()
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				cliLogger.Debugf("all GoCD environment information was fetched successfully")
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+				pipelineErrors := make(map[string]string)
+
+				for _, goCDPipeline := range goCDPipelines {
+					var configRepoName, goCDEnvironmentName, originGoCD string
+
+					cliLogger.Debugf("fetching pipeline config to identify which config repo this pipeline is part of")
+					pipelineConfig, err := client.GetPipelineConfig(goCDPipeline)
+					if err != nil {
+						pipelineErrors[goCDPipeline] = err.Error()
+					}
+
+					cliLogger.Debugf("pipeline config was retrieved successfully")
+
+					originGoCD = "true"
+					if pipelineConfig.Origin.Type != "gocd" {
+						configRepoName = pipelineConfig.Origin.ID
+						originGoCD = "false"
+					}
+
+					for _, environmentName := range environmentNames {
+						for _, pipeline := range environmentName.Pipelines {
+							if pipeline.Name == goCDPipeline {
+								goCDEnvironmentName = environmentName.Name
+							}
+						}
+					}
+
+					pipelineMappings = append(pipelineMappings, map[string]string{
+						"pipeline":    goCDPipeline,
+						"group":       pipelineConfig.Group,
+						"config_repo": configRepoName,
+						"environment": goCDEnvironmentName,
+						"origin_gocd": originGoCD,
+					})
+				}
+
+				if len(pipelineErrors) != 0 {
+					cliLogger.Errorf("fetching mappings of following pipelines errored")
+					for pipeline, pipelineError := range pipelineErrors {
+						cliLogger.Errorf("pipeline '%s': '%s'", pipeline, pipelineError)
+					}
+				}
+
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+					baseQuery, err := query.SetQuery(pipelineMappings, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(pipelineMappings); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(pipelineMappings)
+			return nil
 		},
 	}
 

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 )
@@ -40,12 +42,24 @@ func getScheduledJobsCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli job scheduled"`,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetScheduledJobs()
-			if err != nil {
-				return err
+			for {
+				response, err := client.GetScheduledJobs()
+				if err != nil {
+					return err
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 

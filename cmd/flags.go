@@ -16,6 +16,7 @@ const (
 	defaultDelay            = 5 * time.Second
 	defaultInstanceCount    = 0
 	defaultRetryCount       = 5
+	defaultWatchInterval    = 5
 )
 
 func registerGlobalFlags(cmd *cobra.Command) {
@@ -57,6 +58,12 @@ func registerGlobalFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&jsonQuery, "query", "q", "",
 		`query to filter the results, ex: '.material.attributes.type | id eq git'. this uses library gojsonq beneath
 more queries can be found here https://github.com/thedevsaddam/gojsonq/wiki/Queries`)
+	cmd.PersistentFlags().BoolVarP(&cliCfg.Watch, "watch", "w", false,
+		"enable this to monitor resources continuously, applicable only if supported by the command")
+	cmd.PersistentFlags().DurationVarP(&cliCfg.WatchInterval, "watch-interval", "", defaultWatchInterval*time.Second,
+		"time interval between each watch cycle")
+
+	cmd.MarkFlagsMutuallyExclusive("watch", "to-file", "watch-interval")
 }
 
 func registerEncryptionFlags(cmd *cobra.Command) {
@@ -77,6 +84,8 @@ func registerConfigRepoDefinitionsFlags(cmd *cobra.Command) {
 		"when enabled gets config-repo definitions of all config repos present in GoCD")
 	cmd.PersistentFlags().BoolVarP(&detailed, "detailed", "", false,
 		"when enabled prints the information in detail")
+	cmd.PersistentFlags().BoolVarP(&rawOutput, "raw", "", false,
+		"when enabled prints the raw information, won't generate report")
 	cmd.PersistentFlags().StringSliceVarP(&goCDConfigReposName, "repo-name", "", nil,
 		"name of the configuration repository from which the definitions are to be retrieved")
 }

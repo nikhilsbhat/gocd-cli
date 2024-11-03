@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
@@ -48,25 +49,37 @@ func getClusterProfilesCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetClusterProfiles()
-			if err != nil {
-				return err
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
+			for {
+				response, err := client.GetClusterProfiles()
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(response.ClusterProfilesConfig); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response.ClusterProfilesConfig)
+			return nil
 		},
 	}
 
@@ -80,25 +93,37 @@ func getClusterProfileCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, args []string) error {
-			response, err := client.GetClusterProfile(args[0])
-			if err != nil {
-				return err
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
+			for {
+				response, err := client.GetClusterProfile(args[0])
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -246,18 +271,30 @@ func listClusterProfilesCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetClusterProfiles()
-			if err != nil {
-				return err
+			for {
+				response, err := client.GetClusterProfiles()
+				if err != nil {
+					return err
+				}
+
+				var clusterProfiles []string
+
+				for _, commonConfig := range response.ClusterProfilesConfig {
+					clusterProfiles = append(clusterProfiles, commonConfig.ID)
+				}
+
+				if err = cliRenderer.Render(strings.Join(clusterProfiles, "\n")); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			var clusterProfiles []string
-
-			for _, commonConfig := range response.ClusterProfilesConfig {
-				clusterProfiles = append(clusterProfiles, commonConfig.ID)
-			}
-
-			return cliRenderer.Render(strings.Join(clusterProfiles, "\n"))
+			return nil
 		},
 	}
 

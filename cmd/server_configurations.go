@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
@@ -269,12 +270,24 @@ func getJobTimeoutCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetDefaultJobTimeout()
-			if err != nil {
-				return fmt.Errorf("fetching default job timeout errored with: %w", err)
+			for {
+				response, err := client.GetDefaultJobTimeout()
+				if err != nil {
+					return fmt.Errorf("fetching default job timeout errored with: %w", err)
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -315,12 +328,24 @@ func getMailServerConfigCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetMailServerConfig()
-			if err != nil {
-				return err
+			for {
+				response, err := client.GetMailServerConfig()
+				if err != nil {
+					return err
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 

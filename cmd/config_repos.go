@@ -129,63 +129,75 @@ Do not use this command unless you know what you are doing with it`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetConfigReposInternal()
-			if err != nil {
-				return err
-			}
-
-			var repos interface{}
-
-			if failedConfigRepo {
-				response = funk.Filter(response, func(configRepo gocd.ConfigRepo) bool {
-					return len(configRepo.ConfigRepoParseInfo.Error) != 0
-				}).([]gocd.ConfigRepo)
-			}
-
-			if detailed {
-				repos = response
-			} else {
-				names := make([]string, 0)
-				for _, configRepo := range response {
-					names = append(names, configRepo.ID)
-				}
-				repos = names
-			}
-
-			if getLastModified {
-				configRepo := make([]configRepoLastModified, 0)
-				for _, cfgRepo := range response {
-					modificationTime := cfgRepo.ConfigRepoParseInfo.LatestParsedModification["modified_time"]
-					if modificationTime != nil {
-						modifiedDate := modificationTime.(string)
-						configRepo = append(configRepo, configRepoLastModified{
-							LastModified: lastUpdated(modifiedDate),
-							ModifiedDate: parseTime(modifiedDate).String(),
-							Name:         cfgRepo.ID,
-							URL:          cfgRepo.Material.Attributes.URL,
-						})
-					} else {
-						cliLogger.Debugf("looks like config repo '%s' was never parsed, check the status of it", cfgRepo.ID)
-					}
-				}
-
-				return cliRenderer.Render(configRepo)
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(repos, jsonQuery)
+			for {
+				response, err := client.GetConfigReposInternal()
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				var repos interface{}
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+				if failedConfigRepo {
+					response = funk.Filter(response, func(configRepo gocd.ConfigRepo) bool {
+						return len(configRepo.ConfigRepoParseInfo.Error) != 0
+					}).([]gocd.ConfigRepo)
+				}
+
+				if detailed {
+					repos = response
+				} else {
+					names := make([]string, 0)
+					for _, configRepo := range response {
+						names = append(names, configRepo.ID)
+					}
+					repos = names
+				}
+
+				if getLastModified {
+					configRepo := make([]configRepoLastModified, 0)
+					for _, cfgRepo := range response {
+						modificationTime := cfgRepo.ConfigRepoParseInfo.LatestParsedModification["modified_time"]
+						if modificationTime != nil {
+							modifiedDate := modificationTime.(string)
+							configRepo = append(configRepo, configRepoLastModified{
+								LastModified: lastUpdated(modifiedDate),
+								ModifiedDate: parseTime(modifiedDate).String(),
+								Name:         cfgRepo.ID,
+								URL:          cfgRepo.Material.Attributes.URL,
+							})
+						} else {
+							cliLogger.Debugf("looks like config repo '%s' was never parsed, check the status of it", cfgRepo.ID)
+						}
+					}
+
+					return cliRenderer.Render(configRepo)
+				}
+
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+					baseQuery, err := query.SetQuery(repos, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(repos); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(repos)
+			return nil
 		},
 	}
 
@@ -226,93 +238,105 @@ gocd-cli configrepo get-definitions --repo-name sample-repo -o yaml --pipelines 
 				cliLogger.Fatalf("no config repo name passed, either set --all or pass name using --repo-name")
 			}
 
-			if all {
-				response, err := client.GetConfigRepos()
-				if err != nil {
+			for {
+				if all {
+					response, err := client.GetConfigRepos()
+					if err != nil {
+						return err
+					}
+
+					for _, configRepo := range response {
+						goCDConfigReposName = append(goCDConfigReposName, configRepo.ID)
+					}
+				}
+
+				configReposResponse := make(map[string]gocd.ConfigRepo)
+
+				for _, configRepo := range goCDConfigReposName {
+					response, err := client.GetConfigRepoDefinitions(configRepo)
+					if err != nil {
+						cliLogger.Errorf("fetching config repo definitions for '%s' errored with: '%s'", configRepo, err.Error())
+
+						continue
+					}
+
+					configReposResponse[configRepo] = response
+				}
+
+				var output interface{}
+				output = configReposResponse
+				configRepoFilteredResponse := make([]ConfigRepoDefinitions, 0)
+
+				if !rawOutput {
+					for configRepoName, configRepoResponse := range configReposResponse {
+						var (
+							configRepoEnvironment    []string
+							configRepoPipelines      []string
+							configRepoPipelineGroups []string
+						)
+
+						configRepo := ConfigRepoDefinitions{Name: configRepoName}
+
+						for _, env := range configRepoResponse.Environments {
+							configRepoEnvironment = append(configRepoEnvironment, env.Name)
+						}
+
+						for _, group := range configRepoResponse.Groups {
+							for _, pipeline := range group.Pipelines {
+								configRepoPipelines = append(configRepoPipelines, pipeline.Name)
+							}
+							configRepoPipelineGroups = append(configRepoPipelineGroups, group.Name)
+						}
+
+						switch {
+						case environments:
+							configRepo.Environments = strings.Join(configRepoEnvironment, "\n")
+						case pipelines:
+							configRepo.Pipelines = strings.Join(configRepoPipelines, "\n")
+						case pipelineGroup:
+							configRepo.PipelineGroups = strings.Join(configRepoPipelineGroups, "\n")
+						default:
+							configRepo.Environments = strings.Join(configRepoEnvironment, "\n")
+							configRepo.Pipelines = strings.Join(configRepoPipelines, "\n")
+							configRepo.PipelineGroups = strings.Join(configRepoPipelineGroups, "\n")
+							configRepo.PipelineCount = len(configRepoPipelines)
+							configRepo.PipelineGroupCount = len(configRepoPipelineGroups)
+							if len(configRepoEnvironment) != 0 {
+								configRepo.EnvironmentCount = len(configRepoEnvironment)
+							}
+						}
+
+						configRepoFilteredResponse = append(configRepoFilteredResponse, configRepo)
+					}
+
+					output = configRepoFilteredResponse
+				}
+
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+					baseQuery, err := query.SetQuery(output, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err := cliRenderer.Render(output); err != nil {
 					return err
 				}
 
-				for _, configRepo := range response {
-					goCDConfigReposName = append(goCDConfigReposName, configRepo.ID)
-				}
-			}
-
-			configReposResponse := make(map[string]gocd.ConfigRepo)
-
-			for _, configRepo := range goCDConfigReposName {
-				response, err := client.GetConfigRepoDefinitions(configRepo)
-				if err != nil {
-					cliLogger.Errorf("fetching config repo definitions for '%s' errored with: '%s'", configRepo, err.Error())
-
-					continue
+				if !cliCfg.Watch {
+					break
 				}
 
-				configReposResponse[configRepo] = response
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			var output interface{}
-			output = configReposResponse
-			configRepoFilteredResponse := make([]ConfigRepoDefinitions, 0)
-
-			if !detailed {
-				for configRepoName, configRepoResponse := range configReposResponse {
-					var (
-						configRepoEnvironment    []string
-						configRepoPipelines      []string
-						configRepoPipelineGroups []string
-					)
-
-					configRepo := ConfigRepoDefinitions{Name: configRepoName}
-
-					for _, env := range configRepoResponse.Environments {
-						configRepoEnvironment = append(configRepoEnvironment, env.Name)
-					}
-
-					for _, group := range configRepoResponse.Groups {
-						for _, pipeline := range group.Pipelines {
-							configRepoPipelines = append(configRepoPipelines, pipeline.Name)
-						}
-						configRepoPipelineGroups = append(configRepoPipelineGroups, group.Name)
-					}
-
-					switch {
-					case environments:
-						configRepo.Environments = strings.Join(configRepoEnvironment, "\n")
-					case pipelines:
-						configRepo.Pipelines = strings.Join(configRepoPipelines, "\n")
-					case pipelineGroup:
-						configRepo.PipelineGroups = strings.Join(configRepoPipelineGroups, "\n")
-					default:
-						configRepo.Environments = strings.Join(configRepoEnvironment, "\n")
-						configRepo.Pipelines = strings.Join(configRepoPipelines, "\n")
-						configRepo.PipelineGroups = strings.Join(configRepoPipelineGroups, "\n")
-						configRepo.PipelineCount = len(configRepoPipelines)
-						configRepo.PipelineGroupCount = len(configRepoPipelineGroups)
-						if len(configRepoEnvironment) != 0 {
-							configRepo.EnvironmentCount = len(configRepoEnvironment)
-						}
-					}
-
-					configRepoFilteredResponse = append(configRepoFilteredResponse, configRepo)
-				}
-
-				output = configRepoFilteredResponse
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(output, jsonQuery)
-				if err != nil {
-					return err
-				}
-
-				cliLogger.Debugf(baseQuery.Print())
-
-				return cliRenderer.Render(baseQuery.RunQuery())
-			}
-
-			return cliRenderer.Render(output)
+			return nil
 		},
 	}
 
@@ -333,32 +357,44 @@ func getConfigRepoCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, args []string) error {
-			response, err := client.GetConfigRepo(args[0])
-			if err != nil {
-				return err
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
+			for {
+				response, err := client.GetConfigRepo(args[0])
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if cliRenderer.Table {
+					cliCfg.TableData = append(cliCfg.TableData, []string{"ID", "Data"})
+					cliCfg.TableData = append(cliCfg.TableData, []string{response.ID, fmt.Sprintf("%v", response)})
+
+					return cliRenderer.Render(cliCfg.TableData)
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			if cliRenderer.Table {
-				cliCfg.TableData = append(cliCfg.TableData, []string{"ID", "Data"})
-				cliCfg.TableData = append(cliCfg.TableData, []string{response.ID, fmt.Sprintf("%v", response)})
-
-				return cliRenderer.Render(cliCfg.TableData)
-			}
-
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -507,18 +543,30 @@ func listConfigReposCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetConfigRepos()
-			if err != nil {
-				return err
+			for {
+				response, err := client.GetConfigRepos()
+				if err != nil {
+					return err
+				}
+
+				var configRepos []string
+
+				for _, configRepo := range response {
+					configRepos = append(configRepos, configRepo.ID)
+				}
+
+				if err = cliRenderer.Render(strings.Join(configRepos, "\n")); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			var configRepos []string
-
-			for _, configRepo := range response {
-				configRepos = append(configRepos, configRepo.ID)
-			}
-
-			return cliRenderer.Render(strings.Join(configRepos, "\n"))
+			return nil
 		},
 	}
 
@@ -533,12 +581,24 @@ func getConfigRepoStatusCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, args []string) error {
-			response, err := client.ConfigRepoStatus(args[0])
-			if err != nil {
-				return err
+			for {
+				response, err := client.ConfigRepoStatus(args[0])
+				if err != nil {
+					return err
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 

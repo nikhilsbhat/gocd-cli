@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
@@ -51,31 +52,43 @@ func getPipelineGroupsCommand() *cobra.Command {
 		Example: `gocd-cli pipeline-group get-all --query "[*] | name eq sample-group"
 // should return only one pipeline group 'sample-group', this is as good as running 'gocd-cli pipeline-group get movies'`,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetPipelineGroups()
-			if err != nil {
-				return err
-			}
-
-			if dangling {
-				response = funk.Filter(response, func(group gocd.PipelineGroup) bool {
-					return len(group.Pipelines) == 0
-				}).([]gocd.PipelineGroup)
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
+			for {
+				response, err := client.GetPipelineGroups()
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				if dangling {
+					response = funk.Filter(response, func(group gocd.PipelineGroup) bool {
+						return len(group.Pipelines) == 0
+					}).([]gocd.PipelineGroup)
+				}
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -93,25 +106,37 @@ func getPipelineGroupCommand() *cobra.Command {
 		Example: `gocd-cli pipeline-group get movies --query "pipelines.[*] | name" -o yaml
 // should return only the list of pipeline names based on the query`,
 		RunE: func(_ *cobra.Command, args []string) error {
-			response, err := client.GetPipelineGroup(args[0])
-			if err != nil {
-				return err
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
+			for {
+				response, err := client.GetPipelineGroup(args[0])
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -260,24 +285,36 @@ func listPipelineGroupsCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline-group list`,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetPipelineGroups()
-			if err != nil {
-				return err
+			for {
+				response, err := client.GetPipelineGroups()
+				if err != nil {
+					return err
+				}
+
+				if dangling {
+					response = funk.Filter(response, func(group gocd.PipelineGroup) bool {
+						return len(group.Pipelines) == 0
+					}).([]gocd.PipelineGroup)
+				}
+
+				var pipelineGroups []string
+
+				for _, environment := range response {
+					pipelineGroups = append(pipelineGroups, environment.Name)
+				}
+
+				if err = cliRenderer.Render(strings.Join(pipelineGroups, "\n")); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			if dangling {
-				response = funk.Filter(response, func(group gocd.PipelineGroup) bool {
-					return len(group.Pipelines) == 0
-				}).([]gocd.PipelineGroup)
-			}
-
-			var pipelineGroups []string
-
-			for _, environment := range response {
-				pipelineGroups = append(pipelineGroups, environment.Name)
-			}
-
-			return cliRenderer.Render(strings.Join(pipelineGroups, "\n"))
+			return nil
 		},
 	}
 

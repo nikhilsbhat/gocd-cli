@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/goccy/go-yaml"
 	"github.com/nikhilsbhat/common/content"
@@ -51,40 +52,52 @@ func getRolesCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			var rolesConfig gocd.RolesConfig
-			switch len(roleType) {
-			case 0:
-				response, err := client.GetRoles()
-				if err != nil {
+			for {
+				var rolesConfig gocd.RolesConfig
+				switch len(roleType) {
+				case 0:
+					response, err := client.GetRoles()
+					if err != nil {
+						return err
+					}
+
+					rolesConfig = response
+				default:
+					cliLogger.Debugf("fetching roles by type '%s'", roleType)
+
+					response, err := client.GetRolesByType(roleType)
+					if err != nil {
+						return err
+					}
+
+					rolesConfig = response
+				}
+
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+					baseQuery, err := query.SetQuery(rolesConfig, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err := cliRenderer.Render(rolesConfig); err != nil {
 					return err
 				}
 
-				rolesConfig = response
-			default:
-				cliLogger.Debugf("fetching roles by type '%s'", roleType)
-
-				response, err := client.GetRolesByType(roleType)
-				if err != nil {
-					return err
+				if !cliCfg.Watch {
+					break
 				}
 
-				rolesConfig = response
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(rolesConfig, jsonQuery)
-				if err != nil {
-					return err
-				}
-
-				cliLogger.Debugf(baseQuery.Print())
-
-				return cliRenderer.Render(baseQuery.RunQuery())
-			}
-
-			return cliRenderer.Render(rolesConfig)
+			return nil
 		},
 	}
 
@@ -102,25 +115,37 @@ func getRoleCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, args []string) error {
-			response, err := client.GetRole(args[0])
-			if err != nil {
-				return err
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
+			for {
+				response, err := client.GetRole(args[0])
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -273,18 +298,30 @@ func listRolesCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetRoles()
-			if err != nil {
-				return err
+			for {
+				response, err := client.GetRoles()
+				if err != nil {
+					return err
+				}
+
+				var elasticAgentProfiles []string
+
+				for _, commonConfig := range response.Role {
+					elasticAgentProfiles = append(elasticAgentProfiles, commonConfig.Name)
+				}
+
+				if err = cliRenderer.Render(strings.Join(elasticAgentProfiles, "\n")); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			var elasticAgentProfiles []string
-
-			for _, commonConfig := range response.Role {
-				elasticAgentProfiles = append(elasticAgentProfiles, commonConfig.Name)
-			}
-
-			return cliRenderer.Render(strings.Join(elasticAgentProfiles, "\n"))
+			return nil
 		},
 	}
 

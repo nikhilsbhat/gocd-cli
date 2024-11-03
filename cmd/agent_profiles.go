@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
@@ -86,25 +87,37 @@ func getAgentProfileCommand() *cobra.Command {
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, args []string) error {
-			response, err := client.GetElasticAgentProfile(args[0])
-			if err != nil {
-				return err
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
+			for {
+				response, err := client.GetElasticAgentProfile(args[0])
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -256,18 +269,30 @@ func listAgentProfilesCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetElasticAgentProfiles()
-			if err != nil {
-				return err
+			for {
+				response, err := client.GetElasticAgentProfiles()
+				if err != nil {
+					return err
+				}
+
+				var elasticAgentProfiles []string
+
+				for _, commonConfig := range response.CommonConfigs {
+					elasticAgentProfiles = append(elasticAgentProfiles, commonConfig.ID)
+				}
+
+				if err = cliRenderer.Render(strings.Join(elasticAgentProfiles, "\n")); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			var elasticAgentProfiles []string
-
-			for _, commonConfig := range response.CommonConfigs {
-				elasticAgentProfiles = append(elasticAgentProfiles, commonConfig.ID)
-			}
-
-			return cliRenderer.Render(strings.Join(elasticAgentProfiles, "\n"))
+			return nil
 		},
 	}
 
@@ -282,30 +307,45 @@ func getAgentProfilesUsageCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			usageResponse := make([]gocd.ElasticProfileUsage, 0)
+			for {
+				usageResponse := make([]gocd.ElasticProfileUsage, 0)
 
-			for _, elasticProfile := range elasticProfiles {
-				response, err := client.GetElasticAgentProfileUsage(elasticProfile)
-				if err != nil {
-					return err
+				for _, elasticProfile := range elasticProfiles {
+					response, err := client.GetElasticAgentProfileUsage(elasticProfile)
+					if err != nil {
+						return err
+					}
+
+					usageResponse = append(usageResponse, response...)
 				}
 
-				usageResponse = append(usageResponse, response...)
-			}
+				var elasticAgentProfilesUsage []string
 
-			if rawOutput {
-				return cliRenderer.Render(usageResponse)
-			}
-
-			var elasticAgentProfilesUsage []string
-
-			for _, usage := range usageResponse {
-				if !funk.Contains(elasticAgentProfilesUsage, usage.PipelineName) {
-					elasticAgentProfilesUsage = append(elasticAgentProfilesUsage, usage.PipelineName)
+				for _, usage := range usageResponse {
+					if !funk.Contains(elasticAgentProfilesUsage, usage.PipelineName) {
+						elasticAgentProfilesUsage = append(elasticAgentProfilesUsage, usage.PipelineName)
+					}
 				}
+
+				switch rawOutput {
+				case true:
+					if err := cliRenderer.Render(usageResponse); err != nil {
+						return err
+					}
+				default:
+					if err := cliRenderer.Render(strings.Join(elasticAgentProfilesUsage, "\n")); err != nil {
+						return err
+					}
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(strings.Join(elasticAgentProfilesUsage, "\n"))
+			return nil
 		},
 	}
 

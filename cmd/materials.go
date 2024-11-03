@@ -3,6 +3,7 @@ package cmd
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/query"
@@ -55,70 +56,82 @@ gocd-cli materials get --names`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetMaterials()
-			if err != nil {
-				return err
-			}
-
-			if materialFailed {
-				response = funk.Filter(response, func(material gocd.Material) bool {
-					return len(material.Messages) != 0
-				}).([]gocd.Material)
-			}
-
-			if len(materialNames) != 0 {
-				response = funk.Filter(response, func(material gocd.Material) bool {
-					return funk.Contains(materialNames, material.Config.Attributes.URL)
-				}).([]gocd.Material)
-			}
-
-			if len(materialFilters) != 0 {
-				for _, materialFilter := range materialFilters {
-					filter := strings.Split(materialFilter, "=")
-
-					response = funk.Filter(response, func(material gocd.Material) bool {
-						switch strings.ToLower(filter[0]) {
-						case "url":
-							if funk.Contains(material.Config.Attributes.URL, filter[1]) {
-								return true
-							}
-
-							return false
-						case "type":
-							if funk.Contains(material.Config.Type, filter[1]) {
-								return true
-							}
-
-							return false
-						case "can_update":
-							boolValue, _ := strconv.ParseBool(strings.ToLower(filter[1]))
-
-							return material.CanTriggerUpdate == boolValue
-						case "auto_update":
-							boolValue, _ := strconv.ParseBool(strings.ToLower(filter[1]))
-
-							return material.Config.Attributes.AutoUpdate == boolValue
-						}
-
-						return false
-					}).([]gocd.Material)
-				}
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
+			for {
+				response, err := client.GetMaterials()
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				if materialFailed {
+					response = funk.Filter(response, func(material gocd.Material) bool {
+						return len(material.Messages) != 0
+					}).([]gocd.Material)
+				}
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+				if len(materialNames) != 0 {
+					response = funk.Filter(response, func(material gocd.Material) bool {
+						return funk.Contains(materialNames, material.Config.Attributes.URL)
+					}).([]gocd.Material)
+				}
+
+				if len(materialFilters) != 0 {
+					for _, materialFilter := range materialFilters {
+						filter := strings.Split(materialFilter, "=")
+
+						response = funk.Filter(response, func(material gocd.Material) bool {
+							switch strings.ToLower(filter[0]) {
+							case "url":
+								if funk.Contains(material.Config.Attributes.URL, filter[1]) {
+									return true
+								}
+
+								return false
+							case "type":
+								if funk.Contains(material.Config.Type, filter[1]) {
+									return true
+								}
+
+								return false
+							case "can_update":
+								boolValue, _ := strconv.ParseBool(strings.ToLower(filter[1]))
+
+								return material.CanTriggerUpdate == boolValue
+							case "auto_update":
+								boolValue, _ := strconv.ParseBool(strings.ToLower(filter[1]))
+
+								return material.Config.Attributes.AutoUpdate == boolValue
+							}
+
+							return false
+						}).([]gocd.Material)
+					}
+				}
+
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debugf(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -135,26 +148,38 @@ func listMaterialsCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			response, err := client.GetMaterials()
-			if err != nil {
-				return err
+			for {
+				response, err := client.GetMaterials()
+				if err != nil {
+					return err
+				}
+
+				materials := make([]string, 0)
+				for _, material := range response {
+					if material.Config.Type == "plugin" {
+						continue
+					}
+
+					if len(material.Config.Attributes.Name) != 0 {
+						materials = append(materials, material.Config.Attributes.Name)
+					}
+					if len(material.Config.Attributes.URL) != 0 {
+						materials = append(materials, material.Config.Attributes.URL)
+					}
+				}
+
+				if err = cliRenderer.Render(materials); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			materials := make([]string, 0)
-			for _, material := range response {
-				if material.Config.Type == "plugin" {
-					continue
-				}
-
-				if len(material.Config.Attributes.Name) != 0 {
-					materials = append(materials, material.Config.Attributes.Name)
-				}
-				if len(material.Config.Attributes.URL) != 0 {
-					materials = append(materials, material.Config.Attributes.URL)
-				}
-			}
-
-			return cliRenderer.Render(materials)
+			return nil
 		},
 	}
 
@@ -171,29 +196,41 @@ func getMaterialUsageCommand() *cobra.Command {
 		RunE: func(_ *cobra.Command, args []string) error {
 			materialID = args[0]
 
-			if fetchID {
-				materials, err := client.GetMaterials()
+			for {
+				if fetchID {
+					materials, err := client.GetMaterials()
+					if err != nil {
+						return err
+					}
+
+					materials = funk.Filter(materials, func(material gocd.Material) bool {
+						return funk.Contains(material.Config.Attributes.URL, args[0])
+					}).([]gocd.Material)
+
+					if len(materials) == 0 {
+						return &errors.MaterialError{Message: "no material found with the specified URL/Name"}
+					}
+
+					materialID = materials[0].Config.Fingerprint
+				}
+
+				response, err := client.GetMaterialUsage(materialID)
 				if err != nil {
 					return err
 				}
 
-				materials = funk.Filter(materials, func(material gocd.Material) bool {
-					return funk.Contains(material.Config.Attributes.URL, args[0])
-				}).([]gocd.Material)
-
-				if len(materials) == 0 {
-					return &errors.MaterialError{Message: "no material found with the specified URL/Name"}
+				if err = cliRenderer.Render(response); err != nil {
+					return err
 				}
 
-				materialID = materials[0].Config.Fingerprint
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			response, err := client.GetMaterialUsage(materialID)
-			if err != nil {
-				return err
-			}
-
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 

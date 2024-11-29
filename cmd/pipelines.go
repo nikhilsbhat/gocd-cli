@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -14,9 +15,10 @@ import (
 	"github.com/ghodss/yaml"
 	goYAML "github.com/goccy/go-yaml"
 	"github.com/nikhilsbhat/common/content"
-	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
+	clierrors "github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
+	gocderrors "github.com/nikhilsbhat/gocd-sdk-go/pkg/errors"
 	"github.com/nikhilsbhat/gocd-sdk-go/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/thoas/go-funk"
@@ -36,6 +38,7 @@ var (
 	goCDPipelineUnPause      bool
 	numberOfDays             time.Duration
 	configRepoNames          []string
+	fromConfigRepos          bool
 	goCDPipelinesPath        string
 	goCDPipelinesPatterns    []string
 )
@@ -405,12 +408,35 @@ func getPipelineNotSchedulesCommand() *cobra.Command {
 		RunE: func(_ *cobra.Command, _ []string) error {
 			goCDPipelineNames := make([]string, 0)
 
+			// Fetch pipelines from config repos if enabled
+			if fromConfigRepos {
+				cliLogger.Debugf("fetching pipelines from config repos since 'from-config-repos' is enabled")
+
+				configRepos, err := client.GetConfigRepos()
+				if err != nil {
+					return err
+				}
+
+				for _, configRepo := range configRepos {
+					configRepoNames = append(configRepoNames, configRepo.ID)
+				}
+			}
+
 			if len(configRepoNames) != 0 {
-				cliLogger.Debugf("fetching pipelines from config repo is enabled, hence identifying limiting pipelines to config repo '%v'", configRepoNames)
+				if !fromConfigRepos {
+					cliLogger.Debugf("fetching pipelines from config repo is enabled, hence pipelines identification is limited to configs repos '%v'", configRepoNames)
+				}
 
 				for _, configRepoName := range configRepoNames {
 					definitions, err := client.GetConfigRepoDefinitions(configRepoName)
 					if err != nil {
+						var notFoundError *gocderrors.NonFoundError
+						if errors.As(err, &notFoundError) {
+							cliLogger.Errorf("fetching definition of config repo '%s' errored with '%s'", configRepoName, err)
+
+							continue
+						}
+
 						return err
 					}
 
@@ -450,26 +476,14 @@ func getPipelineNotSchedulesCommand() *cobra.Command {
 					continue
 				}
 
-				timeNow := time.Now()
-				var timeThen time.Time
-
-				const faultyLength = 2
-				if len(response.Groups) == faultyLength {
-					if response.Groups[1].History[0].ScheduledDate == "N/A" {
-						continue
-					}
-
-					timeThen = time.UnixMilli(response.Groups[1].History[0].ScheduledTimestamp).UTC()
-				} else {
-					if response.Groups[0].History[0].ScheduledDate == "N/A" {
-						continue
-					}
-
-					timeThen = time.UnixMilli(response.Groups[0].History[0].ScheduledTimestamp).UTC()
+				// Validate schedule timestamps
+				scheduleTime, isValid := extractScheduledTime(response)
+				if !isValid {
+					continue
 				}
 
-				timeDiff := timeNow.Sub(timeThen).Round(1).Hours()
-				if timeDiff >= numberOfDays.Hours() {
+				// Check if the schedule is older than the threshold
+				if time.Since(scheduleTime).Hours() >= numberOfDays.Hours() {
 					pipelineSchedules = append(pipelineSchedules, response)
 				}
 
@@ -494,6 +508,7 @@ func getPipelineNotSchedulesCommand() *cobra.Command {
 	}
 
 	registerPipelineHistoryFlags(getPipelineNotScheduledCmd)
+	getPipelineNotScheduledCmd.MarkFlagsMutuallyExclusive("from-config-repos", "from-config-repo")
 
 	return getPipelineNotScheduledCmd
 }
@@ -523,7 +538,7 @@ func createPipelineCommand() *cobra.Command {
 					return err
 				}
 			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
+				return &clierrors.UnknownObjectTypeError{Name: objType}
 			}
 
 			if goCDPausePipelineAtStart {
@@ -573,7 +588,7 @@ func updatePipelineCommand() *cobra.Command {
 					return err
 				}
 			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
+				return &clierrors.UnknownObjectTypeError{Name: objType}
 			}
 
 			pipelineConfigFetched, err := client.GetPipelineConfig(pipelineConfig.Name)
@@ -786,7 +801,7 @@ func schedulePipelineCommand() *cobra.Command {
 					return err
 				}
 			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
+				return &clierrors.UnknownObjectTypeError{Name: objType}
 			}
 
 			if err = client.SchedulePipeline(args[0], schedule); err != nil {
@@ -1273,7 +1288,7 @@ func showPipelineCommand() *cobra.Command {
 				default:
 					cliLogger.Errorf("the command `pipeline show` does not support reading pipeline config of file '%s'", goCDPipeline)
 
-					return &errors.UnknownObjectTypeError{Name: objType}
+					return &clierrors.UnknownObjectTypeError{Name: objType}
 				}
 
 				if len(pipelinesIdentified) == 0 {
@@ -1328,7 +1343,7 @@ available in the GoCD server`,
 				var projectsConf gocd.Projects
 
 				if len(cliCfg.FromFile) == 0 {
-					return &errors.CLIError{Message: "when '--analyse' set make sure to pass the file using '--from-file'"}
+					return &clierrors.CLIError{Message: "when '--analyse' set make sure to pass the file using '--from-file'"}
 				}
 
 				cliLogger.Infof("--analyse is set, reading file '%s' for generating report", cliCfg.FromFile)
@@ -1339,7 +1354,7 @@ available in the GoCD server`,
 				}
 
 				if err = xml.Unmarshal(response, &projectsConf); err != nil {
-					return &errors.CLIError{Message: err.Error()}
+					return &clierrors.CLIError{Message: err.Error()}
 				}
 
 				projects = projectsConf.Project
@@ -1589,6 +1604,25 @@ func filterPipelineFromReport(projects []gocd.Project, failed, succeeded bool) [
 	}).([]gocd.Project)
 
 	return projects
+}
+
+// extractScheduledTime extracts and validates the scheduled time from a response.
+func extractScheduledTime(response gocd.PipelineSchedules) (time.Time, bool) {
+	const faultyLength = 2
+
+	if len(response.Groups) == faultyLength {
+		if response.Groups[1].History[0].ScheduledDate == "N/A" {
+			return time.Time{}, false
+		}
+
+		return time.UnixMilli(response.Groups[1].History[0].ScheduledTimestamp).UTC(), true
+	}
+
+	if response.Groups[0].History[0].ScheduledDate == "N/A" {
+		return time.Time{}, false
+	}
+
+	return time.UnixMilli(response.Groups[0].History[0].ScheduledTimestamp).UTC(), true
 }
 
 // func renderVSMtoCSV(pipelineVSMs []PipelineVSM, upstream bool) error {

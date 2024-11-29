@@ -436,8 +436,17 @@ func listEnvironmentsCommand() *cobra.Command {
 			}
 
 			if dangling {
+				agents, err := client.GetAgents()
+				if err != nil {
+					return err
+				}
+
 				response = funk.Filter(response, func(environment gocd.Environment) bool {
-					return len(environment.Pipelines) == 0
+					agentsFound := funk.Find(agents, func(agent gocd.Agent) bool {
+						return funk.Find(agent.Environments, environment).(bool)
+					}).(bool)
+
+					return len(environment.Pipelines) == 0 || agentsFound
 				}).([]gocd.Environment)
 			}
 

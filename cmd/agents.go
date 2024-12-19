@@ -19,6 +19,7 @@ import (
 var (
 	agentsDisabled                             bool
 	agentName, agentID                         string
+	agentIDs                                   []string
 	agentEnvironments, agentResources, agentOS []string
 )
 
@@ -38,6 +39,7 @@ GET/UPDATE/DELETE GoCD agent also kill task and job run history from an agent`,
 	agentsCommand.AddCommand(getAgentsCommand())
 	agentsCommand.AddCommand(getAgentCommand())
 	agentsCommand.AddCommand(updateAgentCommand())
+	agentsCommand.AddCommand(disableAgentCommand())
 	agentsCommand.AddCommand(deleteAgentCommand())
 	agentsCommand.AddCommand(listAgentsCommand())
 	agentsCommand.AddCommand(killTaskCommand())
@@ -160,7 +162,7 @@ gocd-cli agents get --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 }
 
 func updateAgentCommand() *cobra.Command {
-	createAgentCmd := &cobra.Command{
+	updateAgentCmd := &cobra.Command{
 		Use:     "update",
 		Short:   "Command to UPDATE an agent with all specified configuration [https://api.gocd.org/current/#update-an-agent]",
 		Args:    cobra.NoArgs,
@@ -209,7 +211,53 @@ func updateAgentCommand() *cobra.Command {
 		},
 	}
 
-	return createAgentCmd
+	return updateAgentCmd
+}
+
+func disableAgentCommand() *cobra.Command {
+	var wait bool
+
+	disableAgentCmd := &cobra.Command{
+		Use:     "disable",
+		Short:   "Command to DISABLE an agent registered with GoCD server [https://api.gocd.org/current/#update-an-agent]",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			if err := client.UpdateAgentBulk(gocd.Agent{UUIDS: agentIDs, ConfigState: "Disabled"}); err != nil {
+				return err
+			}
+
+			if wait {
+				cliLogger.Debugf("Waiting for agent %s to be completely disabled...", agentID)
+
+				for _, id := range agentIDs {
+					for {
+						agentInfo, err := client.GetAgent(id)
+						if err != nil {
+							return err
+						}
+
+						if isAgentDisabled(agentInfo) {
+							break
+						}
+
+						time.Sleep(delay)
+					}
+				}
+			}
+
+			return cliRenderer.Render(fmt.Sprintf("agent %s disabled successfully", agentID))
+		},
+	}
+
+	disableAgentCmd.PersistentFlags().StringSliceVarP(&agentIDs, "ids", "", nil,
+		"ids of the agent which has to be disabled")
+	disableAgentCmd.PersistentFlags().BoolVarP(&wait, "wait", "", false,
+		"enable this if you want to wait until the agent is disabled completely")
+	disableAgentCmd.PersistentFlags().DurationVarP(&delay, "delay", "", defaultDelay,
+		"time delay between each retries that would be made to get the agent status")
+
+	return disableAgentCmd
 }
 
 func deleteAgentCommand() *cobra.Command {
@@ -468,4 +516,10 @@ func filterAgentsResponse(response []gocd.Agent) []gocd.Agent {
 	}
 
 	return response
+}
+
+func isAgentDisabled(agent gocd.Agent) bool {
+	return (agent.BuildState == "Idle" || agent.BuildState == "Unknown") &&
+		(agent.CurrentState == "Idle" || agent.CurrentState == "LostContact" || agent.CurrentState == "Unknown" || agent.CurrentState == "Missing") &&
+		agent.ConfigState == "Disabled"
 }

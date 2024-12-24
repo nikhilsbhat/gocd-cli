@@ -227,10 +227,12 @@ func disableAgentCommand() *cobra.Command {
 				return err
 			}
 
-			if wait {
-				cliLogger.Debugf("Waiting for agent %s to be completely disabled...", agentID)
+			startTime := time.Now()
 
-				for _, id := range agentIDs {
+			if wait {
+				cliLogger.Debugf("waiting for agent %s to be completely disabled...", agentID)
+
+				for _, id := range agentIDs { //nolint:varnamelen
 					for {
 						agentInfo, err := client.GetAgent(id)
 						if err != nil {
@@ -239,6 +241,16 @@ func disableAgentCommand() *cobra.Command {
 
 						if isAgentDisabled(agentInfo) {
 							break
+						}
+
+						cliLogger.Infof("looks like there is a pipeline scheduled in the agent, waiting for it to complete")
+
+						if time.Since(startTime) > timeout {
+							cliLogger.Errorf("timedout waiting for the agent '%s' to get disabled, skipping disablement", id)
+							cliLogger.Errorf("wait time crossed the default timeout of '%s', "+
+								"try increasing the timeout value using '--timeout'", timeout.String())
+
+							continue
 						}
 
 						time.Sleep(delay)
@@ -256,6 +268,10 @@ func disableAgentCommand() *cobra.Command {
 		"enable this if you want to wait until the agent is disabled completely")
 	disableAgentCmd.PersistentFlags().DurationVarP(&delay, "delay", "", defaultDelay,
 		"time delay between each retries that would be made to get the agent status")
+	disableAgentCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "", defaultTimeout,
+		"timeout, if the operation is not successful in this specified duration")
+
+	disableAgentCmd.MarkFlagsRequiredTogether("wait", "timeout")
 
 	return disableAgentCmd
 }

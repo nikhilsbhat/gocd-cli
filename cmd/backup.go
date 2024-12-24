@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	backupRetry int
-	delay       time.Duration
+	backupRetry    int
+	timeout, delay time.Duration
 )
 
 func registerBackupCommand() *cobra.Command {

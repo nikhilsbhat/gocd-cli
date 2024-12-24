@@ -14,6 +14,7 @@ var (
 const (
 	defaultBackupRetryCount = 30
 	defaultDelay            = 5 * time.Second
+	defaultTimeout          = 20 * time.Minute
 	defaultInstanceCount    = 0
 	defaultRetryCount       = 5
 	defaultWatchInterval    = 5

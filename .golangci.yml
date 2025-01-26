@@ -22,8 +22,17 @@ linters:
     - depguard
     - tagalign
     - perfsprint
+    - exhaustivestruct
 
 issues:
+  exclude-files:
+    - Makefile
+    - README.md
+    - Dockerfile
+  exclude-dirs:
+    - scripts/
+    - vendor/
+    - docs/
   exclude-rules:
     - path: _test\.go
       linters:
@@ -57,20 +66,6 @@ run:
   timeout: 10m
   issues-exit-code: 1
   tests: true
-  exclude-dirs:
-    - scripts/
-    - vendor/
-    - docs/
-
-  exclude-files:
-    - Makefile
-    - README.md
-    - Dockerfile
 
 severity:
   default-severity: error
-
-service:
-  golangci-lint-version: 1.27.x
-  prepare:
-    - make local.check

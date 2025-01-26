@@ -1,3 +1,5 @@
+include makefiles/security.mk
+
 GOFMT_FILES?=$(shell find . -not -path "./vendor/*" -type f -name '*.go')
 APP_NAME?=gocd-cli
 APP_DIR?=$(shell git rev-parse --show-toplevel)

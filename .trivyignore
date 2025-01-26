@@ -1,0 +1,11 @@
+# Ignoring the fixtures used for testing
+internal
+
+# Ignoring all the vendor directories
+vendor
+
+# Ignoring all python codes
+*.py
+*.pyc
+*.pyo
+venv/

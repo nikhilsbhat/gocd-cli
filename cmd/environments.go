@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/nikhilsbhat/common/content"
@@ -105,7 +106,7 @@ gocd-cli environment get-all --pipelines -o yaml`,
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				cliLogger.Debug(baseQuery.Print())
 
 				return cliRenderer.Render(baseQuery.RunQuery())
 			}
@@ -170,7 +171,7 @@ gocd-cli environment get gocd_environment_1 --pipelines -o yaml`,
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				cliLogger.Debug(baseQuery.Print())
 
 				return cliRenderer.Render(baseQuery.RunQuery())
 			}
@@ -216,7 +217,7 @@ func getEnvironmentMapping() *cobra.Command {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				cliLogger.Debug(baseQuery.Print())
 
 				return cliRenderer.Render(baseQuery.RunQuery())
 			}
@@ -238,32 +239,7 @@ func createEnvironmentCommand() *cobra.Command {
 		Example: `gocd-cli environment create gocd_environment_1 --from-file gocd_environment_1.yaml`,
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			var envs gocd.Environment
-			object, err := readObject(cmd)
-			if err != nil {
-				return err
-			}
-
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &envs); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &envs); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
-			}
-
-			if err = client.CreateEnvironment(envs); err != nil {
-				return err
-			}
-
-			return cliRenderer.Render(fmt.Sprintf("environment %s created successfully", envs.Name))
-		},
+		RunE:    createEnvironment,
 	}
 
 	return createEnvironmentCmd
@@ -297,8 +273,14 @@ func updateEnvironmentCommand() *cobra.Command {
 			}
 
 			environmentFetched, err := client.GetEnvironment(envs.Name)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "404") {
 				return err
+			}
+
+			if create {
+				if reflect.DeepEqual(environmentFetched, gocd.Environment{}) {
+					return createEnvironment(cmd, nil)
+				}
 			}
 
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "environment", envs.Name)
@@ -324,6 +306,9 @@ func updateEnvironmentCommand() *cobra.Command {
 			return cliRenderer.Render(env)
 		},
 	}
+
+	updateEnvironmentCmd.PersistentFlags().BoolVarP(&create, "create", "", false,
+		"if a environment by this name doesn't already exist, run create")
 
 	return updateEnvironmentCmd
 }
@@ -478,4 +463,32 @@ func getOriginType(mappings map[string]string, origins []gocd.EnvironmentOrigin)
 	}
 
 	return mappings
+}
+
+func createEnvironment(cmd *cobra.Command, _ []string) error {
+	var envs gocd.Environment
+
+	object, err := readObject(cmd)
+	if err != nil {
+		return err
+	}
+
+	switch objType := object.CheckFileType(cliLogger); objType {
+	case content.FileTypeYAML:
+		if err = yaml.Unmarshal([]byte(object), &envs); err != nil {
+			return err
+		}
+	case content.FileTypeJSON:
+		if err = json.Unmarshal([]byte(object), &envs); err != nil {
+			return err
+		}
+	default:
+		return &errors.UnknownObjectTypeError{Name: objType}
+	}
+
+	if err = client.CreateEnvironment(envs); err != nil {
+		return err
+	}
+
+	return cliRenderer.Render(fmt.Sprintf("environment %s created successfully", envs.Name))
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -67,7 +68,7 @@ func getAgentProfilesCommand() *cobra.Command {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				cliLogger.Debug(baseQuery.Print())
 
 				return cliRenderer.Render(baseQuery.RunQuery())
 			}
@@ -101,7 +102,7 @@ func getAgentProfileCommand() *cobra.Command {
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -131,37 +132,7 @@ func createAgentProfileCommand() *cobra.Command {
 		Example: "gocd-cli elastic-agent-profile create sample_ec2 --from-file sample-ec2.yaml --log-level debug",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			var commonCfg gocd.CommonConfig
-			object, err := readObject(cmd)
-			if err != nil {
-				return err
-			}
-
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &commonCfg); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &commonCfg); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
-			}
-
-			response, err := client.CreateElasticAgentProfile(commonCfg)
-			if err != nil {
-				return err
-			}
-
-			if err = cliRenderer.Render(fmt.Sprintf("elastic agent profile %s created successfully", commonCfg.Name)); err != nil {
-				return err
-			}
-
-			return cliRenderer.Render(response)
-		},
+		RunE:    createAgentProfiles,
 	}
 
 	return createElasticAgentProfileCmd
@@ -195,8 +166,14 @@ func updateAgentProfileCommand() *cobra.Command {
 			}
 
 			elasticAgentProfileFetched, err := client.GetElasticAgentProfile(commonCfg.ID)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "404") {
 				return err
+			}
+
+			if create {
+				if reflect.DeepEqual(elasticAgentProfileFetched, gocd.CommonConfig{}) {
+					return createAgentProfiles(cmd, nil)
+				}
 			}
 
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "elastic-agent-profile", elasticAgentProfileFetched.ID)
@@ -222,6 +199,10 @@ func updateAgentProfileCommand() *cobra.Command {
 			return cliRenderer.Render(response)
 		},
 	}
+
+	updateElasticAgentProfileCmd.SetUsageTemplate(getUsageTemplate())
+	updateElasticAgentProfileCmd.PersistentFlags().BoolVarP(&create, "create", "", false,
+		"if a elastic agent profile by this name doesn't already exist, run create")
 
 	return updateElasticAgentProfileCmd
 }
@@ -353,4 +334,37 @@ func getAgentProfilesUsageCommand() *cobra.Command {
 	registerRawFlags(getAgentProfilesUsageCmd)
 
 	return getAgentProfilesUsageCmd
+}
+
+func createAgentProfiles(cmd *cobra.Command, _ []string) error {
+	var commonCfg gocd.CommonConfig
+
+	object, err := readObject(cmd)
+	if err != nil {
+		return err
+	}
+
+	switch objType := object.CheckFileType(cliLogger); objType {
+	case content.FileTypeYAML:
+		if err = yaml.Unmarshal([]byte(object), &commonCfg); err != nil {
+			return err
+		}
+	case content.FileTypeJSON:
+		if err = json.Unmarshal([]byte(object), &commonCfg); err != nil {
+			return err
+		}
+	default:
+		return &errors.UnknownObjectTypeError{Name: objType}
+	}
+
+	response, err := client.CreateElasticAgentProfile(commonCfg)
+	if err != nil {
+		return err
+	}
+
+	if err = cliRenderer.Render(fmt.Sprintf("elastic agent profile %s created successfully", commonCfg.Name)); err != nil {
+		return err
+	}
+
+	return cliRenderer.Render(response)
 }

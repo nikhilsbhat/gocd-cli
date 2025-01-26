@@ -87,7 +87,7 @@ func setCLIClient(_ *cobra.Command, _ []string) error {
 	if !cliCfg.validateOutputFormats() {
 		supportedOutputFormatsString := strings.Join(supportedOutputFormats, "|")
 		errMsg := fmt.Sprintf("unsupported output format '%s', the value should be one of %s", cliCfg.OutputFormat, supportedOutputFormatsString)
-		cliLogger.Errorf(errMsg)
+		cliLogger.Error(errMsg)
 
 		return &errors.CLIError{Message: errMsg}
 	}

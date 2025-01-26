@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -85,7 +86,7 @@ func getConfigReposCommand() *cobra.Command {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				cliLogger.Debug(baseQuery.Print())
 
 				return cliRenderer.Render(baseQuery.RunQuery())
 			}
@@ -181,7 +182,7 @@ Do not use this command unless you know what you are doing with it`,
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -320,7 +321,7 @@ gocd-cli configrepo get-definitions --repo-name sample-repo -o yaml --pipelines 
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -371,7 +372,7 @@ func getConfigRepoCommand() *cobra.Command {
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -409,34 +410,7 @@ func getCreateConfigRepoCommand() *cobra.Command {
 		Short:   "Command to CREATE the config-repo with specified configuration [https://api.gocd.org/current/#create-a-config-repo]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			var configRepo gocd.ConfigRepo
-			object, err := readObject(cmd)
-			if err != nil {
-				return err
-			}
-
-			fmt.Println(object.String())
-
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &configRepo); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &configRepo); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
-			}
-
-			if err = client.CreateConfigRepo(configRepo); err != nil {
-				return err
-			}
-
-			return cliRenderer.Render(fmt.Sprintf("config repo %s created successfully", configRepo.ID))
-		},
+		RunE:    createConfigRepo,
 	}
 
 	configCreateStatusCommand.SetUsageTemplate(getUsageTemplate())
@@ -445,7 +419,7 @@ func getCreateConfigRepoCommand() *cobra.Command {
 }
 
 func getUpdateConfigRepoCommand() *cobra.Command {
-	configCreateStatusCommand := &cobra.Command{
+	configRepoUpdateCommand := &cobra.Command{
 		Use:     "update",
 		Short:   "Command to UPDATE the config-repo present in GoCD [https://api.gocd.org/current/#update-config-repo]",
 		Args:    cobra.NoArgs,
@@ -471,8 +445,14 @@ func getUpdateConfigRepoCommand() *cobra.Command {
 			}
 
 			configRepoFetched, err := client.GetConfigRepo(configRepo.ID)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "404") {
 				return err
+			}
+
+			if create {
+				if reflect.DeepEqual(configRepoFetched, gocd.ConfigRepo{}) {
+					return createConfigRepo(cmd, nil)
+				}
 			}
 
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "config-repo", configRepoFetched.ID)
@@ -495,9 +475,11 @@ func getUpdateConfigRepoCommand() *cobra.Command {
 		},
 	}
 
-	configCreateStatusCommand.SetUsageTemplate(getUsageTemplate())
+	configRepoUpdateCommand.SetUsageTemplate(getUsageTemplate())
+	configRepoUpdateCommand.PersistentFlags().BoolVarP(&create, "create", "", false,
+		"if a config repo by this name doesn't already exist, run create")
 
-	return configCreateStatusCommand
+	return configRepoUpdateCommand
 }
 
 func getDeleteConfigRepoCommand() *cobra.Command {
@@ -694,6 +676,36 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 	configPreflightCheckCommand.MarkFlagsMutuallyExclusive("pipeline-file", "pipeline-dir")
 
 	return configPreflightCheckCommand
+}
+
+func createConfigRepo(cmd *cobra.Command, _ []string) error {
+	var configRepo gocd.ConfigRepo
+
+	object, err := readObject(cmd)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(object.String())
+
+	switch objType := object.CheckFileType(cliLogger); objType {
+	case content.FileTypeYAML:
+		if err = yaml.Unmarshal([]byte(object), &configRepo); err != nil {
+			return err
+		}
+	case content.FileTypeJSON:
+		if err = json.Unmarshal([]byte(object), &configRepo); err != nil {
+			return err
+		}
+	default:
+		return &errors.UnknownObjectTypeError{Name: objType}
+	}
+
+	if err = client.CreateConfigRepo(configRepo); err != nil {
+		return err
+	}
+
+	return cliRenderer.Render(fmt.Sprintf("config repo %s created successfully", configRepo.ID))
 }
 
 func (cfg *goCdPlugin) getPluginID() string {

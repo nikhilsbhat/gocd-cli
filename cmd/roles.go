@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -81,7 +82,7 @@ func getRolesCommand() *cobra.Command {
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -129,7 +130,7 @@ func getRoleCommand() *cobra.Command {
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -160,37 +161,7 @@ func createRoleCommand() *cobra.Command {
 		Example: "gocd-cli role create sample-config --from-file sample-config.yaml --log-level debug",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			var roleCfg gocd.Role
-			object, err := readObject(cmd)
-			if err != nil {
-				return err
-			}
-
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &roleCfg); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &roleCfg); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
-			}
-
-			response, err := client.CreateRole(roleCfg)
-			if err != nil {
-				return err
-			}
-
-			if err = cliRenderer.Render(fmt.Sprintf("role %s created successfully", roleCfg.Name)); err != nil {
-				return err
-			}
-
-			return cliRenderer.Render(response)
-		},
+		RunE:    createRole,
 	}
 
 	return createRoleCmd
@@ -224,8 +195,14 @@ func updateRoleCommand() *cobra.Command {
 			}
 
 			rolesFetched, err := client.GetRole(roleCfg.Name)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "404") {
 				return err
+			}
+
+			if create {
+				if reflect.DeepEqual(rolesFetched, gocd.Role{}) {
+					return createRole(cmd, nil)
+				}
 			}
 
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "role", rolesFetched.Name)
@@ -251,6 +228,9 @@ func updateRoleCommand() *cobra.Command {
 			return cliRenderer.Render(response)
 		},
 	}
+
+	updateRoleCmd.PersistentFlags().BoolVarP(&create, "create", "", false,
+		"if a role by this name doesn't already exist, run create")
 
 	return updateRoleCmd
 }
@@ -326,4 +306,37 @@ func listRolesCommand() *cobra.Command {
 	}
 
 	return listRolesCmd
+}
+
+func createRole(cmd *cobra.Command, _ []string) error {
+	var roleCfg gocd.Role
+
+	object, err := readObject(cmd)
+	if err != nil {
+		return err
+	}
+
+	switch objType := object.CheckFileType(cliLogger); objType {
+	case content.FileTypeYAML:
+		if err = yaml.Unmarshal([]byte(object), &roleCfg); err != nil {
+			return err
+		}
+	case content.FileTypeJSON:
+		if err = json.Unmarshal([]byte(object), &roleCfg); err != nil {
+			return err
+		}
+	default:
+		return &errors.UnknownObjectTypeError{Name: objType}
+	}
+
+	response, err := client.CreateRole(roleCfg)
+	if err != nil {
+		return err
+	}
+
+	if err = cliRenderer.Render(fmt.Sprintf("role %s created successfully", roleCfg.Name)); err != nil {
+		return err
+	}
+
+	return cliRenderer.Render(response)
 }

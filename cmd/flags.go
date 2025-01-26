@@ -9,6 +9,7 @@ import (
 var (
 	cliCfg    Config
 	jsonQuery string
+	create    bool
 )
 
 const (

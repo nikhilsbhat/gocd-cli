@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -72,7 +73,7 @@ func getPipelineGroupsCommand() *cobra.Command {
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -120,7 +121,7 @@ func getPipelineGroupCommand() *cobra.Command {
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -151,32 +152,7 @@ func createPipelineGroupCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		Example: `gocd-cli pipeline-group create movies --from-file pipeline-group-movies.yaml --log-level debug
 // the inputs can be passed either from file using '--from-file' flag or entire content as argument to command`,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			var ppGroup gocd.PipelineGroup
-			object, err := readObject(cmd)
-			if err != nil {
-				return err
-			}
-
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &ppGroup); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &ppGroup); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
-			}
-
-			if err = client.CreatePipelineGroup(ppGroup); err != nil {
-				return err
-			}
-
-			return cliRenderer.Render(fmt.Sprintf("pipeline group %s created successfully", ppGroup.Name))
-		},
+		RunE: createPipelineGroup,
 	}
 
 	return createPipelineGroupCmd
@@ -211,8 +187,14 @@ func updatePipelineGroupCommand() *cobra.Command {
 			}
 
 			pipelineGroupFetched, err := client.GetPipelineGroup(ppGroup.Name)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "404") {
 				return err
+			}
+
+			if create {
+				if reflect.DeepEqual(pipelineGroupFetched, gocd.PipelineGroup{}) {
+					return createPipelineGroup(cmd, nil)
+				}
 			}
 
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "pipeline-group", ppGroup.Name)
@@ -238,6 +220,9 @@ func updatePipelineGroupCommand() *cobra.Command {
 			return cliRenderer.Render(env)
 		},
 	}
+
+	updatePipelineGroupCmd.PersistentFlags().BoolVarP(&create, "create", "", false,
+		"if a pipeline group by this name doesn't already exist, run create")
 
 	return updatePipelineGroupCmd
 }
@@ -321,4 +306,32 @@ func listPipelineGroupsCommand() *cobra.Command {
 	registerDanglingFlags(listPipelineCmd)
 
 	return listPipelineCmd
+}
+
+func createPipelineGroup(cmd *cobra.Command, _ []string) error {
+	var ppGroup gocd.PipelineGroup
+
+	object, err := readObject(cmd)
+	if err != nil {
+		return err
+	}
+
+	switch objType := object.CheckFileType(cliLogger); objType {
+	case content.FileTypeYAML:
+		if err = yaml.Unmarshal([]byte(object), &ppGroup); err != nil {
+			return err
+		}
+	case content.FileTypeJSON:
+		if err = json.Unmarshal([]byte(object), &ppGroup); err != nil {
+			return err
+		}
+	default:
+		return &errors.UnknownObjectTypeError{Name: objType}
+	}
+
+	if err = client.CreatePipelineGroup(ppGroup); err != nil {
+		return err
+	}
+
+	return cliRenderer.Render(fmt.Sprintf("pipeline group %s created successfully", ppGroup.Name))
 }

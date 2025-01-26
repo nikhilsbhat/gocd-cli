@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/nikhilsbhat/common/content"
@@ -65,7 +66,7 @@ func getArtifactStoreCommand() *cobra.Command {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				cliLogger.Debug(baseQuery.Print())
 
 				return cliRenderer.Render(baseQuery.RunQuery())
 			}
@@ -97,7 +98,7 @@ func getArtifactStoresCommand() *cobra.Command {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				cliLogger.Debug(baseQuery.Print())
 
 				return cliRenderer.Render(baseQuery.RunQuery())
 			}
@@ -129,7 +130,7 @@ func getArtifactConfigCommand() *cobra.Command {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				cliLogger.Debug(baseQuery.Print())
 
 				return cliRenderer.Render(baseQuery.RunQuery())
 			}
@@ -147,37 +148,7 @@ func createArtifactStoreCommand() *cobra.Command {
 		Short:   "Command to CREATE an artifact store with all specified configurations in GoCD [https://api.gocd.org/current/#create-an-artifact-store]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			var commonCfg gocd.CommonConfig
-			object, err := readObject(cmd)
-			if err != nil {
-				return err
-			}
-
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &commonCfg); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &commonCfg); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
-			}
-
-			response, err := client.CreateArtifactStore(commonCfg)
-			if err != nil {
-				return err
-			}
-
-			if err = cliRenderer.Render(fmt.Sprintf("artifact store %s created successfully", commonCfg.Name)); err != nil {
-				return err
-			}
-
-			return cliRenderer.Render(response)
-		},
+		RunE:    createArtifactStore,
 	}
 
 	return getArtifactsStoreCmd
@@ -210,8 +181,14 @@ func updateArtifactStoreCommand() *cobra.Command {
 			}
 
 			artifactStoreFetched, err := client.GetArtifactStore(commonCfg.Name)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "404") {
 				return err
+			}
+
+			if create {
+				if reflect.DeepEqual(artifactStoreFetched, gocd.CommonConfig{}) {
+					return createArtifactStore(cmd, nil)
+				}
 			}
 
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "artifact-store", artifactStoreFetched.Name)
@@ -237,6 +214,9 @@ func updateArtifactStoreCommand() *cobra.Command {
 			return cliRenderer.Render(response)
 		},
 	}
+
+	updateArtifactsStoreCmd.PersistentFlags().BoolVarP(&create, "create", "", false,
+		"if artifact store config doesn't already exist, run create")
 
 	return updateArtifactsStoreCmd
 }
@@ -356,4 +336,37 @@ func listArtifactsStoreCommand() *cobra.Command {
 	}
 
 	return listArtifactsStoreCmd
+}
+
+func createArtifactStore(cmd *cobra.Command, _ []string) error {
+	var commonCfg gocd.CommonConfig
+
+	object, err := readObject(cmd)
+	if err != nil {
+		return err
+	}
+
+	switch objType := object.CheckFileType(cliLogger); objType {
+	case content.FileTypeYAML:
+		if err = yaml.Unmarshal([]byte(object), &commonCfg); err != nil {
+			return err
+		}
+	case content.FileTypeJSON:
+		if err = json.Unmarshal([]byte(object), &commonCfg); err != nil {
+			return err
+		}
+	default:
+		return &errors.UnknownObjectTypeError{Name: objType}
+	}
+
+	response, err := client.CreateArtifactStore(commonCfg)
+	if err != nil {
+		return err
+	}
+
+	if err = cliRenderer.Render(fmt.Sprintf("artifact store %s created successfully", commonCfg.Name)); err != nil {
+		return err
+	}
+
+	return cliRenderer.Render(response)
 }

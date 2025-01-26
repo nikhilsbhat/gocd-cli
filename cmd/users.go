@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -110,33 +111,7 @@ func userCreateCommand() *cobra.Command {
 		Short:   "Command to CREATE user in GoCD [https://api.gocd.org/current/#create-a-user]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			var user gocd.User
-			object, err := readObject(cmd)
-			if err != nil {
-				return err
-			}
-
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &user); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &user); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
-			}
-
-			_, err = client.CreateUser(user)
-			if err != nil {
-				return err
-			}
-
-			return cliRenderer.Render(fmt.Sprintf("user %s created successfully", user.Name))
-		},
+		RunE:    userCreate,
 	}
 
 	return createUserCmd
@@ -169,8 +144,14 @@ func userUpdateCommand() *cobra.Command {
 			}
 
 			userFetched, err := client.GetUser(user.Name)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "404") {
 				return err
+			}
+
+			if create {
+				if reflect.DeepEqual(userFetched, gocd.User{}) {
+					return createRole(cmd, nil)
+				}
 			}
 
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "user", user.Name)
@@ -192,6 +173,9 @@ func userUpdateCommand() *cobra.Command {
 			return cliRenderer.Render(fmt.Sprintf("user %s updated successfully", user.Name))
 		},
 	}
+
+	updateUserCmd.PersistentFlags().BoolVarP(&create, "create", "", false,
+		"if a user by this name doesn't already exist, run create")
 
 	return updateUserCmd
 }
@@ -304,4 +288,33 @@ func listUsersCommand() *cobra.Command {
 	listPluginsCmd.SetUsageTemplate(getUsageTemplate())
 
 	return listPluginsCmd
+}
+
+func userCreate(cmd *cobra.Command, _ []string) error {
+	var user gocd.User
+
+	object, err := readObject(cmd)
+	if err != nil {
+		return err
+	}
+
+	switch objType := object.CheckFileType(cliLogger); objType {
+	case content.FileTypeYAML:
+		if err = yaml.Unmarshal([]byte(object), &user); err != nil {
+			return err
+		}
+	case content.FileTypeJSON:
+		if err = json.Unmarshal([]byte(object), &user); err != nil {
+			return err
+		}
+	default:
+		return &errors.UnknownObjectTypeError{Name: objType}
+	}
+
+	_, err = client.CreateUser(user)
+	if err != nil {
+		return err
+	}
+
+	return cliRenderer.Render(fmt.Sprintf("user %s created successfully", user.Name))
 }

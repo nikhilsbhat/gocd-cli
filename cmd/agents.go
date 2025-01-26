@@ -74,7 +74,7 @@ func getAgentsCommand() *cobra.Command {
 					return err
 				}
 
-				cliLogger.Debugf(baseQuery.Print())
+				cliLogger.Debug(baseQuery.Print())
 
 				return cliRenderer.Render(baseQuery.RunQuery())
 			}
@@ -136,7 +136,7 @@ gocd-cli agents get --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}

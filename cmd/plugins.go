@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -71,7 +72,7 @@ func getPluginSettingsCommand() *cobra.Command {
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -102,37 +103,7 @@ func createPluginSettingsCommand() *cobra.Command {
 		Short:   "Command to CREATE settings of a specified plugin present in GoCD [https://api.gocd.org/current/#create-plugin-settings]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			var setting gocd.PluginSettings
-			object, err := readObject(cmd)
-			if err != nil {
-				return err
-			}
-
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &setting); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &setting); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
-			}
-
-			response, err := client.CreatePluginSettings(setting)
-			if err != nil {
-				return err
-			}
-
-			if err = cliRenderer.Render(fmt.Sprintf("setting for plugin %s created successfully", setting.ID)); err != nil {
-				return err
-			}
-
-			return cliRenderer.Render(response)
-		},
+		RunE:    createPluginSettings,
 	}
 
 	createPluginSettingsCmd.SetUsageTemplate(getUsageTemplate())
@@ -167,8 +138,14 @@ func updatePluginSettingsCommand() *cobra.Command {
 			}
 
 			pluginSettingsFetched, err := client.GetPluginSettings(setting.ID)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "404") {
 				return err
+			}
+
+			if create {
+				if reflect.DeepEqual(pluginSettingsFetched, gocd.PluginSettings{}) {
+					return createPluginSettings(cmd, nil)
+				}
 			}
 
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "pipeline-settings", setting.ID)
@@ -196,6 +173,8 @@ func updatePluginSettingsCommand() *cobra.Command {
 	}
 
 	updatePluginSettingsCmd.SetUsageTemplate(getUsageTemplate())
+	updatePluginSettingsCmd.PersistentFlags().BoolVarP(&create, "create", "", false,
+		"if a plugin setting for respective plugin doesn't already exist, run create")
 
 	return updatePluginSettingsCmd
 }
@@ -221,7 +200,7 @@ func getPluginsInfoCommand() *cobra.Command {
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -267,7 +246,7 @@ func getPluginInfoCommand() *cobra.Command {
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -329,4 +308,37 @@ func listPluginsCommand() *cobra.Command {
 	listPluginsCmd.SetUsageTemplate(getUsageTemplate())
 
 	return listPluginsCmd
+}
+
+func createPluginSettings(cmd *cobra.Command, _ []string) error {
+	var setting gocd.PluginSettings
+
+	object, err := readObject(cmd)
+	if err != nil {
+		return err
+	}
+
+	switch objType := object.CheckFileType(cliLogger); objType {
+	case content.FileTypeYAML:
+		if err = yaml.Unmarshal([]byte(object), &setting); err != nil {
+			return err
+		}
+	case content.FileTypeJSON:
+		if err = json.Unmarshal([]byte(object), &setting); err != nil {
+			return err
+		}
+	default:
+		return &errors.UnknownObjectTypeError{Name: objType}
+	}
+
+	response, err := client.CreatePluginSettings(setting)
+	if err != nil {
+		return err
+	}
+
+	if err = cliRenderer.Render(fmt.Sprintf("setting for plugin %s created successfully", setting.ID)); err != nil {
+		return err
+	}
+
+	return cliRenderer.Render(response)
 }

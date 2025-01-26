@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -63,7 +64,7 @@ func getClusterProfilesCommand() *cobra.Command {
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -107,7 +108,7 @@ func getClusterProfileCommand() *cobra.Command {
 						return err
 					}
 
-					cliLogger.Debugf(baseQuery.Print())
+					cliLogger.Debug(baseQuery.Print())
 
 					return cliRenderer.Render(baseQuery.RunQuery())
 				}
@@ -136,37 +137,7 @@ func createClusterProfileCommand() *cobra.Command {
 		Short:   "Command to CREATE a cluster profile with all specified configurations in GoCD [https://api.gocd.org/current/#create-a-cluster-profile]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			var commonCfg gocd.CommonConfig
-			object, err := readObject(cmd)
-			if err != nil {
-				return err
-			}
-
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &commonCfg); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &commonCfg); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
-			}
-
-			response, err := client.CreateClusterProfile(commonCfg)
-			if err != nil {
-				return err
-			}
-
-			if err = cliRenderer.Render(fmt.Sprintf("cluster profile %s created successfully", commonCfg.Name)); err != nil {
-				return err
-			}
-
-			return cliRenderer.Render(response)
-		},
+		RunE:    createClusterProfile,
 	}
 
 	return createClusterProfileCmd
@@ -199,8 +170,14 @@ func updateClusterProfileCommand() *cobra.Command {
 			}
 
 			clusterProfileFetched, err := client.GetClusterProfile(commonCfg.ID)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "404") {
 				return err
+			}
+
+			if create {
+				if reflect.DeepEqual(clusterProfileFetched, gocd.CommonConfig{}) {
+					return createClusterProfile(cmd, nil)
+				}
 			}
 
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "cluster-profile", clusterProfileFetched.ID)
@@ -226,6 +203,9 @@ func updateClusterProfileCommand() *cobra.Command {
 			return cliRenderer.Render(response)
 		},
 	}
+
+	updateClusterProfileCmd.PersistentFlags().BoolVarP(&create, "create", "", false,
+		"if a cluster profile by this name doesn't already exist, run create")
 
 	return updateClusterProfileCmd
 }
@@ -299,4 +279,37 @@ func listClusterProfilesCommand() *cobra.Command {
 	}
 
 	return listElasticAgentProfilesCmd
+}
+
+func createClusterProfile(cmd *cobra.Command, _ []string) error {
+	var commonCfg gocd.CommonConfig
+
+	object, err := readObject(cmd)
+	if err != nil {
+		return err
+	}
+
+	switch objType := object.CheckFileType(cliLogger); objType {
+	case content.FileTypeYAML:
+		if err = yaml.Unmarshal([]byte(object), &commonCfg); err != nil {
+			return err
+		}
+	case content.FileTypeJSON:
+		if err = json.Unmarshal([]byte(object), &commonCfg); err != nil {
+			return err
+		}
+	default:
+		return &errors.UnknownObjectTypeError{Name: objType}
+	}
+
+	response, err := client.CreateClusterProfile(commonCfg)
+	if err != nil {
+		return err
+	}
+
+	if err = cliRenderer.Render(fmt.Sprintf("cluster profile %s created successfully", commonCfg.Name)); err != nil {
+		return err
+	}
+
+	return cliRenderer.Render(response)
 }

@@ -197,6 +197,10 @@ func updatePipelineGroupCommand() *cobra.Command {
 				}
 			}
 
+			if len(ppGroup.ETAG) == 0 {
+				ppGroup.ETAG = pipelineGroupFetched.ETAG
+			}
+
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "pipeline-group", ppGroup.Name)
 
 			existing, err := diffCfg.String(pipelineGroupFetched)

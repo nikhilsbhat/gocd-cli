@@ -180,6 +180,10 @@ func updateClusterProfileCommand() *cobra.Command {
 				}
 			}
 
+			if len(commonCfg.ETAG) == 0 {
+				commonCfg.ETAG = clusterProfileFetched.ETAG
+			}
+
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "cluster-profile", clusterProfileFetched.ID)
 
 			existing, err := diffCfg.String(clusterProfileFetched)

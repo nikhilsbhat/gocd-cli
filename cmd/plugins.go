@@ -148,6 +148,10 @@ func updatePluginSettingsCommand() *cobra.Command {
 				}
 			}
 
+			if len(setting.ETAG) == 0 {
+				setting.ETAG = pluginSettingsFetched.ETAG
+			}
+
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "pipeline-settings", setting.ID)
 
 			existing, err := diffCfg.String(pluginSettingsFetched)

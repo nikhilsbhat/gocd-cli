@@ -205,6 +205,10 @@ func updateRoleCommand() *cobra.Command {
 				}
 			}
 
+			if len(roleCfg.ETAG) == 0 {
+				roleCfg.ETAG = rolesFetched.ETAG
+			}
+
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "role", rolesFetched.Name)
 
 			existing, err := diffCfg.String(rolesFetched)

@@ -191,6 +191,10 @@ func updateArtifactStoreCommand() *cobra.Command {
 				}
 			}
 
+			if len(commonCfg.ETAG) == 0 {
+				commonCfg.ETAG = artifactStoreFetched.ETAG
+			}
+
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "artifact-store", artifactStoreFetched.Name)
 
 			existing, err := diffCfg.String(artifactStoreFetched)

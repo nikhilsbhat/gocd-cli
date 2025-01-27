@@ -283,6 +283,10 @@ func updateEnvironmentCommand() *cobra.Command {
 				}
 			}
 
+			if len(envs.ETAG) == 0 {
+				envs.ETAG = environmentFetched.ETAG
+			}
+
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "environment", envs.Name)
 
 			existing, err := diffCfg.String(environmentFetched)

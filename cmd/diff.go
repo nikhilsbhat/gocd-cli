@@ -17,7 +17,7 @@ func (cfg *Config) CheckDiffAndAllow(oldData, newData string) error {
 	}
 
 	fmt.Printf("%s\n", diffIdentified)
-	fmt.Printf("%s\n\n", "Above changes would be deployed")
+	fmt.Printf("%s\n\n", "Above changes would be applied")
 
 	if !cfg.Yes {
 		contains, option := cliShellReadConfig.Reader()

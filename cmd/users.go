@@ -111,7 +111,7 @@ func userCreateCommand() *cobra.Command {
 		Short:   "Command to CREATE user in GoCD [https://api.gocd.org/current/#create-a-user]",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE:    userCreate,
+		RunE:    createUser,
 	}
 
 	return createUserCmd
@@ -150,7 +150,7 @@ func userUpdateCommand() *cobra.Command {
 
 			if create {
 				if reflect.DeepEqual(userFetched, gocd.User{}) {
-					return createRole(cmd, nil)
+					return createUser(cmd, nil)
 				}
 			}
 
@@ -290,7 +290,7 @@ func listUsersCommand() *cobra.Command {
 	return listPluginsCmd
 }
 
-func userCreate(cmd *cobra.Command, _ []string) error {
+func createUser(cmd *cobra.Command, _ []string) error {
 	var user gocd.User
 
 	object, err := readObject(cmd)

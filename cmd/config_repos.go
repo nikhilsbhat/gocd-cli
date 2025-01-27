@@ -455,6 +455,10 @@ func getUpdateConfigRepoCommand() *cobra.Command {
 				}
 			}
 
+			if len(configRepo.ETAG) == 0 {
+				configRepo.ETAG = configRepoFetched.ETAG
+			}
+
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "config-repo", configRepoFetched.ID)
 
 			existing, err := diffCfg.String(configRepoFetched)

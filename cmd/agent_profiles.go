@@ -176,6 +176,10 @@ func updateAgentProfileCommand() *cobra.Command {
 				}
 			}
 
+			if len(commonCfg.ETAG) == 0 {
+				commonCfg.ETAG = elasticAgentProfileFetched.ETAG
+			}
+
 			cliShellReadConfig.ShellMessage = fmt.Sprintf(updateMessage, "elastic-agent-profile", elasticAgentProfileFetched.ID)
 
 			existing, err := diffCfg.String(elasticAgentProfileFetched)

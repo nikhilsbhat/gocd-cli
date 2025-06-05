@@ -1,71 +1,79 @@
----
-linters:
-  disable-all: false
-  enable-all: true
-  disable:
-    - gci
-    - gochecknoglobals
-    - tagliatelle
-    - exhaustivestruct
-    - nolintlint
-    - exhaustruct
-    - forbidigo
-    - paralleltest
-    - cyclop
-    - ireturn
-    - wrapcheck
-    - interfacebloat
-    - forcetypeassert
-    - dupl
-    - goconst
-    - maligned
-    - depguard
-    - tagalign
-    - perfsprint
-    - exhaustivestruct
-
-issues:
-  exclude-files:
-    - Makefile
-    - README.md
-    - Dockerfile
-  exclude-dirs:
-    - scripts/
-    - vendor/
-    - docs/
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gomnd
-
-    # https://github.com/go-critic/go-critic/issues/926
-    - linters:
-        - gocritic
-      text: "unnecessaryDefer:"
-
-linters-settings:
-  funlen:
-    lines: 160
-    statements: 50
-
-  lll:
-    line-length: 165
-
-  dupl:
-    threshold: 450
-
-  gocognit:
-    min-complexity: 78
-
-  nestif:
-    min-complexity: 20
-
-
+version: "2"
 run:
   concurrency: 10
-  timeout: 10m
   issues-exit-code: 1
   tests: true
-
+linters:
+  default: all
+  disable:
+    - cyclop
+    - depguard
+    - dupl
+    - exhaustruct
+    - forbidigo
+    - forcetypeassert
+    - gochecknoglobals
+    - goconst
+    - interfacebloat
+    - ireturn
+    - nolintlint
+    - paralleltest
+    - perfsprint
+    - tagalign
+    - tagliatelle
+    - wrapcheck
+  settings:
+    dupl:
+      threshold: 450
+    funlen:
+      lines: 160
+      statements: 50
+    gocognit:
+      min-complexity: 78
+    lll:
+      line-length: 165
+    nestif:
+      min-complexity: 20
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - mnd
+        path: _test\.go
+      - linters:
+          - gocritic
+        text: 'unnecessaryDefer:'
+    paths:
+      - Makefile
+      - README.md
+      - Dockerfile
+      - scripts/
+      - vendor/
+      - docs/
+      - third_party$
+      - builtin$
+      - examples$
 severity:
-  default-severity: error
+  default: error
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - Makefile
+      - README.md
+      - Dockerfile
+      - scripts/
+      - vendor/
+      - docs/
+      - third_party$
+      - builtin$
+      - examples$

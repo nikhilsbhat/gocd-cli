@@ -98,7 +98,7 @@ func setCLIClient(_ *cobra.Command, _ []string) error {
 	cliRenderer = renderer.GetRenderer(writer, cliLogger, cliCfg.NoColor, cliCfg.yaml, cliCfg.json, cliCfg.csv, cliCfg.table)
 
 	inputOptions := []utils.Options{{Name: "yes", Short: "y"}, {Name: "no", Short: "n"}}
-	cliShellReadConfig = utils.NewReadConfig("gocd-cli", "", inputOptions, cliLogger)
+	cliShellReadConfig = utils.Reader("gocd-cli", "", inputOptions, cliLogger)
 
 	return nil
 }

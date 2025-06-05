@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
@@ -135,48 +136,60 @@ gocd-cli environment get gocd_environment_1 --pipelines -o yaml`,
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, args []string) error {
-			response, err := client.GetEnvironment(args[0])
-			if err != nil {
-				return err
-			}
-
-			if fetchPipeline {
-				pipelineName := make([]string, 0)
-
-				for _, name := range response.Pipelines {
-					pipelineName = append(pipelineName, name.Name)
-				}
-
-				return cliRenderer.Render(pipelineName)
-			}
-
-			if len(environmentVariables) != 0 {
-				envVars := make([]gocd.EnvVars, 0)
-				for _, envVar := range response.EnvVars {
-					for _, environmentVariable := range environmentVariables {
-						if funk.Contains(envVar.Name, environmentVariable) {
-							envVars = append(envVars, envVar)
-						}
-					}
-				}
-
-				return cliRenderer.Render(envVars)
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(response, jsonQuery)
+			for {
+				response, err := client.GetEnvironment(args[0])
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debug(baseQuery.Print())
+				if fetchPipeline {
+					pipelineName := make([]string, 0)
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+					for _, name := range response.Pipelines {
+						pipelineName = append(pipelineName, name.Name)
+					}
+
+					return cliRenderer.Render(pipelineName)
+				}
+
+				if len(environmentVariables) != 0 {
+					envVars := make([]gocd.EnvVars, 0)
+					for _, envVar := range response.EnvVars {
+						for _, environmentVariable := range environmentVariables {
+							if funk.Contains(envVar.Name, environmentVariable) {
+								envVars = append(envVars, envVar)
+							}
+						}
+					}
+
+					return cliRenderer.Render(envVars)
+				}
+
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+					baseQuery, err := query.SetQuery(response, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debug(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(response); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(response)
+			return nil
 		},
 	}
 
@@ -196,33 +209,45 @@ func getEnvironmentMapping() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			environmentNames, err := client.GetEnvironmentsMerged(goCDEnvironments)
-			if err != nil {
-				return err
-			}
-
-			cliLogger.Debugf("GoCD environment mapping information was fetched successfully")
-
-			environmentMappings := make([]map[string]string, 0)
-
-			for _, environmentName := range environmentNames {
-				environmentMappings = append(environmentMappings, getOriginType(map[string]string{"name": environmentName.Name}, environmentName.Origins))
-			}
-
-			if len(jsonQuery) != 0 {
-				cliLogger.Debugf(queryEnabledMessage, jsonQuery)
-
-				baseQuery, err := query.SetQuery(environmentMappings, jsonQuery)
+			for {
+				environmentNames, err := client.GetEnvironmentsMerged(goCDEnvironments)
 				if err != nil {
 					return err
 				}
 
-				cliLogger.Debug(baseQuery.Print())
+				cliLogger.Debugf("GoCD environment mapping information was fetched successfully")
 
-				return cliRenderer.Render(baseQuery.RunQuery())
+				environmentMappings := make([]map[string]string, 0)
+
+				for _, environmentName := range environmentNames {
+					environmentMappings = append(environmentMappings, getOriginType(map[string]string{"name": environmentName.Name}, environmentName.Origins))
+				}
+
+				if len(jsonQuery) != 0 {
+					cliLogger.Debugf(queryEnabledMessage, jsonQuery)
+
+					baseQuery, err := query.SetQuery(environmentMappings, jsonQuery)
+					if err != nil {
+						return err
+					}
+
+					cliLogger.Debug(baseQuery.Print())
+
+					return cliRenderer.Render(baseQuery.RunQuery())
+				}
+
+				if err = cliRenderer.Render(environmentMappings); err != nil {
+					return err
+				}
+
+				if !cliCfg.Watch {
+					break
+				}
+
+				time.Sleep(cliCfg.WatchInterval)
 			}
 
-			return cliRenderer.Render(environmentMappings)
+			return nil
 		},
 	}
 

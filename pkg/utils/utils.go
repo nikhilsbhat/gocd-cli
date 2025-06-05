@@ -52,8 +52,8 @@ func (cfg *ReadConfig) Reader() (bool, Options) {
 		inputString := strings.TrimSpace(inputStringRaw)
 		inputLength := len(inputString)
 
-		switch {
-		case inputLength == 0:
+		switch inputLength {
+		case 0:
 			cfg.logger.Warnf("did not get any input, please pass one of the valid inputs '%s'", flattenedInputs)
 
 			return false, Options{}
@@ -93,8 +93,8 @@ func getArrayOfInputs(inputs string) []string {
 	return strings.Fields(inputs)
 }
 
-// NewReadConfig returns new instance of ReadConfig.
-func NewReadConfig(name, message string, options []Options, logger *logrus.Logger) *ReadConfig {
+// Reader returns new instance of ReadConfig.
+func Reader(name, message string, options []Options, logger *logrus.Logger) *ReadConfig {
 	return &ReadConfig{
 		ShellName:    name,
 		ShellMessage: message,

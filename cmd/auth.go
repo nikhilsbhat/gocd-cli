@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"github.com/goccy/go-yaml"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
@@ -36,6 +37,7 @@ gocd-cli auth-config show --profile central
 	registerAuthConfigCmd.AddCommand(getAuthStoreCommand())
 	registerAuthConfigCmd.AddCommand(getAuthShowCommand())
 	registerAuthConfigCmd.AddCommand(getAuthEraseCommand())
+	registerAuthConfigCmd.AddCommand(getAuthListCommand())
 
 	for _, command := range registerAuthConfigCmd.Commands() {
 		command.SilenceUsage = true
@@ -163,6 +165,49 @@ func getAuthShowCommand() *cobra.Command {
 			}
 
 			return cliRenderer.Render(string(authConfigData))
+		},
+	}
+
+	return authEraseCmd
+}
+
+func getAuthListCommand() *cobra.Command {
+	authEraseCmd := &cobra.Command{
+		Use:     "list",
+		Short:   "Command to list the cached GoCD authorization configuration profiles that is used by the cli.",
+		Args:    cobra.NoArgs,
+		PreRunE: setCLIClient,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				cliLogger.Errorf("fetching user's home directory errored with '%v'", err)
+
+				return err
+			}
+
+			authConfigFileDir := filepath.Join(home, goCdCacheDirName)
+
+			pattern := `auth_config\.([^.]+)\.yaml`
+			profileRegex := regexp.MustCompile(pattern)
+
+			if err = filepath.Walk(authConfigFileDir, func(_ string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+
+				if !info.IsDir() {
+					matches := profileRegex.FindStringSubmatch(info.Name())
+					if len(matches) > 1 {
+						fmt.Println(matches[1])
+					}
+				}
+
+				return nil
+			}); err != nil {
+				return err
+			}
+
+			return nil
 		},
 	}
 

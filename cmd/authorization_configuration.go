@@ -45,8 +45,9 @@ GET/CREATE/UPDATE/DELETE cluster profiles present in GoCD`,
 
 func getAuthConfigCommand() *cobra.Command {
 	authConfigGetCmd := &cobra.Command{
-		Use:     "get",
-		Short:   "Command to GET a authorization configuration with all specified configurations in GoCD [https://api.gocd.org/current/#get-an-authorization-configuration]",
+		Use: "get",
+		Short: "Command to GET a authorization configuration with all specified configurations in GoCD " +
+			"[https://api.gocd.org/current/#get-an-authorization-configuration]",
 		Example: "gocd-cli authorization get ldap -o yaml",
 		Args:    cobra.RangeArgs(1, 1),
 		PreRunE: setCLIClient,
@@ -95,7 +96,7 @@ func getAuthConfigsCommand() *cobra.Command {
 		Example: "gocd-cli authorization get-all",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			response, err := client.GetAuthConfigs()
 			if err != nil {
 				return err

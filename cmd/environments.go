@@ -457,8 +457,8 @@ func listEnvironmentsCommand() *cobra.Command {
 
 				response = funk.Filter(response, func(environment gocd.Environment) bool {
 					agentsFound := funk.Find(agents, func(agent gocd.Agent) bool {
-						return funk.Find(agent.Environments, environment).(bool)
-					}).(bool)
+						return funk.Contains(agent.Environments, environment)
+					}) != nil
 
 					return len(environment.Pipelines) == 0 || agentsFound
 				}).([]gocd.Environment)

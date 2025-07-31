@@ -1416,7 +1416,7 @@ available in the GoCD server`,
 	}
 
 	getPipelineReportCmd.PersistentFlags().BoolVarP(&analyseReport, "analyse", "", false,
-		"if enabled, analyse the report passed over making an API call")
+		"if enabled, analyzes the provided report instead of making an API call.")
 	getPipelineReportCmd.PersistentFlags().BoolVarP(&failed, "failed", "", false,
 		"if enabled, fetches only the pipelines with 'Failure' status")
 	getPipelineReportCmd.PersistentFlags().BoolVarP(&succeeded, "succeeded", "", false,

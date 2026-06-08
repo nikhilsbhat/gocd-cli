@@ -1,19 +1,15 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"reflect"
 	"time"
 
-	"github.com/nikhilsbhat/common/content"
-	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/thoas/go-funk"
-	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -105,6 +101,7 @@ gocd-cli agents get --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 					if err != nil {
 						return err
 					}
+
 					response = agentResponse
 				}
 
@@ -113,6 +110,7 @@ gocd-cli agents get --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 					if err != nil {
 						return err
 					}
+
 					for _, agentResponse := range agentsResponse {
 						if agentResponse.Name == agentName {
 							response = agentResponse
@@ -169,22 +167,14 @@ func updateAgentCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var agent gocd.Agent
+
 			object, err := readObject(cmd)
 			if err != nil {
 				return err
 			}
 
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &agent); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &agent); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
+			if err = unmarshalObject(object, &agent); err != nil {
+				return err
 			}
 
 			agentFetched, err := client.GetAgent(agent.ID)
@@ -290,6 +280,7 @@ gocd-cli agents delete --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 				if err != nil {
 					return err
 				}
+
 				for _, agentResponse := range agentsResponse {
 					if agentResponse.Name == agentName {
 						agentID = agentResponse.ID
@@ -394,6 +385,7 @@ gocd-cli agents job-history --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 				if err != nil {
 					return err
 				}
+
 				for _, agentResponse := range agentsResponse {
 					if agentResponse.Name == agentName {
 						agentID = agentResponse.ID
@@ -437,6 +429,7 @@ gocd-cli agents kill-task --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 				if err != nil {
 					return err
 				}
+
 				for _, agentResponse := range agentsResponse {
 					if agentResponse.Name == agentName {
 						agentID = agentResponse.ID
@@ -466,12 +459,12 @@ gocd-cli agents kill-task --id 938d1935-bdca-4728-83d5-e96cbf0a4f8b`,
 }
 
 func getEnvironmentNames(environments any) []string {
-	envs := environments.([]interface{})
+	envs := environments.([]any)
 
-	envNames := make([]string, 0)
+	envNames := make([]string, 0, len(envs))
 
 	for _, value := range envs {
-		name := value.(map[string]interface{})
+		name := value.(map[string]any)
 		envNames = append(envNames, name["name"].(string))
 	}
 

@@ -1,16 +1,12 @@
 package cmd
 
 import (
-	"encoding/json"
 	"os"
 	"strconv"
 	"time"
 
-	"github.com/nikhilsbhat/common/content"
-	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -73,22 +69,14 @@ func createOrUpdateBackupConfig() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var backupConfig gocd.BackupConfig
+
 			object, err := readObject(cmd)
 			if err != nil {
 				return err
 			}
 
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &backupConfig); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &backupConfig); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
+			if err = unmarshalObject(object, &backupConfig); err != nil {
+				return err
 			}
 
 			if err = client.CreateOrUpdateBackupConfig(backupConfig); err != nil {
@@ -181,7 +169,9 @@ func scheduleBackup() *cobra.Command {
 			cliLogger.Debugf("fetching information of the backup id: '%s'", backupID)
 
 			currentRetryCount := 0
+
 			var latestBackupStatus string
+
 			for {
 				if currentRetryCount > backupRetry {
 					cliLogger.Fatalf("maximum retry count of '%d' crossed with current count '%d', still backup is not ready yet with status '%s'. Exitting",
@@ -216,7 +206,9 @@ func scheduleBackup() *cobra.Command {
 				}
 
 				latestBackupStatus = response.Status
+
 				time.Sleep(delay)
+
 				currentRetryCount++
 			}
 

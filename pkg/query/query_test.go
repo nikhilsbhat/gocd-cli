@@ -55,19 +55,35 @@ func TestObject_GetQuery(t *testing.T) {
 			},
 		}
 
-		expected := []interface{}{
-			map[string]interface{}{
+		expected := []any{
+			map[string]any{
 				"id": "sample-repo",
-				"material": map[string]interface{}{
-					"attributes": map[string]interface{}{
-						"branch": "master",
-						"filter": map[string]interface{}{},
-						"url":    "https://github.com/TWChennai/gocd-git-path-sample.git",
+				"material": map[string]any{
+					"attributes": map[string]any{
+						"auto_update":           false,
+						"branch":                "master",
+						"check_externals":       false,
+						"filter":                map[string]any{},
+						"ignore_for_scheduling": false,
+						"invert_filter":         false,
+						"url":                   "https://github.com/TWChennai/gocd-git-path-sample.git",
+						"use_tickets":           false,
+					},
+					"config": map[string]any{
+						"attributes": map[string]any{
+							"auto_update":           false,
+							"check_externals":       false,
+							"filter":                map[string]any{},
+							"ignore_for_scheduling": false,
+							"invert_filter":         false,
+							"use_tickets":           false,
+						},
 					},
 					"type": "git",
 				},
-				"plugin_id": "json.config.plugin",
-				"rules": []interface{}{map[string]interface{}{
+				"parse_info": map[string]any{},
+				"plugin_id":  "json.config.plugin",
+				"rules": []any{map[string]any{
 					"action":    "refer",
 					"directive": "allow",
 					"resource":  "*",
@@ -129,7 +145,7 @@ func TestObject_GetQuery(t *testing.T) {
 			},
 		}
 
-		expected := []interface{}{"json.config.plugin", "yaml.config.plugin"}
+		expected := []any{"json.config.plugin", "yaml.config.plugin"}
 
 		querySet, err := query.SetQuery(data, "[*] | plugin_id")
 		assert.NoError(t, err)

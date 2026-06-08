@@ -54,6 +54,7 @@ func getAuthStoreCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			cliLogger.Debug("saving authorisation config to cache, so that it can be reused next")
+
 			home, err := os.UserHomeDir()
 			if err != nil {
 				cliLogger.Errorf("fetching user's home directory errored with '%v'", err)
@@ -62,7 +63,9 @@ func getAuthStoreCommand() *cobra.Command {
 			}
 
 			authConfigDir := filepath.Join(home, goCdCacheDirName)
+
 			const filePermission = 0o755
+
 			if err = os.Mkdir(authConfigDir, filePermission); os.IsNotExist(err) {
 				cliLogger.Errorf("creating directory '%s' errored with '%v'", authConfigDir, err)
 
@@ -70,6 +73,7 @@ func getAuthStoreCommand() *cobra.Command {
 			}
 
 			authFile := filepath.Join(authConfigDir, setConfigWithProfile())
+
 			authConfigFile, err := os.Create(authFile)
 			if err != nil {
 				cliLogger.Errorf("creating authfile '%s' errored with '%v'", authFile, err)

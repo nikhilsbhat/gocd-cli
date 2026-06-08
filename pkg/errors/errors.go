@@ -19,7 +19,7 @@ func (e *CipherMinKeyError) Error() string {
 }
 
 func (e *UnknownObjectTypeError) Error() string {
-	return fmt.Sprintf("unknow object type %s", e.Name)
+	return fmt.Sprintf("unknown object type %s", e.Name)
 }
 
 func (e *MaterialError) Error() string {

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -9,14 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nikhilsbhat/common/content"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/thoas/go-funk"
-	"gopkg.in/yaml.v3"
 )
 
 type configRepoPreflight struct {
@@ -136,7 +133,7 @@ Do not use this command unless you know what you are doing with it`,
 					return err
 				}
 
-				var repos interface{}
+				var repos any
 
 				if failedConfigRepo {
 					response = funk.Filter(response, func(configRepo gocd.ConfigRepo) bool {
@@ -151,11 +148,13 @@ Do not use this command unless you know what you are doing with it`,
 					for _, configRepo := range response {
 						names = append(names, configRepo.ID)
 					}
+
 					repos = names
 				}
 
 				if getLastModified {
 					configRepo := make([]configRepoLastModified, 0)
+
 					for _, cfgRepo := range response {
 						modificationTime := cfgRepo.ConfigRepoParseInfo.LatestParsedModification["modified_time"]
 						if modificationTime != nil {
@@ -264,7 +263,8 @@ gocd-cli configrepo get-definitions --repo-name sample-repo -o yaml --pipelines 
 					configReposResponse[configRepo] = response
 				}
 
-				var output interface{}
+				var output any
+
 				output = configReposResponse
 				configRepoFilteredResponse := make([]ConfigRepoDefinitions, 0)
 
@@ -286,6 +286,7 @@ gocd-cli configrepo get-definitions --repo-name sample-repo -o yaml --pipelines 
 							for _, pipeline := range group.Pipelines {
 								configRepoPipelines = append(configRepoPipelines, pipeline.Name)
 							}
+
 							configRepoPipelineGroups = append(configRepoPipelineGroups, group.Name)
 						}
 
@@ -302,6 +303,7 @@ gocd-cli configrepo get-definitions --repo-name sample-repo -o yaml --pipelines 
 							configRepo.PipelineGroups = strings.Join(configRepoPipelineGroups, "\n")
 							configRepo.PipelineCount = len(configRepoPipelines)
 							configRepo.PipelineGroupCount = len(configRepoPipelineGroups)
+
 							if len(configRepoEnvironment) != 0 {
 								configRepo.EnvironmentCount = len(configRepoEnvironment)
 							}
@@ -426,22 +428,14 @@ func getUpdateConfigRepoCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var configRepo gocd.ConfigRepo
+
 			object, err := readObject(cmd)
 			if err != nil {
 				return err
 			}
 
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &configRepo); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &configRepo); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
+			if err = unmarshalObject(object, &configRepo); err != nil {
+				return err
 			}
 
 			configRepoFetched, err := client.GetConfigRepo(configRepo.ID)
@@ -624,6 +618,7 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			var pipelineFilesData []gocd.PipelineFiles
+
 			pattern := configRepoPreflightObj.pipelineExtRegex
 
 			if len(configRepoPreflightObj.pipelineFiles) != 0 {
@@ -633,6 +628,7 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 
 					return err
 				}
+
 				pipelineFilesData = append(pipelineFilesData, file...)
 			} else {
 				if len(configRepoPreflightObj.pipelineExtRegex) == 0 {
@@ -651,12 +647,22 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 
 			if cliLogger.Level == logrus.DebugLevel {
 				pipelineFiles := make([]string, 0)
+
 				funk.ForEach(pipelineFilesData, func(pipelineFileData gocd.PipelineFiles) {
 					pipelineFiles = append(pipelineFiles, pipelineFileData.Path)
 				})
 
 				fmt.Printf("Following pipeline files would be used for running preflight check:\n%s\n", strings.Join(pipelineFiles, "\n"))
 			}
+
+			pipelinePathPatterns := filterIgnoredPipelines(pipelineFilesData, []string{})
+
+			pipelineNames, _, err := getPipelineNames(pipelinePathPatterns)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Following pipelines would be used for running preflight check:\n%s\n", strings.Join(pipelineNames, "\n"))
 
 			pipelineMap := client.SetPipelineFiles(pipelineFilesData)
 
@@ -692,17 +698,8 @@ func createConfigRepo(cmd *cobra.Command, _ []string) error {
 
 	fmt.Println(object.String())
 
-	switch objType := object.CheckFileType(cliLogger); objType {
-	case content.FileTypeYAML:
-		if err = yaml.Unmarshal([]byte(object), &configRepo); err != nil {
-			return err
-		}
-	case content.FileTypeJSON:
-		if err = json.Unmarshal([]byte(object), &configRepo); err != nil {
-			return err
-		}
-	default:
-		return &errors.UnknownObjectTypeError{Name: objType}
+	if err = unmarshalObject(object, &configRepo); err != nil {
+		return err
 	}
 
 	if err = client.CreateConfigRepo(configRepo); err != nil {

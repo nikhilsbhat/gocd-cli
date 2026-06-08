@@ -1,16 +1,12 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"time"
 
-	"github.com/nikhilsbhat/common/content"
-	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 func registerServerConfigCommand() *cobra.Command {
@@ -360,22 +356,14 @@ func createUpdateMailServerConfigCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var mailConfig gocd.MailServerConfig
+
 			object, err := readObject(cmd)
 			if err != nil {
 				return err
 			}
 
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &mailConfig); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &mailConfig); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
+			if err = unmarshalObject(object, &mailConfig); err != nil {
+				return err
 			}
 
 			mailServerConfigFetched, err := client.GetMailServerConfig()

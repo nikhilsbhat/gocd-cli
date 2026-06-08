@@ -155,6 +155,7 @@ func listMaterialsCommand() *cobra.Command {
 				}
 
 				materials := make([]string, 0)
+
 				for _, material := range response {
 					if material.Config.Type == "plugin" {
 						continue
@@ -163,6 +164,7 @@ func listMaterialsCommand() *cobra.Command {
 					if len(material.Config.Attributes.Name) != 0 {
 						materials = append(materials, material.Config.Attributes.Name)
 					}
+
 					if len(material.Config.Attributes.URL) != 0 {
 						materials = append(materials, material.Config.Attributes.URL)
 					}

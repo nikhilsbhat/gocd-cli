@@ -80,14 +80,17 @@ func enableOrDisableMaintenanceCommand() *cobra.Command {
 		Example: `gocd-cli maintenance --enable/--disable`,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			var action string
-			if goCDEnableMaintenance {
+
+			switch {
+			case goCDEnableMaintenance:
 				action = "enabling"
+
 				if err := client.EnableMaintenanceMode(); err != nil {
 					return err
 				}
-			}
-			if goCDDisableMaintenance {
+			case goCDDisableMaintenance:
 				action = "disabling"
+
 				if err := client.DisableMaintenanceMode(); err != nil {
 					return err
 				}

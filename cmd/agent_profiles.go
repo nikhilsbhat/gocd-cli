@@ -1,20 +1,16 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"reflect"
 	"strings"
 	"time"
 
-	"github.com/nikhilsbhat/common/content"
-	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/thoas/go-funk"
-	"gopkg.in/yaml.v3"
 )
 
 var elasticProfiles []string
@@ -147,22 +143,14 @@ func updateAgentProfileCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var commonCfg gocd.CommonConfig
+
 			object, err := readObject(cmd)
 			if err != nil {
 				return err
 			}
 
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &commonCfg); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &commonCfg); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
+			if err = unmarshalObject(object, &commonCfg); err != nil {
+				return err
 			}
 
 			elasticAgentProfileFetched, err := client.GetElasticAgentProfile(commonCfg.ID)
@@ -348,17 +336,8 @@ func createAgentProfiles(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	switch objType := object.CheckFileType(cliLogger); objType {
-	case content.FileTypeYAML:
-		if err = yaml.Unmarshal([]byte(object), &commonCfg); err != nil {
-			return err
-		}
-	case content.FileTypeJSON:
-		if err = json.Unmarshal([]byte(object), &commonCfg); err != nil {
-			return err
-		}
-	default:
-		return &errors.UnknownObjectTypeError{Name: objType}
+	if err = unmarshalObject(object, &commonCfg); err != nil {
+		return err
 	}
 
 	response, err := client.CreateElasticAgentProfile(commonCfg)

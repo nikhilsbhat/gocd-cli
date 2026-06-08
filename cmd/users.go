@@ -1,18 +1,14 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"reflect"
 	"strings"
 	"time"
 
-	"github.com/nikhilsbhat/common/content"
-	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 func registerUsersCommand() *cobra.Command {
@@ -125,22 +121,14 @@ func userUpdateCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var user gocd.User
+
 			object, err := readObject(cmd)
 			if err != nil {
 				return err
 			}
 
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &user); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &user); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
+			if err = unmarshalObject(object, &user); err != nil {
+				return err
 			}
 
 			userFetched, err := client.GetUser(user.Name)
@@ -221,23 +209,15 @@ func bulkDeleteUsersCommand() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			var user map[string]interface{}
+			var user map[string]any
+
 			object, err := readObject(cmd)
 			if err != nil {
 				return err
 			}
 
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &user); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &user); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
+			if err = unmarshalObject(object, &user); err != nil {
+				return err
 			}
 
 			if err = client.BulkDeleteUsers(user); err != nil {
@@ -298,21 +278,11 @@ func createUser(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	switch objType := object.CheckFileType(cliLogger); objType {
-	case content.FileTypeYAML:
-		if err = yaml.Unmarshal([]byte(object), &user); err != nil {
-			return err
-		}
-	case content.FileTypeJSON:
-		if err = json.Unmarshal([]byte(object), &user); err != nil {
-			return err
-		}
-	default:
-		return &errors.UnknownObjectTypeError{Name: objType}
+	if err = unmarshalObject(object, &user); err != nil {
+		return err
 	}
 
-	_, err = client.CreateUser(user)
-	if err != nil {
+	if _, err = client.CreateUser(user); err != nil {
 		return err
 	}
 

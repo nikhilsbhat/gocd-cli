@@ -1,16 +1,12 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"reflect"
 	"strings"
 	"time"
 
-	"github.com/goccy/go-yaml"
-	"github.com/nikhilsbhat/common/content"
-	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
@@ -55,6 +51,7 @@ func getRolesCommand() *cobra.Command {
 		RunE: func(_ *cobra.Command, _ []string) error {
 			for {
 				var rolesConfig gocd.RolesConfig
+
 				switch len(roleType) {
 				case 0:
 					response, err := client.GetRoles()
@@ -158,7 +155,7 @@ func createRoleCommand() *cobra.Command {
 		Use: "create",
 		Short: "Command to CREATE a role with all specified configurations in GoCD " +
 			"[https://api.gocd.org/current/#create-a-gocd-role, https://api.gocd.org/current/#create-a-plugin-role]",
-		Example: "gocd-cli role create sample-config --from-file sample-config.yaml --log-level debug",
+		Example: "gocd-cli role create --from-file sample-config.yaml --log-level debug",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE:    createRole,
@@ -171,27 +168,19 @@ func updateRoleCommand() *cobra.Command {
 	updateRoleCmd := &cobra.Command{
 		Use:     "update",
 		Short:   "Command to UPDATE a role with all specified configurations in GoCD [https://api.gocd.org/current/#update-a-role]",
-		Example: "gocd-cli role update sample-config --from-file sample-config.yaml --log-level debug",
+		Example: "gocd-cli role update --from-file sample-config.yaml --log-level debug",
 		Args:    cobra.NoArgs,
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var roleCfg gocd.Role
+
 			object, err := readObject(cmd)
 			if err != nil {
 				return err
 			}
 
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &roleCfg); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &roleCfg); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
+			if err = unmarshalObject(object, &roleCfg); err != nil {
+				return err
 			}
 
 			rolesFetched, err := client.GetRole(roleCfg.Name)
@@ -320,17 +309,8 @@ func createRole(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	switch objType := object.CheckFileType(cliLogger); objType {
-	case content.FileTypeYAML:
-		if err = yaml.Unmarshal([]byte(object), &roleCfg); err != nil {
-			return err
-		}
-	case content.FileTypeJSON:
-		if err = json.Unmarshal([]byte(object), &roleCfg); err != nil {
-			return err
-		}
-	default:
-		return &errors.UnknownObjectTypeError{Name: objType}
+	if err = unmarshalObject(object, &roleCfg); err != nil {
+		return err
 	}
 
 	response, err := client.CreateRole(roleCfg)

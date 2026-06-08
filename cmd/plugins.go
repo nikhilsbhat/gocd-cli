@@ -1,18 +1,14 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
 	"time"
 
-	"github.com/nikhilsbhat/common/content"
-	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
 	"github.com/nikhilsbhat/gocd-cli/pkg/query"
 	"github.com/nikhilsbhat/gocd-sdk-go"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 type goCdPlugin struct {
@@ -119,22 +115,14 @@ func updatePluginSettingsCommand() *cobra.Command {
 		PreRunE: setCLIClient,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var setting gocd.PluginSettings
+
 			object, err := readObject(cmd)
 			if err != nil {
 				return err
 			}
 
-			switch objType := object.CheckFileType(cliLogger); objType {
-			case content.FileTypeYAML:
-				if err = yaml.Unmarshal([]byte(object), &setting); err != nil {
-					return err
-				}
-			case content.FileTypeJSON:
-				if err = json.Unmarshal([]byte(object), &setting); err != nil {
-					return err
-				}
-			default:
-				return &errors.UnknownObjectTypeError{Name: objType}
+			if err = unmarshalObject(object, &setting); err != nil {
+				return err
 			}
 
 			pluginSettingsFetched, err := client.GetPluginSettings(setting.ID)
@@ -322,17 +310,8 @@ func createPluginSettings(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	switch objType := object.CheckFileType(cliLogger); objType {
-	case content.FileTypeYAML:
-		if err = yaml.Unmarshal([]byte(object), &setting); err != nil {
-			return err
-		}
-	case content.FileTypeJSON:
-		if err = json.Unmarshal([]byte(object), &setting); err != nil {
-			return err
-		}
-	default:
-		return &errors.UnknownObjectTypeError{Name: objType}
+	if err = unmarshalObject(object, &setting); err != nil {
+		return err
 	}
 
 	response, err := client.CreatePluginSettings(setting)

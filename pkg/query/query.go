@@ -26,7 +26,7 @@ type Query struct {
 }
 
 // SetQuery processes the data into a format FromString of gojsonq understands and return finally processed query.
-func SetQuery(data interface{}, query string) (*Query, error) {
+func SetQuery(data any, query string) (*Query, error) {
 	objectString, err := content.Marshal(data)
 	if err != nil {
 		return nil, err
@@ -77,28 +77,28 @@ func getBaseQuery(obj content.Object) *gojsonq.JSONQ {
 }
 
 // QueryGet returns response post the GET query.
-func (q *Query) QueryGet() interface{} {
+func (q *Query) QueryGet() any {
 	queryResponse := q.JSONQ.From(q.object)
 
 	return queryResponse.Get()
 }
 
 // QueryPluck returns response post the PLUCK query.
-func (q *Query) QueryPluck() interface{} {
+func (q *Query) QueryPluck() any {
 	queryResponse := q.JSONQ.From(q.object).Pluck(q.key)
 
 	return queryResponse
 }
 
 // QueryWhere returns response post the WHERE query.
-func (q *Query) QueryWhere() interface{} {
+func (q *Query) QueryWhere() any {
 	queryResponse := q.JSONQ.From(q.object).Where(q.key, q.operator, q.value)
 
 	return queryResponse.Get()
 }
 
 // QuerySort returns response post the SORT query.
-func (q *Query) QuerySort() interface{} {
+func (q *Query) QuerySort() any {
 	queryResponse := q.JSONQ.From(q.object).SortBy(q.key, q.value)
 
 	return queryResponse.Get()
@@ -130,7 +130,7 @@ func (q *Query) GetQueryObject() string {
 }
 
 // RunQuery identifies the query type based on the type set by ConstructQuery and return the result post applying the query.
-func (q *Query) RunQuery() interface{} {
+func (q *Query) RunQuery() any {
 	switch q.queryType {
 	case "get":
 		return q.QueryGet()

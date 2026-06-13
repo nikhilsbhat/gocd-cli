@@ -664,16 +664,19 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 
 			fmt.Printf("Following pipelines would be used for running preflight check:\n%s\n", strings.Join(pipelineNames, "\n"))
 
-			pipelineMap := client.SetPipelineFiles(pipelineFilesData)
-
-			response, err := client.ConfigRepoPreflightCheck(pipelineMap, goCdPluginObj.getPluginID(), goCDConfigRepoName)
+			preflightStartTime := time.Now()
+			response, err := client.ConfigRepoPreflightCheckFiles(pipelineFilesData, goCdPluginObj.getPluginID(), goCDConfigRepoName)
+			preflightDuration := time.Since(preflightStartTime)
 			if err != nil {
-				cliLogger.Errorf("preflight checks errored with: %v", err)
+				cliLogger.Errorf("preflight checks errored after %s with: %v", preflightDuration, err)
 
-				return err
+				return fmt.Errorf("GoCD server preflight check failed after %s: %w", preflightDuration, err)
 			}
 
-			return cliRenderer.Render(response)
+			return cliRenderer.Render(map[string]any{
+				"valid":      response,
+				"time_taken": preflightDuration.String(),
+			})
 		},
 	}
 

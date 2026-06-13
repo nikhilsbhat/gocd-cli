@@ -667,6 +667,7 @@ func getConfigRepoPreflightCheckCommand() *cobra.Command {
 			preflightStartTime := time.Now()
 			response, err := client.ConfigRepoPreflightCheckFiles(pipelineFilesData, goCdPluginObj.getPluginID(), goCDConfigRepoName)
 			preflightDuration := time.Since(preflightStartTime)
+
 			if err != nil {
 				cliLogger.Errorf("preflight checks errored after %s with: %v", preflightDuration, err)
 

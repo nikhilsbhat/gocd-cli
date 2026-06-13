@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 
 	"github.com/goccy/go-yaml"
 	"github.com/nikhilsbhat/gocd-cli/pkg/errors"
@@ -178,9 +179,9 @@ func getAuthShowCommand() *cobra.Command {
 func getAuthListCommand() *cobra.Command {
 	authEraseCmd := &cobra.Command{
 		Use:     "list",
+		Aliases: []string{"profiles"},
 		Short:   "Command to list the cached GoCD authorization configuration profiles that is used by the cli.",
 		Args:    cobra.NoArgs,
-		PreRunE: setCLIClient,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			home, err := os.UserHomeDir()
 			if err != nil {
@@ -190,9 +191,13 @@ func getAuthListCommand() *cobra.Command {
 			}
 
 			authConfigFileDir := filepath.Join(home, goCdCacheDirName)
+			if _, err = os.Stat(authConfigFileDir); os.IsNotExist(err) {
+				return nil
+			}
 
 			pattern := `auth_config\.([^.]+)\.yaml`
 			profileRegex := regexp.MustCompile(pattern)
+			profiles := make([]string, 0)
 
 			if err = filepath.Walk(authConfigFileDir, func(_ string, info os.FileInfo, err error) error {
 				if err != nil {
@@ -202,13 +207,19 @@ func getAuthListCommand() *cobra.Command {
 				if !info.IsDir() {
 					matches := profileRegex.FindStringSubmatch(info.Name())
 					if len(matches) > 1 {
-						fmt.Println(matches[1])
+						profiles = append(profiles, matches[1])
 					}
 				}
 
 				return nil
 			}); err != nil {
 				return err
+			}
+
+			sort.Strings(profiles)
+
+			for _, profile := range profiles {
+				fmt.Println(profile)
 			}
 
 			return nil
